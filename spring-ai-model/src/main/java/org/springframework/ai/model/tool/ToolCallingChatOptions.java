@@ -37,6 +37,7 @@ import org.springframework.util.CollectionUtils;
  * including tool calling.
  *
  * @author Thomas Vitale
+ * @author Ilayaperumal Gopinathan
  * @since 1.0.0
  */
 public interface ToolCallingChatOptions extends FunctionCallingOptions {
@@ -68,7 +69,17 @@ public interface ToolCallingChatOptions extends FunctionCallingOptions {
 	 * the model or if the tools should be executed directly by the caller.
 	 */
 	@Nullable
-	Boolean isInternalToolExecutionEnabled();
+	Boolean getInternalToolExecutionEnabled();
+
+	/**
+	 * Whether the {@link ChatModel} is responsible for executing the tools requested by
+	 * the model or if the tools should be executed directly by the caller.
+	 */
+	@Nullable
+	@Deprecated
+	default Boolean isInternalToolExecutionEnabled() {
+		return getInternalToolExecutionEnabled();
+	}
 
 	/**
 	 * Set whether the {@link ChatModel} is responsible for executing the tools requested
@@ -87,8 +98,9 @@ public interface ToolCallingChatOptions extends FunctionCallingOptions {
 		Assert.notNull(chatOptions, "chatOptions cannot be null");
 		boolean internalToolExecutionEnabled;
 		if (chatOptions instanceof ToolCallingChatOptions toolCallingChatOptions
-				&& toolCallingChatOptions.isInternalToolExecutionEnabled() != null) {
-			internalToolExecutionEnabled = Boolean.TRUE.equals(toolCallingChatOptions.isInternalToolExecutionEnabled());
+				&& toolCallingChatOptions.getInternalToolExecutionEnabled() != null) {
+			internalToolExecutionEnabled = Boolean.TRUE
+				.equals(toolCallingChatOptions.getInternalToolExecutionEnabled());
 		}
 		else if (chatOptions instanceof FunctionCallingOptions functionCallingOptions
 				&& functionCallingOptions.getProxyToolCalls() != null) {

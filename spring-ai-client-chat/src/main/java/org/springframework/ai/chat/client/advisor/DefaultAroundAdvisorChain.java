@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor;
 
 import java.util.ArrayList;
@@ -43,16 +27,6 @@ import org.springframework.core.OrderComparator;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * Default implementation for the {@link BaseAdvisorChain}. Used by the
- * {@link org.springframework.ai.chat.client.ChatClient} to delegate the call to the next
- * {@link CallAdvisor} or {@link StreamAdvisor} in the chain.
- *
- * @author Christian Tzolov
- * @author Dariusz Jedrzejczyk
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 
 	public static final AdvisorObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultAdvisorObservationConvention();
@@ -98,7 +72,7 @@ public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 		return AdvisorObservationDocumentation.AI_ADVISOR
 			.observation(null, DEFAULT_OBSERVATION_CONVENTION, () -> observationContext, this.observationRegistry)
 			.observe(() -> {
-				// Supports both deprecated and new API.
+
 				if (advisor instanceof CallAdvisor callAdvisor) {
 					return callAdvisor.adviseCall(chatClientRequest, this);
 				}
@@ -109,9 +83,6 @@ public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 			});
 	}
 
-	/**
-	 * @deprecated Use {@link #nextCall(ChatClientRequest)} instead
-	 */
 	@Override
 	@Deprecated
 	public AdvisedResponse nextAroundCall(AdvisedRequest advisedRequest) {
@@ -132,7 +103,7 @@ public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 		return AdvisorObservationDocumentation.AI_ADVISOR
 			.observation(null, DEFAULT_OBSERVATION_CONVENTION, () -> observationContext, this.observationRegistry)
 			.observe(() -> {
-				// Supports both deprecated and new API.
+
 				if (advisor instanceof CallAdvisor callAdvisor) {
 					ChatClientResponse chatClientResponse = callAdvisor.adviseCall(advisedRequest.toChatClientRequest(),
 							this);
@@ -169,7 +140,7 @@ public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 
 			// @formatter:off
 			return Flux.defer(() -> {
-				// Supports both deprecated and new API.
+
 				if (advisor instanceof StreamAdvisor streamAdvisor) {
 					return streamAdvisor.adviseStream(chatClientRequest, this)
 							.doOnError(observation::error)
@@ -186,9 +157,6 @@ public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 		});
 	}
 
-	/**
-	 * @deprecated Use {@link #nextStream(ChatClientRequest)} instead.
-	 */
 	@Override
 	@Deprecated
 	public Flux<AdvisedResponse> nextAroundStream(AdvisedRequest advisedRequest) {
@@ -214,7 +182,7 @@ public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 
 			// @formatter:off
 			return Flux.defer(() -> {
-				// Supports both deprecated and new API.
+
 				if (advisor instanceof StreamAdvisor streamAdvisor) {
 					return streamAdvisor.adviseStream(advisedRequest.toChatClientRequest(), this)
 							.doOnError(observation::error)
@@ -277,9 +245,6 @@ public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 			return this;
 		}
 
-		/**
-		 * (Re)orders the advisors in priority order based on their Ordered attribute.
-		 */
 		private void reOrder() {
 			ArrayList<CallAroundAdvisor> callAdvisors = new ArrayList<>(this.callAroundAdvisors);
 			OrderComparator.sort(callAdvisors);

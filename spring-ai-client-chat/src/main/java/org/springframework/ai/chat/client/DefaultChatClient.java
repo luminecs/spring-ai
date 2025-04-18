@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client;
 
 import java.io.IOException;
@@ -71,19 +55,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
-/**
- * The default implementation of {@link ChatClient} as created by the
- * {@link Builder#build()} } method.
- *
- * @author Mark Pollack
- * @author Christian Tzolov
- * @author Josh Long
- * @author Arjen Poutsma
- * @author Soby Chacko
- * @author Dariusz Jedrzejczyk
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class DefaultChatClient implements ChatClient {
 
 	private static final ChatClientObservationConvention DEFAULT_CHAT_CLIENT_OBSERVATION_CONVENTION = new DefaultChatClientObservationConvention();
@@ -100,14 +71,10 @@ public class DefaultChatClient implements ChatClient {
 
 		Map<String, Object> advisorContext = new ConcurrentHashMap<>(inputRequest.getAdvisorParams());
 
-		// Process userText, media and messages before creating the AdvisedRequest.
 		String userText = inputRequest.userText;
 		List<Media> media = inputRequest.media;
 		List<Message> messages = inputRequest.messages;
 
-		// If the userText is empty, then try extracting the userText from the last
-		// message
-		// in the messages list and remove it from the messages list.
 		if (!StringUtils.hasText(userText) && !CollectionUtils.isEmpty(messages)) {
 			Message lastMessage = messages.get(messages.size() - 1);
 			if (lastMessage.getMessageType() == MessageType.USER) {
@@ -158,12 +125,10 @@ public class DefaultChatClient implements ChatClient {
 
 		DefaultChatClientRequestSpec spec = new DefaultChatClientRequestSpec(this.defaultChatClientRequest);
 
-		// Options
 		if (prompt.getOptions() != null) {
 			spec.options(prompt.getOptions());
 		}
 
-		// Messages
 		if (prompt.getInstructions() != null) {
 			spec.messages(prompt.getInstructions());
 		}
@@ -171,10 +136,6 @@ public class DefaultChatClient implements ChatClient {
 		return spec;
 	}
 
-	/**
-	 * Return a {@code ChatClient2Builder} to create a new {@code ChatClient} whose
-	 * settings are replicated from this {@code ChatClientRequest}.
-	 */
 	@Override
 	public Builder mutate() {
 		return this.defaultChatClientRequest.mutate();
@@ -506,7 +467,7 @@ public class DefaultChatClient implements ChatClient {
 			var observation = ChatClientObservationDocumentation.AI_CHAT_CLIENT.observation(observationConvention,
 					DEFAULT_CHAT_CLIENT_OBSERVATION_CONVENTION, () -> observationContext, observationRegistry);
 			var chatClientResponse = observation.observe(() -> {
-				// Apply the advisor chain that terminates with the ChatModelCallAdvisor.
+
 				return advisorChain.nextCall(formattedChatClientRequest);
 			});
 			return chatClientResponse != null ? chatClientResponse : ChatClientResponse.builder().build();
@@ -521,27 +482,20 @@ public class DefaultChatClient implements ChatClient {
 				return chatClientRequest;
 			}
 
-			// Create a copy of the message list to avoid modifying the original.
 			List<Message> modifiedMessages = new ArrayList<>(originalMessages);
 
-			// Get the last message (without removing it from original list)
 			Message lastMessage = modifiedMessages.get(modifiedMessages.size() - 1);
 
-			// If the last message is a UserMessage, replace it with the modified version
 			if (lastMessage instanceof UserMessage userMessage) {
-				// Remove last message
+
 				modifiedMessages.remove(modifiedMessages.size() - 1);
 
-				// Create new user message with format instructions
 				UserMessage userMessageWithFormat = userMessage.mutate()
 					.text(userMessage.getText() + System.lineSeparator() + outputFormat)
 					.build();
 
-				// Add modified message back
 				modifiedMessages.add(userMessageWithFormat);
 
-				// Build new ChatClientRequest preserving all properties but with modified
-				// prompt
 				return ChatClientRequest.builder()
 					.prompt(chatClientRequest.prompt().mutate().messages(modifiedMessages).build())
 					.context(Map.copyOf(chatClientRequest.context()))
@@ -601,7 +555,7 @@ public class DefaultChatClient implements ChatClient {
 					.start();
 
 				// @formatter:off
-				// Apply the advisor chain that terminates with the ChatModelStreamAdvisor.
+
 				return advisorChain.nextStream(chatClientRequest)
 						.doOnError(observation::error)
 						.doFinally(s -> observation.stop())
@@ -675,7 +629,6 @@ public class DefaultChatClient implements ChatClient {
 		@Nullable
 		private ChatOptions chatOptions;
 
-		/* copy constructor */
 		DefaultChatClientRequestSpec(DefaultChatClientRequestSpec ccr) {
 			this(ccr.chatModel, ccr.userText, ccr.userParams, ccr.systemText, ccr.systemParams, ccr.toolCallbacks,
 					ccr.messages, ccr.toolNames, ccr.media, ccr.chatOptions, ccr.advisors, ccr.advisorParams,
@@ -721,8 +674,6 @@ public class DefaultChatClient implements ChatClient {
 					: DEFAULT_CHAT_CLIENT_OBSERVATION_CONVENTION;
 			this.toolContext.putAll(toolContext);
 
-			// At the stack bottom add the model call advisors.
-			// They play the role of the last advisors in the advisor chain.
 			this.advisors.add(new ChatModelCallAdvisor(chatModel));
 			this.advisors.add(new ChatModelStreamAdvisor(chatModel));
 
@@ -789,10 +740,6 @@ public class DefaultChatClient implements ChatClient {
 			return this.toolContext;
 		}
 
-		/**
-		 * Return a {@code ChatClient2Builder} to create a new {@code ChatClient2} whose
-		 * settings are replicated from this {@code ChatClientRequest}.
-		 */
 		public Builder mutate() {
 			DefaultChatClientBuilder builder = (DefaultChatClientBuilder) ChatClient
 				.builder(this.chatModel, this.observationRegistry, this.observationConvention)
@@ -906,12 +853,12 @@ public class DefaultChatClient implements ChatClient {
 			return this;
 		}
 
-		@Deprecated // Use tools()
+		@Deprecated
 		public ChatClientRequestSpec functions(String... functionBeanNames) {
 			return tools(functionBeanNames);
 		}
 
-		@Deprecated // Use tools()
+		@Deprecated
 		public ChatClientRequestSpec functions(FunctionCallback... functionCallbacks) {
 			Assert.notNull(functionCallbacks, "functionCallbacks cannot be null");
 			Assert.noNullElements(functionCallbacks, "functionCallbacks cannot contain null elements");
@@ -1011,9 +958,7 @@ public class DefaultChatClient implements ChatClient {
 
 	}
 
-	// Prompt
-
-	@Deprecated // never used, to be removed
+	@Deprecated
 	public static class DefaultCallPromptResponseSpec implements CallPromptResponseSpec {
 
 		private final ChatModel chatModel;
@@ -1045,7 +990,7 @@ public class DefaultChatClient implements ChatClient {
 
 	}
 
-	@Deprecated // never used, to be removed
+	@Deprecated
 	public static class DefaultStreamPromptResponseSpec implements StreamPromptResponseSpec {
 
 		private final Prompt prompt;

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.mistralai.api.tool;
 
 import java.util.ArrayList;
@@ -42,21 +26,9 @@ import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Demonstrates how to use function calling suing Mistral AI Java API:
- * {@link MistralAiApi}.
- *
- * It is based on the <a href="https://docs.mistral.ai/guides/function-calling/">Mistral
- * AI Function Calling</a> guide.
- *
- * @author Christian Tzolov
- * @since 0.8.1
- */
-// @Disabled("See https://github.com/spring-projects/spring-ai/issues/1853")
 @EnabledIfEnvironmentVariable(named = "MISTRAL_AI_API_KEY", matches = ".+")
 public class PaymentStatusFunctionCallingIT {
 
-	// Assuming we have the following data
 	public static final Map<String, StatusDate> DATA = Map.of("T1001", new StatusDate("Paid", "2021-10-05"), "T1002",
 			new StatusDate("Unpaid", "2021-10-06"), "T1003", new StatusDate("Paid", "2021-10-07"), "T1004",
 			new StatusDate("Paid", "2021-10-05"), "T1005", new StatusDate("Pending", "2021-10-08"));
@@ -92,11 +64,6 @@ public class PaymentStatusFunctionCallingIT {
 				}
 				""";
 
-		// Alternatively, generate the JSON schema using the ModelOptionsUtils helper:
-		//
-		// var transactionJsonSchema = ModelOptionsUtils.getJsonSchema(Transaction.class,
-		// false);
-
 		var paymentStatusTool = new FunctionTool(Type.FUNCTION, new FunctionTool.Function(
 				"Get payment status of a transaction", "retrieve_payment_status", transactionJsonSchema));
 
@@ -116,20 +83,16 @@ public class PaymentStatusFunctionCallingIT {
 		assertThat(responseMessage.role()).isEqualTo(Role.ASSISTANT);
 		assertThat(responseMessage.toolCalls()).isNotNull();
 
-		// extend conversation with assistant's reply.
 		messages.add(responseMessage);
 
-		// Send the info for each function call and function response to the model.
 		for (ToolCall toolCall : responseMessage.toolCalls()) {
 
 			var functionName = toolCall.function().name();
-			// Map the function, JSON arguments into a Transaction object.
+
 			Transaction transaction = jsonToObject(toolCall.function().arguments(), Transaction.class);
-			// Call the target function with the transaction object.
+
 			var result = functions.get(functionName).apply(transaction);
 
-			// Extend conversation with function response.
-			// The functionName is used to identify the function response!
 			messages.add(new ChatCompletionMessage(result.toString(), Role.TOOL, functionName, null, toolCall.id()));
 		}
 

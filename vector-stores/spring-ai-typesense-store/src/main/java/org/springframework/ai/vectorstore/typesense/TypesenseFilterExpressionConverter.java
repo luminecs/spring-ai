@@ -1,30 +1,8 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.typesense;
 
 import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.filter.converter.AbstractFilterExpressionConverter;
 
-/**
- * Converts {@link Filter.Expression} into Typesense metadata filter expression format.
- * (https://typesense.org/docs/0.24.0/api/search.html#filter-parameters)
- *
- * @author Pablo Sanchidrian
- */
 public class TypesenseFilterExpressionConverter extends AbstractFilterExpressionConverter {
 
 	@Override
@@ -38,15 +16,15 @@ public class TypesenseFilterExpressionConverter extends AbstractFilterExpression
 		return switch (exp.type()) {
 			case AND -> " && ";
 			case OR -> " || ";
-			case EQ -> " "; // in typesense "EQ" operator looks like -> country:USA
+			case EQ -> " ";
 			case NE -> " != ";
 			case LT -> " < ";
 			case LTE -> " <= ";
 			case GT -> " > ";
 			case GTE -> " >= ";
-			case IN -> " "; // in typesense "IN" operator looks like -> country: [USA, UK]
-			case NIN -> " != "; // in typesense "NIN" operator looks like -> country:
-			// !=[USA, UK]
+			case IN -> " ";
+			case NIN -> " != ";
+
 			default -> throw new RuntimeException("Not supported expression type:" + exp.type());
 		};
 	}
@@ -54,7 +32,7 @@ public class TypesenseFilterExpressionConverter extends AbstractFilterExpression
 	@Override
 	protected void doGroup(Filter.Group group, StringBuilder context) {
 		this.convertOperand(new Filter.Expression(Filter.ExpressionType.AND, group.content(), group.content()),
-				context); // trick
+				context);
 	}
 
 	@Override

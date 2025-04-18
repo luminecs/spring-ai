@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.anthropic;
 
 import java.util.ArrayList;
@@ -79,17 +63,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
-/**
- * The {@link ChatModel} implementation for the Anthropic service.
- *
- * @author Christian Tzolov
- * @author luocongqiu
- * @author Mariusz Bernacki
- * @author Thomas Vitale
- * @author Claudio Silva Junior
- * @author Alexandros Pappas
- * @since 1.0.0
- */
 public class AnthropicChatModel implements ChatModel {
 
 	public static final String DEFAULT_MODEL_NAME = AnthropicApi.ChatModel.CLAUDE_3_7_SONNET.getValue();
@@ -104,37 +77,18 @@ public class AnthropicChatModel implements ChatModel {
 
 	private static final ToolCallingManager DEFAULT_TOOL_CALLING_MANAGER = ToolCallingManager.builder().build();
 
-	/**
-	 * The retry template used to retry the OpenAI API calls.
-	 */
 	public final RetryTemplate retryTemplate;
 
-	/**
-	 * The lower-level API for the Anthropic service.
-	 */
 	private final AnthropicApi anthropicApi;
 
-	/**
-	 * The default options used for the chat completion requests.
-	 */
 	private final AnthropicChatOptions defaultOptions;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
 	private final ToolCallingManager toolCallingManager;
 
-	/**
-	 * The tool execution eligibility predicate used to determine if a tool can be
-	 * executed.
-	 */
 	private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
 	public AnthropicChatModel(AnthropicApi anthropicApi, AnthropicChatOptions defaultOptions,
@@ -165,8 +119,7 @@ public class AnthropicChatModel implements ChatModel {
 
 	@Override
 	public ChatResponse call(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return this.internalCall(requestPrompt, null);
 	}
@@ -204,14 +157,14 @@ public class AnthropicChatModel implements ChatModel {
 		if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), response)) {
 			var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
 			if (toolExecutionResult.returnDirect()) {
-				// Return tool execution result directly to the client.
+
 				return ChatResponse.builder()
 					.from(response)
 					.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 					.build();
 			}
 			else {
-				// Send the tool execution result back to the model.
+
 				return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 						response);
 			}
@@ -227,8 +180,7 @@ public class AnthropicChatModel implements ChatModel {
 
 	@Override
 	public Flux<ChatResponse> stream(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return this.internalStream(requestPrompt, null);
 	}
@@ -260,18 +212,17 @@ public class AnthropicChatModel implements ChatModel {
 				ChatResponse chatResponse = toChatResponse(chatCompletionResponse, accumulatedUsage);
 
 				if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), chatResponse) && chatResponse.hasFinishReasons(Set.of("tool_use"))) {
-					// FIXME: bounded elastic needs to be used since tool calling
-					//  is currently only synchronous
+
 					return Flux.defer(() -> {
 						var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, chatResponse);
 						if (toolExecutionResult.returnDirect()) {
-							// Return tool execution result directly to the client.
+
 							return Flux.just(ChatResponse.builder().from(chatResponse)
 								.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 								.build());
 						}
 						else {
-							// Send the tool execution result back to the model.
+
 							return this.internalStream(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 									chatResponse);
 						}
@@ -393,7 +344,7 @@ public class AnthropicChatModel implements ChatModel {
 	}
 
 	Prompt buildRequestPrompt(Prompt prompt) {
-		// Process runtime options
+
 		AnthropicChatOptions runtimeOptions = null;
 		if (prompt.getOptions() != null) {
 			if (prompt.getOptions() instanceof ToolCallingChatOptions toolCallingChatOptions) {
@@ -406,12 +357,9 @@ public class AnthropicChatModel implements ChatModel {
 			}
 		}
 
-		// Define request options by merging runtime options and default options
 		AnthropicChatOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				AnthropicChatOptions.class);
 
-		// Merge @JsonIgnore-annotated options explicitly since they are ignored by
-		// Jackson, used by ModelOptionsUtils.
 		if (runtimeOptions != null) {
 			requestOptions.setHttpHeaders(
 					mergeHttpHeaders(runtimeOptions.getHttpHeaders(), this.defaultOptions.getHttpHeaders()));
@@ -506,7 +454,6 @@ public class AnthropicChatModel implements ChatModel {
 		AnthropicChatOptions requestOptions = (AnthropicChatOptions) prompt.getOptions();
 		request = ModelOptionsUtils.merge(requestOptions, request, ChatCompletionRequest.class);
 
-		// Add the tool definitions to the request's tools parameter.
 		List<ToolDefinition> toolDefinitions = this.toolCallingManager.resolveToolDefinitions(requestOptions);
 		if (!CollectionUtils.isEmpty(toolDefinitions)) {
 			request = ModelOptionsUtils.merge(request, this.defaultOptions, ChatCompletionRequest.class);
@@ -531,10 +478,6 @@ public class AnthropicChatModel implements ChatModel {
 		return AnthropicChatOptions.fromOptions(this.defaultOptions);
 	}
 
-	/**
-	 * Use the provided convention for reporting observation data
-	 * @param observationConvention The provided convention
-	 */
 	public void setObservationConvention(ChatModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;

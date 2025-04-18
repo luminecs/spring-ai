@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.opensearch;
 
 import java.io.IOException;
@@ -56,89 +40,6 @@ import org.springframework.ai.vectorstore.observation.VectorStoreObservationCont
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
-/**
- * OpenSearch-based vector store implementation using OpenSearch's vector search
- * capabilities.
- *
- * <p>
- * The store uses OpenSearch's k-NN functionality to persist and query vector embeddings
- * along with their associated document content and metadata. The implementation supports
- * various similarity functions and provides efficient vector search operations.
- * </p>
- *
- * <p>
- * Features:
- * </p>
- * <ul>
- * <li>Automatic schema initialization with configurable index creation</li>
- * <li>Support for multiple similarity functions: Cosine, L1, L2, and Linf</li>
- * <li>Metadata filtering using OpenSearch query expressions</li>
- * <li>Configurable similarity thresholds for search results</li>
- * <li>Batch processing support with configurable strategies</li>
- * <li>Observation and metrics support through Micrometer</li>
- * </ul>
- *
- * <p>
- * Basic usage example:
- * </p>
- * <pre>{@code
- * OpenSearchVectorStore vectorStore = OpenSearchVectorStore.builder(openSearchClient, embeddingModel)
- *     .initializeSchema(true)
- *     .build();
- *
- * // Add documents
- * vectorStore.add(List.of(
- *     new Document("content1", Map.of("key1", "value1")),
- *     new Document("content2", Map.of("key2", "value2"))
- * ));
- *
- * // Search with filters
- * List<Document> results = vectorStore.similaritySearch(
- *     SearchRequest.query("search text")
- *         .withTopK(5)
- *         .withSimilarityThreshold(0.7)
- *         .withFilterExpression("key1 == 'value1'")
- * );
- * }</pre>
- *
- * <p>
- * Advanced configuration example:
- * </p>
- * <pre>{@code
- * OpenSearchVectorStore vectorStore = OpenSearchVectorStore.builder(openSearchClient, embeddingModel)
- *     .index("custom-index")
- *     .mappingJson(customMapping)
- *     .similarityFunction("l2")
- *     .initializeSchema(true)
- *     .batchingStrategy(new TokenCountBatchingStrategy())
- *     .filterExpressionConverter(new CustomFilterExpressionConverter())
- *     .build();
- * }</pre>
- *
- * <p>
- * Similarity Functions:
- * </p>
- * <ul>
- * <li>cosinesimil: Default, suitable for most use cases. Measures cosine similarity
- * between vectors.</li>
- * <li>l1: Manhattan distance between vectors.</li>
- * <li>l2: Euclidean distance between vectors.</li>
- * <li>linf: Chebyshev distance between vectors.</li>
- * </ul>
- *
- * <p>
- * For more information about available similarity functions, see: <a href=
- * "https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces">OpenSearch
- * KNN Spaces</a>
- * </p>
- *
- * @author Jemin Huh
- * @author Soby Chacko
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author inpink
- * @since 1.0.0
- */
 public class OpenSearchVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(OpenSearchVectorStore.class);
@@ -170,10 +71,6 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 
 	private String similarityFunction;
 
-	/**
-	 * Creates a new OpenSearchVectorStore using the builder pattern.
-	 * @param builder The configured builder instance
-	 */
 	protected OpenSearchVectorStore(Builder builder) {
 		super(builder);
 
@@ -183,16 +80,11 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 		this.index = builder.index;
 		this.mappingJson = builder.mappingJson;
 		this.filterExpressionConverter = builder.filterExpressionConverter;
-		// the potential functions for vector fields at
-		// https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
+
 		this.similarityFunction = builder.similarityFunction;
 		this.initializeSchema = builder.initializeSchema;
 	}
 
-	/**
-	 * Creates a new builder instance for configuring an OpenSearchVectorStore.
-	 * @return A new OpenSearchBuilder instance
-	 */
 	public static Builder builder(OpenSearchClient openSearchClient, EmbeddingModel embeddingModel) {
 		return new Builder(openSearchClient, embeddingModel);
 	}
@@ -243,7 +135,6 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 		try {
 			String filterStr = this.filterExpressionConverter.convertExpression(filterExpression);
 
-			// Create delete by query request
 			DeleteByQueryRequest request = new DeleteByQueryRequest.Builder().index(this.index)
 				.query(q -> q.queryString(qs -> qs.query(filterStr)))
 				.build();
@@ -291,10 +182,7 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 						.params("field", JsonData.of("embedding"))
 						.params("query_value", JsonData.of(embedding))
 						.params("space_type", JsonData.of(this.similarityFunction))));
-			// https://opensearch.org/docs/latest/search-plugins/knn/knn-score-script
-			// k-NN ensures non-negative scores by adding 1 to cosine similarity,
-			// extending OpenSearch scores to 0-2.
-			// A 0.5 boost normalizes to 0-1.
+
 			return this.similarityFunction.equals(COSINE_SIMILARITY_FUNCTION) ? scriptScoreQueryBuilder.boost(0.5f)
 					: scriptScoreQueryBuilder;
 		}));
@@ -389,20 +277,9 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 		return Optional.of(client);
 	}
 
-	/**
-	 * The representation of {@link Document} along with its embedding.
-	 *
-	 * @param id The id of the document
-	 * @param content The content of the document
-	 * @param metadata The metadata of the document
-	 * @param embedding The vectors representing the content of the document
-	 */
 	public record OpenSearchDocument(String id, String content, Map<String, Object> metadata, float[] embedding) {
 	}
 
-	/**
-	 * Builder class for creating OpenSearchVectorStore instances.
-	 */
 	public static class Builder extends AbstractVectorStoreBuilder<Builder> {
 
 		private final OpenSearchClient openSearchClient;
@@ -417,82 +294,41 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 
 		private String similarityFunction = COSINE_SIMILARITY_FUNCTION;
 
-		/**
-		 * Sets the OpenSearch client.
-		 * @param openSearchClient The OpenSearch client to use
-		 * @throws IllegalArgumentException if openSearchClient is null
-		 */
 		private Builder(OpenSearchClient openSearchClient, EmbeddingModel embeddingModel) {
 			super(embeddingModel);
 			Assert.notNull(openSearchClient, "OpenSearchClient must not be null");
 			this.openSearchClient = openSearchClient;
 		}
 
-		/**
-		 * Sets the index name.
-		 * @param index The name of the index to use
-		 * @return The builder instance
-		 * @throws IllegalArgumentException if index is null or empty
-		 */
 		public Builder index(String index) {
 			Assert.hasText(index, "index must not be null or empty");
 			this.index = index;
 			return this;
 		}
 
-		/**
-		 * Sets the JSON mapping for the index.
-		 * @param mappingJson The JSON mapping to use
-		 * @return The builder instance
-		 * @throws IllegalArgumentException if mappingJson is null or empty
-		 */
 		public Builder mappingJson(String mappingJson) {
 			Assert.hasText(mappingJson, "mappingJson must not be null or empty");
 			this.mappingJson = mappingJson;
 			return this;
 		}
 
-		/**
-		 * Sets whether to initialize the schema.
-		 * @param initializeSchema true to initialize schema, false otherwise
-		 * @return The builder instance
-		 */
 		public Builder initializeSchema(boolean initializeSchema) {
 			this.initializeSchema = initializeSchema;
 			return this;
 		}
 
-		/**
-		 * Sets the filter expression converter.
-		 * @param converter The filter expression converter to use
-		 * @return The builder instance
-		 * @throws IllegalArgumentException if converter is null
-		 */
 		public Builder filterExpressionConverter(FilterExpressionConverter converter) {
 			Assert.notNull(converter, "filterExpressionConverter must not be null");
 			this.filterExpressionConverter = converter;
 			return this;
 		}
 
-		/**
-		 * Sets the similarity function for vector comparison. See
-		 * https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
-		 * for available functions.
-		 * @param similarityFunction The similarity function to use
-		 * @return The builder instance
-		 * @throws IllegalArgumentException if similarityFunction is null or empty
-		 */
 		public Builder similarityFunction(String similarityFunction) {
 			Assert.hasText(similarityFunction, "similarityFunction must not be null or empty");
 			this.similarityFunction = similarityFunction;
 			return this;
 		}
 
-		/**
-		 * Builds a new OpenSearchVectorStore instance with the configured properties.
-		 * @return A new OpenSearchVectorStore instance
-		 * @throws IllegalStateException if the builder is in an invalid state
-		 */
 		@Override
 		public OpenSearchVectorStore build() {
 			return new OpenSearchVectorStore(this);

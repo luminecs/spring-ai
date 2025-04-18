@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.qianfan;
 
 import java.util.Collections;
@@ -56,87 +40,34 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
 
-/**
- * {@link ChatModel} and {@link StreamingChatModel} implementation for {@literal QianFan}
- * backed by {@link QianFanApi}.
- *
- * @author Geng Rong
- * @see ChatModel
- * @see StreamingChatModel
- * @see QianFanApi
- * @author Alexandros Pappas
- * @since 1.0
- */
 public class QianFanChatModel implements ChatModel, StreamingChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(QianFanChatModel.class);
 
 	private static final ChatModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultChatModelObservationConvention();
 
-	/**
-	 * The retry template used to retry the QianFan API calls.
-	 */
 	public final RetryTemplate retryTemplate;
 
-	/**
-	 * The default options used for the chat completion requests.
-	 */
 	private final QianFanChatOptions defaultOptions;
 
-	/**
-	 * Low-level access to the QianFan API.
-	 */
 	private final QianFanApi qianFanApi;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
-	/**
-	 * Creates an instance of the QianFanChatModel.
-	 * @param qianFanApi The QianFanApi instance to be used for interacting with the
-	 * QianFan Chat API.
-	 * @throws IllegalArgumentException if QianFanApi is null
-	 */
 	public QianFanChatModel(QianFanApi qianFanApi) {
 		this(qianFanApi, QianFanChatOptions.builder().model(QianFanApi.DEFAULT_CHAT_MODEL).temperature(0.7).build());
 	}
 
-	/**
-	 * Initializes an instance of the QianFanChatModel.
-	 * @param qianFanApi The QianFanApi instance to be used for interacting with the
-	 * QianFan Chat API.
-	 * @param options The QianFanChatOptions to configure the chat client.
-	 */
 	public QianFanChatModel(QianFanApi qianFanApi, QianFanChatOptions options) {
 		this(qianFanApi, options, RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
-	/**
-	 * Initializes a new instance of the QianFanChatModel.
-	 * @param qianFanApi The QianFanApi instance to be used for interacting with the
-	 * QianFan Chat API.
-	 * @param options The QianFanChatOptions to configure the chat client.
-	 * @param retryTemplate The retry template.
-	 */
 	public QianFanChatModel(QianFanApi qianFanApi, QianFanChatOptions options, RetryTemplate retryTemplate) {
 		this(qianFanApi, options, retryTemplate, ObservationRegistry.NOOP);
 	}
 
-	/**
-	 * Initializes a new instance of the QianFanChatModel.
-	 * @param qianFanApi The QianFanApi instance to be used for interacting with the
-	 * QianFan Chat API.
-	 * @param options The QianFanChatOptions to configure the chat client.
-	 * @param retryTemplate The retry template.
-	 * @param observationRegistry The ObservationRegistry used for instrumentation.
-	 */
 	public QianFanChatModel(QianFanApi qianFanApi, QianFanChatOptions options, RetryTemplate retryTemplate,
 			ObservationRegistry observationRegistry) {
 		Assert.notNull(qianFanApi, "QianFanApi must not be null");
@@ -229,19 +160,11 @@ public class QianFanChatModel implements ChatModel, StreamingChatModel {
 		});
 	}
 
-	/**
-	 * Convert the ChatCompletionChunk into a ChatCompletion.
-	 * @param chunk the ChatCompletionChunk to convert
-	 * @return the ChatCompletion
-	 */
 	private ChatCompletion toChatCompletion(ChatCompletionChunk chunk) {
 		return new ChatCompletion(chunk.id(), chunk.object(), chunk.created(), chunk.result(), chunk.finishReason(),
 				chunk.usage());
 	}
 
-	/**
-	 * Accessible for testing.
-	 */
 	public ChatCompletionRequest createRequest(Prompt prompt, boolean stream) {
 		var chatCompletionMessages = prompt.getInstructions()
 			.stream()

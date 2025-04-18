@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.bedrock.converse.api;
 
 import java.math.BigDecimal;
@@ -57,14 +41,6 @@ import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * Amazon Bedrock Converse API utils.
- *
- * @author Wei Jiang
- * @author Christian Tzolov
- * @author Alexandros Pappas
- * @since 1.0.0
- */
 public final class ConverseApiUtils {
 
 	public static final ChatResponse EMPTY_CHAT_RESPONSE = ChatResponse.builder()
@@ -101,19 +77,18 @@ public final class ConverseApiUtils {
 				isInsideTool.set(true);
 			}
 			return event;
-		}).windowUntil(event -> { // Group all chunks belonging to the same function call.
+		}).windowUntil(event -> {
 			if (isInsideTool.get() && ConverseApiUtils.isToolUseFinish(event)) {
 				isInsideTool.set(false);
 				return true;
 			}
 			return !isInsideTool.get();
-		}).concatMapIterable(window -> { // Merging the window chunks into a single chunk.
+		}).concatMapIterable(window -> {
 			Mono<ConverseStreamOutput> monoChunk = window.reduce(new ToolUseAggregationEvent(),
 					ConverseApiUtils::mergeToolUseEvents);
 			return List.of(monoChunk);
 		}).flatMap(mono -> mono).scanWith(() -> new Aggregation(), (lastAggregation, nextEvent) -> {
 
-			// System.out.println(nextEvent);
 			if (nextEvent instanceof ToolUseAggregationEvent toolUseAggregationEvent) {
 
 				if (CollectionUtils.isEmpty(toolUseAggregationEvent.toolUseEntries())) {
@@ -169,7 +144,7 @@ public final class ConverseApiUtils {
 				return new Aggregation(newMeta, ConverseApiUtils.EMPTY_CHAT_RESPONSE);
 			}
 			else if (nextEvent instanceof ContentBlockStartEvent contentBlockStartEvent) {
-				// TODO ToolUse support
+
 				return new Aggregation();
 			}
 			else if (nextEvent instanceof ContentBlockDeltaEvent contentBlockDeltaEvent) {
@@ -186,12 +161,12 @@ public final class ConverseApiUtils {
 							new ChatResponse(List.of(generation)));
 				}
 				else if (contentBlockDeltaEvent.delta().type().equals(ContentBlockDelta.Type.TOOL_USE)) {
-					// TODO ToolUse support
+
 				}
 				return new Aggregation();
 			}
 			else if (nextEvent instanceof ContentBlockStopEvent contentBlockStopEvent) {
-				// TODO ToolUse support
+
 				return new Aggregation();
 			}
 			else if (nextEvent instanceof ConverseStreamMetadataEvent metadataEvent) {
@@ -203,7 +178,6 @@ public final class ConverseApiUtils {
 					.withTrace(metadataEvent.trace())
 					.build();
 
-				// TODO
 				Document modelResponseFields = lastAggregation.metadataAggregation().additionalModelResponseFields();
 				ConverseStreamMetrics metrics = metadataEvent.metrics();
 
@@ -218,13 +192,12 @@ public final class ConverseApiUtils {
 				return new Aggregation();
 			}
 		})
-			// .skip(1)
+
 			.filter(aggregation -> aggregation.chatResponse() != ConverseApiUtils.EMPTY_CHAT_RESPONSE)
 			.map(aggregation -> {
 
 				var chatResponse = aggregation.chatResponse();
 
-				// Merge the previous chat response metadata with the current one.
 				if (perviousChatResponse != null && perviousChatResponse.getMetadata() != null
 						&& perviousChatResponse.getMetadata().getUsage() != null) {
 
@@ -272,7 +245,7 @@ public final class ConverseApiUtils {
 				return toolUseEventAggregator.withIndex(contentBlockStart.contentBlockIndex())
 					.withId(cbToolUse.toolUseId())
 					.withName(cbToolUse.name())
-					.appendPartialJson(""); // CB START always has empty JSON.
+					.appendPartialJson("");
 			}
 		}
 		else if (event.sdkEventType() == EventType.CONTENT_BLOCK_DELTA) {
@@ -398,10 +371,6 @@ public final class ConverseApiUtils {
 		}
 	}
 
-	/**
-	 * Special event used to aggregate multiple tool use events into a single event with
-	 * list of aggregated ContentBlockToolUse.
-	 */
 	public static class ToolUseAggregationEvent implements ConverseStreamOutput {
 
 		private Integer index;

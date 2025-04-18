@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.oci.cohere;
 
 import java.util.ArrayList;
@@ -58,34 +42,18 @@ import org.springframework.ai.oci.ServingModeHelper;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * {@link ChatModel} implementation that uses the OCI GenAI Chat API.
- *
- * @author Anders Swanson
- * @author Alexandros Pappas
- * @since 1.0.0
- */
 public class OCICohereChatModel implements ChatModel {
 
 	private static final ChatModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultChatModelObservationConvention();
 
 	private static final Double DEFAULT_TEMPERATURE = 0.7;
 
-	/**
-	 * The {@link GenerativeAiInference} client used to interact with OCI GenAI service.
-	 */
 	private final GenerativeAiInference genAi;
 
-	/**
-	 * The configuration information for a chat completions request.
-	 */
 	private final OCICohereChatOptions defaultOptions;
 
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
 	public OCICohereChatModel(GenerativeAiInference genAi, OCICohereChatOptions options) {
@@ -125,10 +93,6 @@ public class OCICohereChatModel implements ChatModel {
 		return OCICohereChatOptions.fromOptions(this.defaultOptions);
 	}
 
-	/**
-	 * Use the provided convention for reporting observation data
-	 * @param observationConvention The provided convention
-	 */
 	public void setObservationConvention(ChatModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;

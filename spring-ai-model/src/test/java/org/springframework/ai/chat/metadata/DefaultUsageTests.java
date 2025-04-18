@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.metadata;
 
 import java.util.HashMap;
@@ -83,16 +67,13 @@ public class DefaultUsageTests {
 	void testTwoArgumentConstructorAndSerialization() throws Exception {
 		DefaultUsage usage = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50));
 
-		// Test that the fields are set correctly
 		assertThat(usage.getPromptTokens()).isEqualTo(100);
 		assertThat(usage.getCompletionTokens()).isEqualTo(50);
-		assertThat(usage.getTotalTokens()).isEqualTo(150); // 100 + 50 = 150
+		assertThat(usage.getTotalTokens()).isEqualTo(150);
 
-		// Test serialization
 		String json = this.objectMapper.writeValueAsString(usage);
 		assertThat(json).isEqualTo("{\"promptTokens\":100,\"completionTokens\":50,\"totalTokens\":150}");
 
-		// Test deserialization
 		DefaultUsage deserializedUsage = this.objectMapper.readValue(json, DefaultUsage.class);
 		assertThat(deserializedUsage.getPromptTokens()).isEqualTo(100);
 		assertThat(deserializedUsage.getCompletionTokens()).isEqualTo(50);
@@ -103,16 +84,13 @@ public class DefaultUsageTests {
 	void testTwoArgumentConstructorWithNullValues() throws Exception {
 		DefaultUsage usage = new DefaultUsage((Integer) null, (Integer) null);
 
-		// Test that null values are converted to 0
 		assertThat(usage.getPromptTokens()).isEqualTo(0);
 		assertThat(usage.getCompletionTokens()).isEqualTo(0);
 		assertThat(usage.getTotalTokens()).isEqualTo(0);
 
-		// Test serialization
 		String json = this.objectMapper.writeValueAsString(usage);
 		assertThat(json).isEqualTo("{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0}");
 
-		// Test deserialization
 		DefaultUsage deserializedUsage = this.objectMapper.readValue(json, DefaultUsage.class);
 		assertThat(deserializedUsage.getPromptTokens()).isEqualTo(0);
 		assertThat(deserializedUsage.getCompletionTokens()).isEqualTo(0);
@@ -190,26 +168,21 @@ public class DefaultUsageTests {
 		DefaultUsage usage4 = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50), Integer.valueOf(150),
 				Map.of("custom", "value"));
 
-		// Test equals
 		assertThat(usage1).isEqualTo(usage2);
 		assertThat(usage1).isNotEqualTo(usage3);
 		assertThat(usage1).isNotEqualTo(usage4);
 		assertThat(usage1).isNotEqualTo(null);
 		assertThat(usage1).isNotEqualTo(new Object());
 
-		// Test hashCode
 		assertThat(usage1).hasSameHashCodeAs(usage2);
 		assertThat(usage1.hashCode()).isNotEqualTo(usage3.hashCode());
 		assertThat(usage1.hashCode()).isNotEqualTo(usage4.hashCode());
 
-		// Test reflexivity
 		assertThat(usage1).isEqualTo(usage1);
 		assertThat(usage1).hasSameHashCodeAs(usage1);
 
-		// Test symmetry
 		assertThat(usage1.equals(usage2)).isEqualTo(usage2.equals(usage1));
 
-		// Test with different nativeUsage
 		DefaultUsage usage5 = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50), Integer.valueOf(150),
 				Map.of("key", "value"));
 		DefaultUsage usage6 = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50), Integer.valueOf(150),
@@ -223,12 +196,10 @@ public class DefaultUsageTests {
 		DefaultUsage usage = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50), Integer.valueOf(150));
 		assertThat(usage).hasToString("DefaultUsage{promptTokens=100, completionTokens=50, totalTokens=150}");
 
-		// Test with custom nativeUsage
 		DefaultUsage usageWithNative = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50), Integer.valueOf(150),
 				Map.of("custom", "value"));
 		assertThat(usageWithNative).hasToString("DefaultUsage{promptTokens=100, completionTokens=50, totalTokens=150}");
 
-		// Test with null values
 		DefaultUsage usageWithNulls = new DefaultUsage(null, null, null);
 		assertThat(usageWithNulls).hasToString("DefaultUsage{promptTokens=0, completionTokens=0, totalTokens=0}");
 	}
@@ -246,17 +217,14 @@ public class DefaultUsageTests {
 
 	@Test
 	void testCalculatedTotalTokens() {
-		// Test when total tokens is null and should be calculated
-		DefaultUsage usage = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50), null);
-		assertThat(usage.getTotalTokens()).isEqualTo(150); // Should be sum of prompt and
-															// completion tokens
 
-		// Test that explicit total tokens takes precedence over calculated
+		DefaultUsage usage = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50), null);
+		assertThat(usage.getTotalTokens()).isEqualTo(150);
+
 		DefaultUsage usageWithExplicitTotal = new DefaultUsage(Integer.valueOf(100), Integer.valueOf(50),
 				Integer.valueOf(200));
-		assertThat(usageWithExplicitTotal.getTotalTokens()).isEqualTo(200); // Should use
-																			// explicit
-																			// value
+		assertThat(usageWithExplicitTotal.getTotalTokens()).isEqualTo(200);
+
 	}
 
 }

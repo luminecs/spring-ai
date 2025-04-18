@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.weaviate;
 
 import java.util.ArrayList;
@@ -61,36 +45,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * A vector store implementation that stores and retrieves vectors in a Weaviate database.
- *
- * Note: You can assign arbitrary metadata fields with your Documents. Later will be
- * persisted and managed as Document fields. But only the metadata keys listed in
- * {@link WeaviateVectorStore#filterMetadataFields} can be used for similarity search
- * expression filters.
- *
- * <p>
- * Example usage with builder:
- * </p>
- * <pre>{@code
- * // Create the vector store with builder
- * WeaviateVectorStore vectorStore = WeaviateVectorStore.builder(weaviateClient, embeddingModel)
- *     .objectClass("CustomClass")                // Optional: Custom class name (default: SpringAiWeaviate)
- *     .consistencyLevel(ConsistentLevel.QUORUM)  // Optional: Set consistency level (default: ONE)
- *     .filterMetadataFields(List.of(             // Optional: Configure filterable metadata fields
- *         MetadataField.text("country"),
- *         MetadataField.number("year")
- *     ))
- *     .build();
- * }</pre>
- *
- * @author Christian Tzolov
- * @author Eddú Meléndez
- * @author Josh Long
- * @author Soby Chacko
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class WeaviateVectorStore extends AbstractObservationVectorStore {
 
 	private static final Logger logger = LoggerFactory.getLogger(WeaviateVectorStore.class);
@@ -115,43 +69,14 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 
 	private final String weaviateObjectClass;
 
-	/**
-	 * List of metadata fields (as field name and type) that can be used in similarity
-	 * search query filter expressions. The {@link Document#getMetadata()} can contain
-	 * arbitrary number of metadata entries, but only the fields listed here can be used
-	 * in the search filter expressions.
-	 *
-	 * If new entries are added ot the filterMetadataFields the affected documents must be
-	 * (re)updated.
-	 */
 	private final List<MetadataField> filterMetadataFields;
 
-	/**
-	 * List of weaviate field to retrieve whey performing similarity search.
-	 */
 	private final Field[] weaviateSimilaritySearchFields;
 
-	/**
-	 * Converts the generic {@link Filter.Expression} into, native, Weaviate filter
-	 * expressions.
-	 */
 	private final WeaviateFilterExpressionConverter filterExpressionConverter;
 
-	/**
-	 * Used to serialize/deserialize the document metadata when stored/retrieved from the
-	 * weaviate vector store.
-	 */
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	/**
-	 * Protected constructor for creating a WeaviateVectorStore instance using the builder
-	 * pattern. This constructor initializes the vector store with the configured settings
-	 * from the builder and performs necessary validations.
-	 * @param builder the {@link Builder} containing all configuration settings
-	 * @throws IllegalArgumentException if the weaviateClient is null
-	 * @see Builder
-	 * @since 1.0.0
-	 */
 	protected WeaviateVectorStore(Builder builder) {
 		super(builder);
 
@@ -166,11 +91,6 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 		this.weaviateSimilaritySearchFields = buildWeaviateSimilaritySearchFields();
 	}
 
-	/**
-	 * Creates a new WeaviateBuilder instance. This is the recommended way to instantiate
-	 * a WeaviateVectorStore.
-	 * @return a new WeaviateBuilder instance
-	 */
 	public static Builder builder(WeaviateClient weaviateClient, EmbeddingModel embeddingModel) {
 		return new Builder(weaviateClient, embeddingModel);
 	}
@@ -186,7 +106,7 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 			.toList());
 		searchWeaviateFieldList.add(Field.builder()
 			.name(ADDITIONAL_FIELD_NAME)
-			// https://weaviate.io/developers/weaviate/api/graphql/get#additional-properties--metadata
+
 			.fields(Field.builder().name(ADDITIONAL_ID_FIELD_NAME).build(),
 					Field.builder().name(ADDITIONAL_CERTAINTY_FIELD_NAME).build(),
 					Field.builder().name(ADDITIONAL_VECTOR_FIELD_NAME).build())
@@ -245,7 +165,6 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 
 	private WeaviateObject toWeaviateObject(Document document, List<Document> documents, List<float[]> embeddings) {
 
-		// https://weaviate.io/developers/weaviate/config-refs/datatypes
 		Map<String, Object> fields = new HashMap<>();
 		fields.put(CONTENT_FIELD_NAME, document.getText());
 		try {
@@ -256,8 +175,6 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 			throw new RuntimeException("Failed to serialize the Document metadata: " + document.getText());
 		}
 
-		// Add the filterable metadata fields as top level fields, allowing filler
-		// expressions on them.
 		for (MetadataField mf : this.filterMetadataFields) {
 			if (document.getMetadata().containsKey(mf.name())) {
 				fields.put(METADATA_FIELD_PREFIX + mf.name(), document.getMetadata().get(mf.name()));
@@ -301,12 +218,11 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 		Assert.notNull(filterExpression, "Filter expression must not be null");
 
 		try {
-			// Use similarity search with empty query to find documents matching the
-			// filter
+
 			SearchRequest searchRequest = SearchRequest.builder()
-				.query("") // empty query since we only want filter matches
+				.query("")
 				.filterExpression(filterExpression)
-				.topK(10000) // large enough to get all matches
+				.topK(10000)
 				.similarityThresholdAll()
 				.build();
 
@@ -342,19 +258,19 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 				.certainty((float) request.getSimilarityThreshold())
 				.build())
 			.limit(request.getTopK())
-			.withWhereFilter(WhereArgument.builder().build()) // adds an empty 'where:{}'
-			// placeholder.
+			.withWhereFilter(WhereArgument.builder().build())
+
 			.fields(Fields.builder().fields(this.weaviateSimilaritySearchFields).build());
 
 		String graphQLQuery = queryBuilder.build().buildQuery();
 
 		if (request.hasFilterExpression()) {
-			// replace the empty 'where:{}' placeholder with real filter.
+
 			String filter = this.filterExpressionConverter.convertExpression(request.getFilterExpression());
 			graphQLQuery = graphQLQuery.replace("where:{}", String.format("where:{%s}", filter));
 		}
 		else {
-			// remove the empty 'where:{}' placeholder.
+
 			graphQLQuery = graphQLQuery.replace("where:{}", "");
 		}
 
@@ -398,12 +314,10 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 	@SuppressWarnings("unchecked")
 	private Document toDocument(Map<String, ?> item) {
 
-		// Additional (System)
 		Map<String, ?> additional = (Map<String, ?>) item.get(ADDITIONAL_FIELD_NAME);
 		double certainty = (Double) additional.get(ADDITIONAL_CERTAINTY_FIELD_NAME);
 		String id = (String) additional.get(ADDITIONAL_ID_FIELD_NAME);
 
-		// Metadata
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put(DocumentMetadata.DISTANCE.value(), 1 - certainty);
 
@@ -417,7 +331,6 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 			throw new RuntimeException(e);
 		}
 
-		// Content
 		String content = (String) item.get(CONTENT_FIELD_NAME);
 
 		// @formatter:off
@@ -444,79 +357,33 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 		return Optional.of(client);
 	}
 
-	/**
-	 * Defines the consistency levels for Weaviate operations.
-	 *
-	 * @see <a href=
-	 * "https://weaviate.io/developers/weaviate/concepts/replication-architecture/consistency#tunable-consistency-strategies">Weaviate
-	 * Consistency Strategies</a>
-	 */
 	public enum ConsistentLevel {
 
-		/**
-		 * Write must receive an acknowledgement from at least one replica node. This is
-		 * the fastest (most available), but least consistent option.
-		 */
 		ONE,
 
-		/**
-		 * Write must receive an acknowledgement from at least QUORUM replica nodes.
-		 * QUORUM is calculated as n / 2 + 1, where n is the number of replicas.
-		 */
 		QUORUM,
 
-		/**
-		 * Write must receive an acknowledgement from all replica nodes. This is the most
-		 * consistent, but 'slowest'.
-		 */
 		ALL
 
 	}
 
-	/**
-	 * Represents a metadata field configuration for Weaviate vector store.
-	 *
-	 * @param name the name of the metadata field
-	 * @param type the type of the metadata field
-	 */
 	public record MetadataField(String name, Type type) {
 
-		/**
-		 * Creates a metadata field of type TEXT.
-		 * @param name the name of the field
-		 * @return a new MetadataField instance of type TEXT
-		 * @throws IllegalArgumentException if name is null or empty
-		 */
 		public static MetadataField text(String name) {
 			Assert.hasText(name, "Text field must not be empty");
 			return new MetadataField(name, Type.TEXT);
 		}
 
-		/**
-		 * Creates a metadata field of type NUMBER.
-		 * @param name the name of the field
-		 * @return a new MetadataField instance of type NUMBER
-		 * @throws IllegalArgumentException if name is null or empty
-		 */
 		public static MetadataField number(String name) {
 			Assert.hasText(name, "Number field must not be empty");
 			return new MetadataField(name, Type.NUMBER);
 		}
 
-		/**
-		 * Creates a metadata field of type BOOLEAN.
-		 * @param name the name of the field
-		 * @return a new MetadataField instance of type BOOLEAN
-		 * @throws IllegalArgumentException if name is null or empty
-		 */
 		public static MetadataField bool(String name) {
 			Assert.hasText(name, "Boolean field name must not be empty");
 			return new MetadataField(name, Type.BOOLEAN);
 		}
 
-		/**
-		 * Defines the supported types for metadata fields.
-		 */
 		public enum Type {
 
 			TEXT, NUMBER, BOOLEAN
@@ -534,61 +401,30 @@ public class WeaviateVectorStore extends AbstractObservationVectorStore {
 
 		private final WeaviateClient weaviateClient;
 
-		/**
-		 * Constructs a new WeaviateBuilder instance.
-		 * @param weaviateClient The Weaviate client instance used for database
-		 * operations. Must not be null.
-		 * @param embeddingModel The embedding model used for vector transformations.
-		 * @throws IllegalArgumentException if weaviateClient is null
-		 */
 		private Builder(WeaviateClient weaviateClient, EmbeddingModel embeddingModel) {
 			super(embeddingModel);
 			Assert.notNull(weaviateClient, "WeaviateClient must not be null");
 			this.weaviateClient = weaviateClient;
 		}
 
-		/**
-		 * Configures the Weaviate object class.
-		 * @param objectClass the object class to use
-		 * @return this builder instance
-		 * @throws IllegalArgumentException if objectClass is null or empty
-		 */
 		public Builder objectClass(String objectClass) {
 			Assert.hasText(objectClass, "objectClass must not be empty");
 			this.weaviateObjectClass = objectClass;
 			return this;
 		}
 
-		/**
-		 * Configures the consistency level for Weaviate operations.
-		 * @param consistencyLevel the consistency level to use
-		 * @return this builder instance
-		 * @throws IllegalArgumentException if consistencyLevel is null
-		 */
 		public Builder consistencyLevel(ConsistentLevel consistencyLevel) {
 			Assert.notNull(consistencyLevel, "consistencyLevel must not be null");
 			this.consistencyLevel = consistencyLevel;
 			return this;
 		}
 
-		/**
-		 * Configures the filterable metadata fields.
-		 * @param filterMetadataFields list of metadata fields that can be used in filters
-		 * @return this builder instance
-		 * @throws IllegalArgumentException if filterMetadataFields is null
-		 */
 		public Builder filterMetadataFields(List<MetadataField> filterMetadataFields) {
 			Assert.notNull(filterMetadataFields, "filterMetadataFields must not be null");
 			this.filterMetadataFields = filterMetadataFields;
 			return this;
 		}
 
-		/**
-		 * Builds and returns a new WeaviateVectorStore instance with the configured
-		 * settings.
-		 * @return a new WeaviateVectorStore instance
-		 * @throws IllegalStateException if the builder configuration is invalid
-		 */
 		@Override
 		public WeaviateVectorStore build() {
 			return new WeaviateVectorStore(this);

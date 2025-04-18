@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.stabilityai.api;
 
 import java.util.List;
@@ -28,9 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestClient;
 
-/**
- * Represents the StabilityAI API.
- */
 public class StabilityAiApi {
 
 	public static final String DEFAULT_IMAGE_MODEL = "stable-diffusion-v1-6";
@@ -43,10 +24,6 @@ public class StabilityAiApi {
 
 	private final String model;
 
-	/**
-	 * Create a new StabilityAI API.
-	 * @param apiKey StabilityAI apiKey.
-	 */
 	public StabilityAiApi(String apiKey) {
 		this(apiKey, DEFAULT_IMAGE_MODEL, DEFAULT_BASE_URL, RestClient.builder());
 	}
@@ -59,13 +36,6 @@ public class StabilityAiApi {
 		this(apiKey, model, baseUrl, RestClient.builder());
 	}
 
-	/**
-	 * Create a new StabilityAI API.
-	 * @param apiKey StabilityAI apiKey.
-	 * @param model StabilityAI model.
-	 * @param baseUrl api base URL.
-	 * @param restClientBuilder RestClient builder.
-	 */
 	public StabilityAiApi(String apiKey, String model, String baseUrl, RestClient.Builder restClientBuilder) {
 
 		this.model = model;
@@ -73,9 +43,8 @@ public class StabilityAiApi {
 
 		Consumer<HttpHeaders> jsonContentHeaders = headers -> {
 			headers.setBearerAuth(apiKey);
-			headers.setAccept(List.of(MediaType.APPLICATION_JSON)); // base64 in JSON +
-			// metadata or return
-			// image in bytes.
+			headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
 			headers.setContentType(MediaType.APPLICATION_JSON);
 		};
 

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.redis;
 
 import java.io.IOException;
@@ -54,12 +38,6 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Julien Ruaux
- * @author Eddú Meléndez
- * @author Thomas Vitale
- * @author Soby Chacko
- */
 @Testcontainers
 class RedisVectorStoreIT extends BaseVectorStoreTests {
 
@@ -127,7 +105,6 @@ class RedisVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(resultDoc.getMetadata()).containsKeys("meta1", RedisVectorStore.DISTANCE_FIELD_NAME,
 					DocumentMetadata.DISTANCE.value());
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(doc -> doc.getId()).toList());
 
 			results = vectorStore.similaritySearch(SearchRequest.builder().query("Spring").topK(1).build());
@@ -285,7 +262,6 @@ class RedisVectorStoreIT extends BaseVectorStoreTests {
 
 			vectorStore.add(List.of(doc1, doc2, doc3));
 
-			// Complex filter expression: (type == 'A' AND priority > 1)
 			Filter.Expression priorityFilter = new Filter.Expression(Filter.ExpressionType.GT,
 					new Filter.Key("priority"), new Filter.Value(1));
 			Filter.Expression typeFilter = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("type"),
@@ -327,12 +303,9 @@ class RedisVectorStoreIT extends BaseVectorStoreTests {
 				.builder(new JedisPooled(jedisConnectionFactory.getHostName(), jedisConnectionFactory.getPort()),
 						embeddingModel)
 				.metadataFields(MetadataField.tag("meta1"), MetadataField.tag("meta2"), MetadataField.tag("country"),
-						MetadataField.numeric("year"), MetadataField.numeric("priority"), // Add
-																							// priority
-																							// as
-																							// numeric
-						MetadataField.tag("type") // Add type as tag
-				)
+						MetadataField.numeric("year"), MetadataField.numeric("priority"),
+
+						MetadataField.tag("type"))
 				.initializeSchema(true)
 				.build();
 		}

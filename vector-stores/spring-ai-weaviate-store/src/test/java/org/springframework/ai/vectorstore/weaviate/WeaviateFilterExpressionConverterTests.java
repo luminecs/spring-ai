@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.weaviate;
 
 import java.util.List;
@@ -37,9 +21,6 @@ import static org.springframework.ai.vectorstore.filter.Filter.ExpressionType.NE
 import static org.springframework.ai.vectorstore.filter.Filter.ExpressionType.NIN;
 import static org.springframework.ai.vectorstore.filter.Filter.ExpressionType.OR;
 
-/**
- * @author Christian Tzolov
- */
 public class WeaviateFilterExpressionConverterTests {
 
 	private static String format(String text) {
@@ -61,8 +42,6 @@ public class WeaviateFilterExpressionConverterTests {
 	public void testSystemIdentifiers() {
 
 		FilterExpressionConverter converter = new WeaviateFilterExpressionConverter(List.of());
-
-		// id == "1" && _creationTimeUnix >= "36" && _lastUpdateTimeUnix <= "100"
 
 		String vectorExpr = converter.convertExpression(new Expression(AND,
 				new Expression(AND, new Expression(EQ, new Key("id"), new Value("1")),
@@ -88,7 +67,6 @@ public class WeaviateFilterExpressionConverterTests {
 	public void testEQ() {
 		FilterExpressionConverter converter = new WeaviateFilterExpressionConverter(List.of("country"));
 
-		// country == "BG"
 		String vectorExpr = converter.convertExpression(new Expression(EQ, new Key("country"), new Value("BG")));
 		assertThat(format(vectorExpr)).isEqualTo("""
 				path:["meta_country"]
@@ -101,7 +79,6 @@ public class WeaviateFilterExpressionConverterTests {
 	public void tesEqAndGte() {
 		FilterExpressionConverter converter = new WeaviateFilterExpressionConverter(List.of("genre", "year"));
 
-		// genre == "drama" AND year >= 2020
 		String vectorExpr = converter
 			.convertExpression(new Expression(AND, new Expression(EQ, new Key("genre"), new Value("drama")),
 					new Expression(GTE, new Key("year"), new Value(2020))));
@@ -120,7 +97,6 @@ public class WeaviateFilterExpressionConverterTests {
 	public void tesIn() {
 		FilterExpressionConverter converter = new WeaviateFilterExpressionConverter(List.of("genre"));
 
-		// genre in ["comedy", "documentary", "drama"]
 		String vectorExpr = converter.convertExpression(
 				new Expression(IN, new Key("genre"), new Value(List.of("comedy", "documentary", "drama"))));
 		assertThat(format(vectorExpr)).isEqualTo("""
@@ -142,7 +118,6 @@ public class WeaviateFilterExpressionConverterTests {
 	public void testNe() {
 		FilterExpressionConverter converter = new WeaviateFilterExpressionConverter(List.of("city", "year", "country"));
 
-		// year >= 2020 OR country == "BG" AND city != "Sofia"
 		String vectorExpr = converter
 			.convertExpression(new Expression(OR, new Expression(GTE, new Key("year"), new Value(2020)),
 					new Expression(AND, new Expression(EQ, new Key("country"), new Value("BG")),
@@ -166,7 +141,6 @@ public class WeaviateFilterExpressionConverterTests {
 	public void testGroup() {
 		FilterExpressionConverter converter = new WeaviateFilterExpressionConverter(List.of("city", "year", "country"));
 
-		// (year >= 2020 OR country == "BG") AND city NIN ["Sofia", "Plovdiv"]
 		String vectorExpr = converter.convertExpression(new Expression(AND,
 				new Group(new Expression(OR, new Expression(GTE, new Key("year"), new Value(2020)),
 						new Expression(EQ, new Key("country"), new Value("BG")))),
@@ -200,7 +174,6 @@ public class WeaviateFilterExpressionConverterTests {
 		FilterExpressionConverter converter = new WeaviateFilterExpressionConverter(
 				List.of("isOpen", "year", "country"));
 
-		// isOpen == true AND year >= 2020 AND country IN ["BG", "NL", "US"]
 		String vectorExpr = converter.convertExpression(new Expression(AND,
 				new Expression(AND, new Expression(EQ, new Key("isOpen"), new Value(true)),
 						new Expression(GTE, new Key("year"), new Value(2020))),
@@ -233,7 +206,6 @@ public class WeaviateFilterExpressionConverterTests {
 	public void testDecimal() {
 		FilterExpressionConverter converter = new WeaviateFilterExpressionConverter(List.of("temperature"));
 
-		// temperature >= -15.6 && temperature <= +20.13
 		String vectorExpr = converter
 			.convertExpression(new Expression(AND, new Expression(GTE, new Key("temperature"), new Value(-15.6)),
 					new Expression(LTE, new Key("temperature"), new Value(20.13))));

@@ -1,19 +1,3 @@
-/*
- * Copyright 2024-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.function;
 
 import java.util.ArrayList;
@@ -30,14 +14,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * Default implementation of {@link FunctionCallingOptions}.
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- * @deprecated in favor of {@link DefaultToolCallingChatOptions}.
- */
 @Deprecated
 public class DefaultFunctionCallingOptions implements FunctionCallingOptions {
 
@@ -207,7 +183,6 @@ public class DefaultFunctionCallingOptions implements FunctionCallingOptions {
 			.topK(options.getTopK() != null ? options.getTopK() : this.getTopK())
 			.topP(options.getTopP() != null ? options.getTopP() : this.getTopP());
 
-		// Try to get function-specific properties if options is a FunctionCallingOptions
 		if (options instanceof FunctionCallingOptions functionOptions) {
 			builder.proxyToolCalls(functionOptions.getProxyToolCalls() != null ? functionOptions.getProxyToolCalls()
 					: this.proxyToolCalls);
@@ -240,8 +215,7 @@ public class DefaultFunctionCallingOptions implements FunctionCallingOptions {
 			builder.toolContext(context);
 		}
 		else {
-			// If not a FunctionCallingOptions, preserve current function-specific
-			// properties
+
 			builder.proxyToolCalls(this.proxyToolCalls);
 			builder.functions(new HashSet<>(this.functions));
 			builder.functionCallbacks(new ArrayList<>(this.functionCallbacks));

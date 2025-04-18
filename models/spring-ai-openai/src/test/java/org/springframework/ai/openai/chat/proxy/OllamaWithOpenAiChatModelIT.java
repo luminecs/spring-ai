@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai.chat.proxy;
 
 import java.io.IOException;
@@ -145,7 +129,6 @@ class OllamaWithOpenAiChatModelIT {
 		var streamingTokenUsage = this.chatModel.stream(prompt).blockLast().getMetadata().getUsage();
 		var referenceTokenUsage = this.chatModel.call(prompt).getMetadata().getUsage();
 
-		// assertThat(streamingTokenUsage.getPromptTokens()).isGreaterThan(0);
 		assertThat(streamingTokenUsage.getCompletionTokens()).isGreaterThan(0);
 		assertThat(streamingTokenUsage.getTotalTokens()).isGreaterThan(0);
 
@@ -272,8 +255,7 @@ class OllamaWithOpenAiChatModelIT {
 
 		var promptOptions = OpenAiChatOptions.builder()
 			.model(modelName)
-			// Note for Ollama you must set the tool choice to explicitly. Unlike OpenAI
-			// (which defaults to "auto") Ollama defaults to "nono"
+
 			.toolChoice("auto")
 			.toolCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
 				.description("Get the weather in location")
@@ -299,8 +281,7 @@ class OllamaWithOpenAiChatModelIT {
 
 		var promptOptions = OpenAiChatOptions.builder()
 			.model(modelName)
-			// Note for Ollama you must set the tool choice to explicitly. Unlike OpenAI
-			// (which defaults to "auto") Ollama defaults to "nono"
+
 			.toolChoice("auto")
 			.functionCallbacks(List.of(FunctionCallback.builder()
 				.function("getCurrentWeather", new MockWeatherService())

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.mistralai.api;
 
 import java.util.ArrayList;
@@ -32,22 +16,8 @@ import org.springframework.ai.mistralai.api.MistralAiApi.ChatCompletionMessage.T
 import org.springframework.ai.mistralai.api.MistralAiApi.LogProbs;
 import org.springframework.util.CollectionUtils;
 
-/**
- * Helper class to support Streaming function calling.
- *
- * It can merge the streamed ChatCompletionChunk in case of function calling message.
- *
- * @author Christian Tzolov
- * @since 0.8.1
- */
 public class MistralAiStreamFunctionCallingHelper {
 
-	/**
-	 * Merge the previous and current ChatCompletionChunk into a single one.
-	 * @param previous the previous ChatCompletionChunk
-	 * @param current the current ChatCompletionChunk
-	 * @return the merged ChatCompletionChunk
-	 */
 	public ChatCompletionChunk merge(ChatCompletionChunk previous, ChatCompletionChunk current) {
 
 		if (previous == null) {
@@ -111,7 +81,7 @@ public class MistralAiStreamFunctionCallingHelper {
 		String content = (current.content() != null ? current.content()
 				: (previous.content() != null) ? previous.content() : "");
 		Role role = (current.role() != null ? current.role() : previous.role());
-		role = (role != null ? role : Role.ASSISTANT); // default to ASSISTANT (if null
+		role = (role != null ? role : Role.ASSISTANT);
 		String name = (current.name() != null ? current.name() : previous.name());
 
 		List<ToolCall> toolCalls = new ArrayList<>();
@@ -171,10 +141,6 @@ public class MistralAiStreamFunctionCallingHelper {
 		return new ChatCompletionFunction(name, arguments.toString());
 	}
 
-	/**
-	 * @param chatCompletion the ChatCompletionChunk to check
-	 * @return true if the ChatCompletionChunk is a streaming tool function call.
-	 */
 	public boolean isStreamingToolFunctionCall(ChatCompletionChunk chatCompletion) {
 
 		var choices = chatCompletion.choices();
@@ -186,11 +152,6 @@ public class MistralAiStreamFunctionCallingHelper {
 		return !CollectionUtils.isEmpty(choice.delta().toolCalls());
 	}
 
-	/**
-	 * @param chatCompletion the ChatCompletionChunk to check
-	 * @return true if the ChatCompletionChunk is a streaming tool function call and it is
-	 * the last one.
-	 */
 	public boolean isStreamingToolFunctionCallFinish(ChatCompletionChunk chatCompletion) {
 
 		var choices = chatCompletion.choices();
@@ -203,4 +164,3 @@ public class MistralAiStreamFunctionCallingHelper {
 	}
 
 }
-// ---

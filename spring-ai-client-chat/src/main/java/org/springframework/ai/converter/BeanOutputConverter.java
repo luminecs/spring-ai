@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.converter;
 
 import java.lang.reflect.Type;
@@ -43,81 +27,32 @@ import org.springframework.lang.NonNull;
 
 import static org.springframework.ai.util.LoggingMarkers.SENSITIVE_DATA_MARKER;
 
-/**
- * An implementation of {@link StructuredOutputConverter} that transforms the LLM output
- * to a specific object type using JSON schema. This converter works by generating a JSON
- * schema based on a given Java class or parameterized type reference, which is then used
- * to validate and transform the LLM output into the desired type.
- *
- * @param <T> The target type to which the output will be converted.
- * @author Mark Pollack
- * @author Christian Tzolov
- * @author Sebastian Ullrich
- * @author Kirk Lund
- * @author Josh Long
- * @author Sebastien Deleuze
- * @author Soby Chacko
- * @author Thomas Vitale
- */
 public class BeanOutputConverter<T> implements StructuredOutputConverter<T> {
 
 	private final Logger logger = LoggerFactory.getLogger(BeanOutputConverter.class);
 
-	/**
-	 * The target class type reference to which the output will be converted.
-	 */
 	private final Type type;
 
-	/** The object mapper used for deserialization and other JSON operations. */
 	private final ObjectMapper objectMapper;
 
-	/** Holds the generated JSON schema for the target type. */
 	private String jsonSchema;
 
-	/**
-	 * Constructor to initialize with the target type's class.
-	 * @param clazz The target type's class.
-	 */
 	public BeanOutputConverter(Class<T> clazz) {
 		this(ParameterizedTypeReference.forType(clazz));
 	}
 
-	/**
-	 * Constructor to initialize with the target type's class, a custom object mapper, and
-	 * a line endings normalizer to ensure consistent line endings on any platform.
-	 * @param clazz The target type's class.
-	 * @param objectMapper Custom object mapper for JSON operations. endings.
-	 */
 	public BeanOutputConverter(Class<T> clazz, ObjectMapper objectMapper) {
 		this(ParameterizedTypeReference.forType(clazz), objectMapper);
 	}
 
-	/**
-	 * Constructor to initialize with the target class type reference.
-	 * @param typeRef The target class type reference.
-	 */
 	public BeanOutputConverter(ParameterizedTypeReference<T> typeRef) {
 		this(typeRef.getType(), null);
 	}
 
-	/**
-	 * Constructor to initialize with the target class type reference, a custom object
-	 * mapper, and a line endings normalizer to ensure consistent line endings on any
-	 * platform.
-	 * @param typeRef The target class type reference.
-	 * @param objectMapper Custom object mapper for JSON operations. endings.
-	 */
 	public BeanOutputConverter(ParameterizedTypeReference<T> typeRef, ObjectMapper objectMapper) {
 		this(typeRef.getType(), objectMapper);
 	}
 
-	/**
-	 * Constructor to initialize with the target class type reference, a custom object
-	 * mapper, and a line endings normalizer to ensure consistent line endings on any
-	 * platform.
-	 * @param type The target class type.
-	 * @param objectMapper Custom object mapper for JSON operations. endings.
-	 */
 	private BeanOutputConverter(Type type, ObjectMapper objectMapper) {
 		Objects.requireNonNull(type, "Type cannot be null;");
 		this.type = type;
@@ -125,9 +60,6 @@ public class BeanOutputConverter<T> implements StructuredOutputConverter<T> {
 		generateSchema();
 	}
 
-	/**
-	 * Generates the JSON schema for the target type.
-	 */
 	private void generateSchema() {
 		JacksonModule jacksonModule = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED,
 				JacksonOption.RESPECT_JSONPROPERTY_ORDER);
@@ -150,33 +82,25 @@ public class BeanOutputConverter<T> implements StructuredOutputConverter<T> {
 		}
 	}
 
-	/**
-	 * Parses the given text to transform it to the desired target type.
-	 * @param text The LLM output in string format.
-	 * @return The parsed output in the desired target type.
-	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public T convert(@NonNull String text) {
 		try {
-			// Remove leading and trailing whitespace
+
 			text = text.trim();
 
-			// Check for and remove triple backticks and "json" identifier
 			if (text.startsWith("```") && text.endsWith("```")) {
-				// Remove the first line if it contains "```json"
+
 				String[] lines = text.split("\n", 2);
 				if (lines[0].trim().equalsIgnoreCase("```json")) {
 					text = lines.length > 1 ? lines[1] : "";
 				}
 				else {
-					text = text.substring(3); // Remove leading ```
+					text = text.substring(3);
 				}
 
-				// Remove trailing ```
 				text = text.substring(0, text.length() - 3);
 
-				// Trim again to remove any potential whitespace
 				text = text.trim();
 			}
 			return (T) this.objectMapper.readValue(text, this.objectMapper.constructType(this.type));
@@ -188,10 +112,6 @@ public class BeanOutputConverter<T> implements StructuredOutputConverter<T> {
 		}
 	}
 
-	/**
-	 * Configures and returns an object mapper for JSON operations.
-	 * @return Configured object mapper.
-	 */
 	protected ObjectMapper getObjectMapper() {
 		return JsonMapper.builder()
 			.addModules(JacksonUtils.instantiateAvailableModules())
@@ -199,11 +119,6 @@ public class BeanOutputConverter<T> implements StructuredOutputConverter<T> {
 			.build();
 	}
 
-	/**
-	 * Provides the expected format of the response, instructing that it should adhere to
-	 * the generated JSON schema.
-	 * @return The instruction format string.
-	 */
 	@Override
 	public String getFormat() {
 		String template = """
@@ -217,10 +132,6 @@ public class BeanOutputConverter<T> implements StructuredOutputConverter<T> {
 		return String.format(template, this.jsonSchema);
 	}
 
-	/**
-	 * Provides the generated JSON schema for the target type.
-	 * @return The generated JSON schema.
-	 */
 	public String getJsonSchema() {
 		return this.jsonSchema;
 	}

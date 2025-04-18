@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.opensearch;
 
 import java.io.IOException;
@@ -64,18 +48,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
-/**
- * The OpenSearchVectorStoreIT class is a test class designed to validate the
- * functionality of a vector store that integrates with OpenSearch. It contains multiple
- * parameterized tests to ensure the correctness of storing, searching, and updating
- * vectorized documents in OpenSearch.
- *
- * @author Jemin Huh
- * @author Soby Chacko
- * @author Thomas Vitale
- * @author inpink
- * @since 1.0.0
- */
 @Testcontainers
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".+")
 class OpenSearchVectorStoreIT {
@@ -152,7 +124,6 @@ class OpenSearchVectorStoreIT {
 			assertThat(resultDoc.getMetadata()).containsKey("meta2");
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(Document::getId).toList());
 
 			Awaitility.await()
@@ -269,7 +240,6 @@ class OpenSearchVectorStoreIT {
 			assertThat(results).hasSize(1);
 			assertThat(results.get(0).getId()).isEqualTo(bgDocument2.getId());
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(Document::getId).toList());
 
 			Awaitility.await()
@@ -326,7 +296,6 @@ class OpenSearchVectorStoreIT {
 			assertThat(resultDoc.getMetadata()).containsKey("meta2");
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 
-			// Remove all documents from the store
 			vectorStore.delete(List.of(document.getId()));
 
 			Awaitility.await().until(() -> vectorStore.similaritySearch(fooBarSearchRequest), hasSize(0));
@@ -376,7 +345,6 @@ class OpenSearchVectorStoreIT {
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 			assertThat(resultDoc.getScore()).isGreaterThanOrEqualTo(similarityThreshold);
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(Document::getId).toList());
 
 			Awaitility.await()
@@ -390,14 +358,13 @@ class OpenSearchVectorStoreIT {
 	@Disabled("GH-1645")
 	public void searchDocumentsInTwoIndicesTest() {
 		getContextRunner().run(context -> {
-			// given
+
 			OpenSearchVectorStore vectorStore1 = context.getBean("vectorStore", OpenSearchVectorStore.class);
 			OpenSearchVectorStore vectorStore2 = context.getBean("anotherVectorStore", OpenSearchVectorStore.class);
 
 			Document docInIndex1 = new Document("1", "Document in index 1", Map.of("meta", "index1"));
 			Document docInIndex2 = new Document("2", "Document in index 2", Map.of("meta", "index2"));
 
-			// when
 			vectorStore1.add(List.of(docInIndex1));
 			vectorStore2.add(List.of(docInIndex2));
 
@@ -407,7 +374,6 @@ class OpenSearchVectorStoreIT {
 			List<Document> resultInIndex2 = vectorStore2.similaritySearch(
 					SearchRequest.builder().query("Document in index 2").topK(1).similarityThreshold(0).build());
 
-			// then
 			assertThat(resultInIndex1).hasSize(1);
 			assertThat(resultInIndex1.get(0).getId()).isEqualTo(docInIndex1.getId());
 
@@ -530,7 +496,6 @@ class OpenSearchVectorStoreIT {
 				.until(() -> vectorStore.similaritySearch(SearchRequest.builder().query("Content").topK(5).build()),
 						hasSize(3));
 
-			// Complex filter expression: (type == 'A' AND priority > 1)
 			Filter.Expression priorityFilter = new Filter.Expression(Filter.ExpressionType.GT,
 					new Filter.Key("priority"), new Filter.Value(1));
 			Filter.Expression typeFilter = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("type"),

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.postgresml;
 
 import java.util.Map;
@@ -28,36 +12,17 @@ import org.springframework.ai.embedding.EmbeddingOptions;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.postgresml.PostgresMlEmbeddingModel.VectorType;
 
-/**
- * PostgresML Embedding Options.
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- */
 @JsonInclude(Include.NON_NULL)
 public class PostgresMlEmbeddingOptions implements EmbeddingOptions {
 
 	// @formatter:off
-	/**
-	 * The Huggingface transformer model to use for the embedding.
-	 */
+
 	private @JsonProperty("transformer") String transformer = PostgresMlEmbeddingModel.DEFAULT_TRANSFORMER_MODEL;
 
-	/**
-	 * PostgresML vector type to use for the embedding.
-	 * Two options are supported: PG_ARRAY and PG_VECTOR.
-	 */
 	private @JsonProperty("vectorType") VectorType vectorType = VectorType.PG_ARRAY;
 
-	/**
-	 * Additional transformer specific options.
-	 */
 	private @JsonProperty("kwargs") Map<String, Object> kwargs = Map.of();
 
-	/**
-	 * The Document metadata aggregation mode.
-	 */
 	private @JsonProperty("metadataMode") MetadataMode metadataMode = MetadataMode.EMBED;
 	// @formatter:on
 

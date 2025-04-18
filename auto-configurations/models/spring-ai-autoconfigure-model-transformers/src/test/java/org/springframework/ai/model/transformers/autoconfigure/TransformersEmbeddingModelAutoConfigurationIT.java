@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.transformers.autoconfigure;
 
 import java.io.File;
@@ -29,9 +13,6 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Christian Tzolov
- */
 public class TransformersEmbeddingModelAutoConfigurationIT {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
@@ -53,15 +34,15 @@ public class TransformersEmbeddingModelAutoConfigurationIT {
 
 			List<float[]> embeddings = embeddingModel.embed(List.of("Spring Framework", "Spring AI"));
 
-			assertThat(embeddings.size()).isEqualTo(2); // batch size
-			assertThat(embeddings.get(0).length).isEqualTo(embeddingModel.dimensions()); // dimensions
-			// size
+			assertThat(embeddings.size()).isEqualTo(2);
+			assertThat(embeddings.get(0).length).isEqualTo(embeddingModel.dimensions());
+
 		});
 	}
 
 	@Test
 	public void remoteOnnxModel() {
-		// https://huggingface.co/intfloat/e5-small-v2
+
 		this.contextRunner.withPropertyValues(
 				"spring.ai.embedding.transformer.cache.directory=" + this.tempDir.getAbsolutePath(),
 				"spring.ai.embedding.transformer.onnx.modelUri=https://huggingface.co/intfloat/e5-small-v2/resolve/main/model.onnx",
@@ -84,9 +65,9 @@ public class TransformersEmbeddingModelAutoConfigurationIT {
 
 				List<float[]> embeddings = embeddingModel.embed(List.of("Spring Framework", "Spring AI"));
 
-				assertThat(embeddings.size()).isEqualTo(2); // batch size
-				assertThat(embeddings.get(0).length).isEqualTo(embeddingModel.dimensions()); // dimensions
-				// size
+				assertThat(embeddings.size()).isEqualTo(2);
+				assertThat(embeddings.get(0).length).isEqualTo(embeddingModel.dimensions());
+
 			});
 	}
 

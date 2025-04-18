@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai.api.tool;
 
 import java.util.ArrayList;
@@ -38,13 +22,6 @@ import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Based on the OpenAI Function Calling tutorial:
- * https://platform.openai.com/docs/guides/function-calling/parallel-function-calling
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- */
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".+")
 public class OpenAiApiToolFunctionCallIT {
 
@@ -67,7 +44,6 @@ public class OpenAiApiToolFunctionCallIT {
 	@Test
 	public void toolFunctionCall() {
 
-		// Step 1: send the conversation and available functions to the model
 		var message = new ChatCompletionMessage("What's the weather like in San Francisco, Tokyo, and Paris?",
 				Role.USER);
 
@@ -102,7 +78,6 @@ public class OpenAiApiToolFunctionCallIT {
 
 		ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest(messages, "gpt-4o",
 				List.of(functionTool), ToolChoiceBuilder.AUTO);
-		// List.of(functionTool), ToolChoiceBuilder.FUNCTION("getCurrentWeather"));
 
 		ResponseEntity<ChatCompletion> chatCompletion = this.completionApi.chatCompletionEntity(chatCompletionRequest);
 
@@ -111,14 +86,11 @@ public class OpenAiApiToolFunctionCallIT {
 
 		ChatCompletionMessage responseMessage = chatCompletion.getBody().choices().get(0).message();
 
-		// Check if the model wanted to call a function
 		assertThat(responseMessage.role()).isEqualTo(Role.ASSISTANT);
 		assertThat(responseMessage.toolCalls()).isNotNull();
 
-		// extend conversation with assistant's reply.
 		messages.add(responseMessage);
 
-		// Send the info for each function call and function response to the model.
 		for (ToolCall toolCall : responseMessage.toolCalls()) {
 			var functionName = toolCall.function().name();
 			if ("getCurrentWeather".equals(functionName)) {
@@ -127,7 +99,6 @@ public class OpenAiApiToolFunctionCallIT {
 
 				MockWeatherService.Response weatherResponse = this.weatherService.apply(weatherRequest);
 
-				// extend conversation with function response.
 				messages.add(new ChatCompletionMessage("" + weatherResponse.temp() + weatherRequest.unit(), Role.TOOL,
 						functionName, toolCall.id(), null, null, null));
 			}

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.pinecone;
 
 import java.io.IOException;
@@ -52,18 +36,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
-/**
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Soby Chacko
- * @author Ilayaperumal Gopinathan
- */
 @EnabledIfEnvironmentVariable(named = "PINECONE_API_KEY", matches = ".+")
 public class PineconeVectorStoreIT extends BaseVectorStoreTests {
 
 	private static final String PINECONE_INDEX_NAME = "spring-ai-test-index";
 
-	// NOTE: Leave it empty as for free tier as later doesn't support namespaces.
 	private static final String PINECONE_NAMESPACE = "";
 
 	private static final String CUSTOM_CONTENT_FIELD_NAME = "article";
@@ -127,7 +104,6 @@ public class PineconeVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(resultDoc.getMetadata()).containsKey("meta2");
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(doc -> doc.getId()).toList());
 
 			Awaitility.await()
@@ -138,9 +114,6 @@ public class PineconeVectorStoreIT extends BaseVectorStoreTests {
 
 	@Test
 	public void addAndSearchWithFilters() {
-
-		// Pinecone metadata filtering syntax:
-		// https://docs.pinecone.io/docs/metadata-filtering
 
 		this.contextRunner.run(context -> {
 
@@ -187,7 +160,6 @@ public class PineconeVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(results).hasSize(1);
 			assertThat(results.get(0).getId()).isEqualTo(bgDocument.getId());
 
-			// Remove all documents from the store
 			vectorStore.delete(List.of(bgDocument, nlDocument).stream().map(doc -> doc.getId()).toList());
 
 			Awaitility.await()
@@ -199,7 +171,6 @@ public class PineconeVectorStoreIT extends BaseVectorStoreTests {
 	@Test
 	public void documentUpdateTest() {
 
-		// Note ,using OpenAI to calculate embeddings
 		this.contextRunner.run(context -> {
 
 			VectorStore vectorStore = context.getBean(VectorStore.class);
@@ -243,7 +214,6 @@ public class PineconeVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(resultDoc.getMetadata()).containsKey("meta2");
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 
-			// Remove all documents from the store
 			vectorStore.delete(List.of(document.getId()));
 			Awaitility.await().until(() -> vectorStore.similaritySearch(fooBarSearchRequest), hasSize(0));
 
@@ -287,7 +257,6 @@ public class PineconeVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 			assertThat(resultDoc.getScore()).isGreaterThanOrEqualTo(similarityThreshold);
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(doc -> doc.getId()).toList());
 			Awaitility.await()
 				.until(() -> vectorStore.similaritySearch(SearchRequest.builder().query("Hello").topK(1).build()),
@@ -316,9 +285,8 @@ public class PineconeVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(results).hasSize(2);
 			assertComplexFilterResults(results);
 
-			vectorStore.delete(List.of(documents.get(0).getId(), documents.get(2).getId())); // doc1
-																								// and
-																								// doc3
+			vectorStore.delete(List.of(documents.get(0).getId(), documents.get(2).getId()));
+
 			awaitDocumentsCount(vectorStore, "Content", 0);
 		});
 	}

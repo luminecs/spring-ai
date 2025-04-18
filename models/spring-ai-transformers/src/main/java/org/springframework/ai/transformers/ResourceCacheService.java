@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.transformers;
 
 import java.io.File;
@@ -34,25 +18,12 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * Service that helps caching remote {@link Resource}s on the local file system.
- *
- * @author Christian Tzolov
- */
 public class ResourceCacheService {
 
 	private static final Log logger = LogFactory.getLog(ResourceCacheService.class);
 
-	/**
-	 * The parent folder that contains all cached resources.
-	 */
 	private final File cacheDirectory;
 
-	/**
-	 * Resources with URI schemas belonging to the excludedUriSchemas are not cached. By
-	 * default, the file and classpath resources are not cached as they are already in the
-	 * local file system.
-	 */
 	private List<String> excludedUriSchemas = new ArrayList<>(List.of("file", "classpath"));
 
 	public ResourceCacheService() {
@@ -73,31 +44,15 @@ public class ResourceCacheService {
 		Assert.isTrue(this.cacheDirectory.isDirectory(), "The cache folder must be a directory");
 	}
 
-	/**
-	 * Overrides the excluded URI schemas list.
-	 * @param excludedUriSchemas new list of URI schemas to be excluded from caching.
-	 */
 	public void setExcludedUriSchemas(List<String> excludedUriSchemas) {
 		Assert.notNull(excludedUriSchemas, "The excluded URI schemas list can not be null");
 		this.excludedUriSchemas = excludedUriSchemas;
 	}
 
-	/**
-	 * Get {@link Resource} representing the cached copy of the original resource.
-	 * @param originalResourceUri Resource to be cached.
-	 * @return Returns a cached resource. If the original resource's URI schema is within
-	 * the excluded schema list the original resource is returned.
-	 */
 	public Resource getCachedResource(String originalResourceUri) {
 		return this.getCachedResource(new DefaultResourceLoader().getResource(originalResourceUri));
 	}
 
-	/**
-	 * Get {@link Resource} representing the cached copy of the original resource.
-	 * @param originalResource Resource to be cached.
-	 * @return Returns a cached resource. If the original resource's URI schema is within
-	 * the excluded schema list the original resource is returned.
-	 */
 	public Resource getCachedResource(Resource originalResource) {
 		try {
 			if (this.excludedUriSchemas.contains(originalResource.getURI().getScheme())) {

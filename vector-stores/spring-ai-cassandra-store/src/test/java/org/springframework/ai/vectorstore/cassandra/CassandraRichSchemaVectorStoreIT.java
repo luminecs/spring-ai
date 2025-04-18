@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.cassandra;
 
 import java.io.IOException;
@@ -58,13 +42,6 @@ import org.springframework.core.io.DefaultResourceLoader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Use `mvn failsafe:integration-test -Dit.test=CassandraRichSchemaVectorStoreIT`
- *
- * @author Mick Semb Wever
- * @author Thomas Vitale
- * @since 1.0.0
- */
 @Testcontainers
 class CassandraRichSchemaVectorStoreIT {
 
@@ -131,8 +108,7 @@ class CassandraRichSchemaVectorStoreIT {
 			.addMetadataColumns(new CassandraVectorStore.SchemaColumn("revision", DataTypes.INT),
 					new CassandraVectorStore.SchemaColumn("id", DataTypes.INT,
 							CassandraVectorStore.SchemaColumnTags.INDEXED))
-			// this store uses '§¶' as a deliminator in the document id between db columns
-			// 'title' and 'chunk_no'
+
 			.primaryKeyTranslator((List<Object> primaryKeys) -> {
 				if (primaryKeys.isEmpty()) {
 					return "test§¶0";
@@ -174,7 +150,6 @@ class CassandraRichSchemaVectorStoreIT {
 				CassandraVectorStore.dropKeyspace(builder);
 				executeCqlFile(context, "test_wiki_partial_3_schema.cql");
 
-				// IllegalStateException: column all_minilm_l6_v2_embedding does not exist
 				IllegalStateException ise = Assertions.assertThrows(IllegalStateException.class,
 						() -> createStore(context, List.of(), true, false));
 
@@ -207,7 +182,7 @@ class CassandraRichSchemaVectorStoreIT {
 					store.close();
 				}
 			}
-			// make sure there's not more files to test
+
 			Assertions.assertThrows(IOException.class, () -> executeCqlFile(context,
 					java.lang.String.format("test_wiki_partial_%d_schema.cql", PARTIAL_FILES)));
 		});
@@ -232,7 +207,6 @@ class CassandraRichSchemaVectorStoreIT {
 
 				assertThat(resultDoc.getMetadata()).containsKeys("id", "revision", DocumentMetadata.DISTANCE.value());
 
-				// Remove all documents from the createStore
 				store.delete(documents.stream().map(doc -> doc.getId()).toList());
 
 				results = store.similaritySearch(SearchRequest.builder().query("Spring").topK(1).build());
@@ -243,10 +217,10 @@ class CassandraRichSchemaVectorStoreIT {
 
 	@Test
 	void addAndSearchPoormansBench() {
-		// todo – replace with JMH (parameters: nThreads, rounds, runs, docsPerAdd)
+
 		int nThreads = CassandraVectorStore.DEFAULT_ADD_CONCURRENCY;
-		int runs = 10; // 100;
-		int docsPerAdd = 12; // 128;
+		int runs = 10;
+		int docsPerAdd = 12;
 		int rounds = 3;
 
 		this.contextRunner.run(context -> {
@@ -307,20 +281,6 @@ class CassandraRichSchemaVectorStoreIT {
 				assertThat(results).hasSize(3);
 				assertThat(results.get(0).getId()).isEqualTo(documents.get(1).getId());
 
-				// BUG CASSANDRA-19544
-				// should be able to restrict on clustering keys (when filtering isn't
-				// required)
-				//
-				// results = store.similaritySearch(SearchRequest.query("Great Dark Spot")
-				// .withTopK(5)
-				// .withSimilarityThresholdAll()
-				// .withFilterExpression(
-				// "wiki == 'simplewiki' && language == 'en' && title == 'Neptune' &&
-				// \"chunk_no\" == 0"));
-				//
-				// assertThat(results).hasSize(1);
-				// assertThat(results.get(0).getId()).isEqualTo(documents.get(0).getId());
-
 				results = store.similaritySearch(SearchRequest.builder()
 					.query("Great Dark Spot")
 					.topK(5)
@@ -330,7 +290,6 @@ class CassandraRichSchemaVectorStoreIT {
 
 				assertThat(results).hasSize(3);
 
-				// cassandra server will throw an error
 				Assertions.assertThrows(SyntaxError.class,
 						() -> store.similaritySearch(SearchRequest.builder()
 							.query("Great Dark Spot")
@@ -404,11 +363,6 @@ class CassandraRichSchemaVectorStoreIT {
 				assertThat(results).hasSize(3);
 				assertThat(results.get(0).getId()).isEqualTo(documents.get(1).getId());
 
-				// cassandra java-driver will throw an error,
-				// as chunk_no is not searchable (i.e. no SAI index on it)
-				// note, it is possible to have SAI indexes on primary key columns to
-				// achieve
-				// e.g. searchWithFilterOnPrimaryKeys()
 				Assertions.assertThrows(InvalidQueryException.class,
 						() -> store.similaritySearch(SearchRequest.builder()
 							.query(URANUS_ORBIT_QUERY)
@@ -417,8 +371,6 @@ class CassandraRichSchemaVectorStoreIT {
 							.filterExpression("id > 557 && \"chunk_no\" == 1")
 							.build()));
 
-				// cassandra server will throw an error,
-				// as revision is not searchable (i.e. no SAI index on it)
 				Assertions.assertThrows(SyntaxError.class,
 						() -> store.similaritySearch(SearchRequest.builder()
 							.query("Great Dark Spot")
@@ -427,7 +379,6 @@ class CassandraRichSchemaVectorStoreIT {
 							.filterExpression("id == 558 || revision == 2020")
 							.build()));
 
-				// cassandra java-driver will throw an error
 				Assertions.assertThrows(InvalidQueryException.class,
 						() -> store.similaritySearch(SearchRequest.builder()
 							.query("Great Dark Spot")
@@ -465,15 +416,6 @@ class CassandraRichSchemaVectorStoreIT {
 				assertThat(results).hasSize(3);
 				assertThat(results.get(0).getId()).isEqualTo(documents.get(1).getId());
 
-				// Cassandra java-driver bug, not detecting index on title exists
-				//
-				// store.similaritySearch(SearchRequest.query(URANUS_ORBIT_QUERY)
-				// .withTopK(5)
-				// .withSimilarityThresholdAll()
-				// .withFilterExpression("id > 557 && title == 'Neptune'"));
-				//
-				// assertThat(results).hasSize(3);
-				// assertThat(results.get(0).getId()).isEqualTo(documents.get(1).getId());
 			}
 		});
 	}
@@ -495,25 +437,6 @@ class CassandraRichSchemaVectorStoreIT {
 				String newContent = "The World is Big and Salvation Lurks Around the Corner";
 
 				Document sameIdDocument = new Document(documents.get(1).getId(), newContent, Collections.emptyMap());
-
-				// BUG in Cassandra 5.0-beta1
-				// uncomment when 5.0-beta2 is release and cassandraContainer pulls it
-				//
-				// store.add(List.of(sameIdDocument));
-				//
-				// results =
-				// store.similaritySearch(SearchRequest.query(newContent).withTopK(1));
-				//
-				// assertThat(results).hasSize(1);
-				// resultDoc = results.get(0);
-				// assertThat(resultDoc.getId()).isEqualTo(sameIdDocument.getId());
-				// assertThat(resultDoc.getContent()).contains(newContent);
-				//
-				// // the empty metadata map will not overwrite the row's existing "id"
-				// and
-				// // "revision" values
-				// assertThat(resultDoc.getMetadata()).containsKeys("id", "revision",
-				// CassandraVectorStore.SIMILARITY_FIELD_NAME);
 
 				store.delete(List.of(sameIdDocument.getId()));
 
@@ -619,14 +542,14 @@ class CassandraRichSchemaVectorStoreIT {
 
 		@Bean
 		public EmbeddingModel embeddingModel() {
-			// default is ONNX all-MiniLM-L6-v2
+
 			return new TransformersEmbeddingModel();
 		}
 
 		@Bean
 		public CqlSession cqlSession() {
 			return new CqlSessionBuilder()
-				// comment next two lines out to connect to a local C* cluster
+
 				.addContactPoint(cassandraContainer.getContactPoint())
 				.withLocalDatacenter(cassandraContainer.getLocalDatacenter())
 				.build();

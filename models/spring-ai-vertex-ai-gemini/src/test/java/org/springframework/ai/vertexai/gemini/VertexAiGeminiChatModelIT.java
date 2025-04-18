@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vertexai.gemini;
 
 import java.io.IOException;
@@ -91,8 +75,8 @@ class VertexAiGeminiChatModelIT {
 	@Test
 	void googleSearchTool() {
 		Prompt prompt = createPrompt(VertexAiGeminiChatOptions.builder()
-			.model(ChatModel.GEMINI_1_5_PRO) // Only the pro model supports the google
-												// search tool
+			.model(ChatModel.GEMINI_1_5_PRO)
+
 			.googleSearchRetrieval(true)
 			.build());
 		ChatResponse response = this.chatModel.call(prompt);
@@ -196,7 +180,6 @@ class VertexAiGeminiChatModelIT {
 			.map(AssistantMessage::getText)
 			.collect(Collectors.joining());
 
-		// logger.info("{}", actorsFilms);
 		assertThat(generationTextFromStream).isNotEmpty();
 	}
 
@@ -225,7 +208,7 @@ class VertexAiGeminiChatModelIT {
 			.collect(Collectors.joining());
 
 		ActorsFilmsRecord actorsFilms = outputConverter.convert(generationTextFromStream);
-		// logger.info("{}", actorsFilms);
+
 		assertThat(actorsFilms.actor()).isEqualTo("Tom Hanks");
 		assertThat(actorsFilms.movies()).hasSize(5);
 	}
@@ -240,32 +223,11 @@ class VertexAiGeminiChatModelIT {
 
 		var response = this.chatModel.call(new Prompt(List.of(userMessage)));
 
-		// Response should contain something like:
-		// I see a bunch of bananas in a golden basket. The bananas are ripe and yellow.
-		// There are also some red apples in the basket. The basket is sitting on a
-		// table.
-		// The background is a blurred light blue color.'
 		assertThat(response.getResult().getOutput().getText()).satisfies(content -> {
 			long count = Stream.of("bananas", "apple", "basket").filter(content::contains).count();
 			assertThat(count).isGreaterThanOrEqualTo(2);
 		});
 
-		// Error with image from URL:
-		// com.google.api.gax.rpc.InvalidArgumentException:
-		// io.grpc.StatusRuntimeException: INVALID_ARGUMENT: Only GCS URIs are supported
-		// in file_uri and please make sure that the path is a valid GCS path.
-
-		// String imageUrl =
-		// "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/banana-apple.jpg";
-
-		// userMessage = new UserMessage("Explain what do you see o this picture?",
-		// List.of(new Media(MimeTypeDetector.getMimeType(imageUrl), imageUrl)));
-		// response = client.call(new Prompt(List.of(userMessage)));
-
-		// assertThat(response.getResult().getOutput().getContent())..containsAnyOf("bananas",
-		// "apple", "bowl", "basket", "fruit stand");
-
-		// https://github.com/GoogleCloudPlatform/generative-ai/blob/main/gemini/use-cases/intro_multimodal_use_cases.ipynb
 	}
 
 	@Test

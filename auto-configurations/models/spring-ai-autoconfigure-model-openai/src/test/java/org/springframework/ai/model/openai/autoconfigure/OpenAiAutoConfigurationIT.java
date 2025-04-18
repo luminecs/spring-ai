@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.openai.autoconfigure;
 
 import java.util.Arrays;
@@ -80,7 +64,7 @@ public class OpenAiAutoConfigurationIT {
 					.call(new Prompt(new UserMessage("Tell me joke about Spring Framework")));
 				assertThat(response).isNotNull();
 				logger.info("Response: " + response);
-				// AudioPlayer.play(response.getResult().getOutput().getMedia().get(0).getDataAsByteArray());
+
 			});
 	}
 
@@ -113,13 +97,11 @@ public class OpenAiAutoConfigurationIT {
 	}
 
 	public boolean verifyMp3FrameHeader(byte[] audioResponse) {
-		// Check if the response is null or too short to contain a frame header
+
 		if (audioResponse == null || audioResponse.length < 2) {
 			return false;
 		}
-		// Check for the MP3 frame header
-		// 0xFFE0 is the sync word for an MP3 frame (11 bits set to 1 followed by 3 bits
-		// set to 0)
+
 		return (audioResponse[0] & 0xFF) == 0xFF && (audioResponse[1] & 0xE0) == 0xE0;
 	}
 
@@ -196,7 +178,7 @@ public class OpenAiAutoConfigurationIT {
 
 	@Test
 	void generateImageWithModel() {
-		// The 256x256 size is supported by dall-e-2, but not by dall-e-3.
+
 		this.contextRunner
 			.withPropertyValues("spring.ai.openai.image.options.model=dall-e-2",
 					"spring.ai.openai.image.options.size=256x256")

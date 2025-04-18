@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.azure.openai;
 
 import java.io.IOException;
@@ -50,26 +34,6 @@ import org.springframework.util.StringUtils;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Spring {@link Configuration} for AI integration testing using mock objects.
- * <p>
- * This test configuration allows Spring AI framework developers to mock an AI provider's
- * APIs with Spring {@link MockMvc} and a test provided Spring Web MVC
- * {@link org.springframework.web.bind.annotation.RestController}.
- * <p>
- * This test configuration makes use of the OkHttp3 {@link MockWebServer} and
- * {@link Dispatcher} to integrate with Spring {@link MockMvc}. This allows you to mock
- * the AI response (e.g. JSON) coming back from the AI provider API and let it pass
- * through the underlying AI client library and infrastructure components responsible for
- * accessing the provider's AI with its API all the way back to Spring AI.
- *
- * @author John Blum
- * @see okhttp3.mockwebserver.Dispatcher
- * @see okhttp3.mockwebserver.MockWebServer
- * @see org.springframework.boot.SpringBootConfiguration
- * @see org.springframework.test.web.servlet.MockMvc
- * @since 0.7.0
- */
 @Configuration
 @SuppressWarnings("unused")
 public class MockAiTestConfiguration {
@@ -85,12 +49,6 @@ public class MockAiTestConfiguration {
 		return factoryBean;
 	}
 
-	/**
-	 * OkHttp {@link Dispatcher} implementation integrated with Spring Web MVC.
-	 *
-	 * @see okhttp3.mockwebserver.Dispatcher
-	 * @see org.springframework.test.web.servlet.MockMvc
-	 */
 	static class MockMvcDispatcher extends Dispatcher {
 
 		private final MockMvc mockMvc;
@@ -177,33 +135,6 @@ public class MockAiTestConfiguration {
 
 	}
 
-	/**
-	 * Spring {@link FactoryBean} used to construct, configure and initialize the
-	 * {@link MockWebServer} inside the Spring container.
-	 * <p>
-	 * Unfortunately, {@link MockWebServerFactoryBean} cannot implement the Spring
-	 * {@link SmartLifecycle} interface as originally intended. The problem is, the
-	 * {@link MockWebServer} class is poorly designed and does not adhere to the
-	 * {@literal Open/Closed principle}:
-	 * <ul>
-	 * <li>The class does not provide a isRunning() lifecycle method, despite the start()
-	 * and shutdown() methods</li>
-	 * <li>The MockWebServer.started is a private state variable</li>
-	 * <li>The overridden before() function is protected</li>
-	 * <li>The class is final and cannot be extended</li>
-	 * <li>Calling MockWebServer.url(:String) is needed to construct Retrofit client in
-	 * the theoOpenAiService bean necessarily starts the MockWebServer</li>
-	 * </ul>
-	 * <p>
-	 * TODO: Figure out a way to implement the Spring {@link SmartLifecycle} interface
-	 * without scrambling bean dependencies, bean phases, and other bean lifecycle
-	 * methods.
-	 *
-	 * @see org.springframework.beans.factory.FactoryBean
-	 * @see org.springframework.beans.factory.DisposableBean
-	 * @see org.springframework.beans.factory.InitializingBean
-	 * @see okhttp3.mockwebserver.MockWebServer
-	 */
 	static class MockWebServerFactoryBean implements FactoryBean<MockWebServer>, InitializingBean, DisposableBean {
 
 		private final Logger logger = LoggerFactory.getLogger(getClass().getName());

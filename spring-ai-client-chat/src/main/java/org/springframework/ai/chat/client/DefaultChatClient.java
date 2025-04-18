@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client;
 
 import java.io.IOException;
@@ -74,19 +58,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
-/**
- * The default implementation of {@link ChatClient} as created by the
- * {@link Builder#build()} } method.
- *
- * @author Mark Pollack
- * @author Christian Tzolov
- * @author Josh Long
- * @author Arjen Poutsma
- * @author Soby Chacko
- * @author Dariusz Jedrzejczyk
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class DefaultChatClient implements ChatClient {
 
 	private static final ChatClientObservationConvention DEFAULT_CHAT_CLIENT_OBSERVATION_CONVENTION = new DefaultChatClientObservationConvention();
@@ -107,14 +78,10 @@ public class DefaultChatClient implements ChatClient {
 			advisorContext.put("formatParam", formatParam);
 		}
 
-		// Process userText, media and messages before creating the AdvisedRequest.
 		String userText = inputRequest.userText;
 		List<Media> media = inputRequest.media;
 		List<Message> messages = inputRequest.messages;
 
-		// If the userText is empty, then try extracting the userText from the last
-		// message
-		// in the messages list and remove it from the messages list.
 		if (!StringUtils.hasText(userText) && !CollectionUtils.isEmpty(messages)) {
 			Message lastMessage = messages.get(messages.size() - 1);
 			if (lastMessage.getMessageType() == MessageType.USER) {
@@ -164,12 +131,10 @@ public class DefaultChatClient implements ChatClient {
 
 		DefaultChatClientRequestSpec spec = new DefaultChatClientRequestSpec(this.defaultChatClientRequest);
 
-		// Options
 		if (prompt.getOptions() != null) {
 			spec.options(prompt.getOptions());
 		}
 
-		// Messages
 		if (prompt.getInstructions() != null) {
 			spec.messages(prompt.getInstructions());
 		}
@@ -177,10 +142,6 @@ public class DefaultChatClient implements ChatClient {
 		return spec;
 	}
 
-	/**
-	 * Return a {@code ChatClient2Builder} to create a new {@code ChatClient} whose
-	 * settings are replicated from this {@code ChatClientRequest}.
-	 */
 	@Override
 	public Builder mutate() {
 		return this.defaultChatClientRequest.mutate();
@@ -486,8 +447,6 @@ public class DefaultChatClient implements ChatClient {
 
 			AdvisedRequest advisedRequest = toAdvisedRequest(inputRequestSpec, formatParam);
 
-			// Apply the around advisor chain that terminates with the last model call
-			// advisor.
 			AdvisedResponse advisedResponse = inputRequestSpec.aroundAdvisorChainBuilder.build()
 				.nextAroundCall(advisedRequest);
 
@@ -545,7 +504,7 @@ public class DefaultChatClient implements ChatClient {
 				var initialAdvisedRequest = toAdvisedRequest(inputRequest, null);
 
 				// @formatter:off
-				// Apply the around advisor chain that terminates with the last model call advisor.
+
 				Flux<AdvisedResponse> stream = inputRequest.aroundAdvisorChainBuilder.build().nextAroundStream(initialAdvisedRequest);
 
 				return stream
@@ -612,7 +571,6 @@ public class DefaultChatClient implements ChatClient {
 		@Nullable
 		private ChatOptions chatOptions;
 
-		/* copy constructor */
 		DefaultChatClientRequestSpec(DefaultChatClientRequestSpec ccr) {
 			this(ccr.chatModel, ccr.userText, ccr.userParams, ccr.systemText, ccr.systemParams, ccr.functionCallbacks,
 					ccr.messages, ccr.functionNames, ccr.media, ccr.chatOptions, ccr.advisors, ccr.advisorParams,
@@ -660,8 +618,7 @@ public class DefaultChatClient implements ChatClient {
 			this.toolContext.putAll(toolContext);
 
 			// @formatter:off
-			// At the stack bottom add the non-streaming and streaming model call advisors.
-			// They play the role of the last advisor in the around advisor chain.
+
 			this.advisors.add(new CallAroundAdvisor() {
 
 				@Override
@@ -696,7 +653,7 @@ public class DefaultChatClient implements ChatClient {
 				public Flux<AdvisedResponse> aroundStream(AdvisedRequest advisedRequest, StreamAroundAdvisorChain chain) {
 					return chatModel.stream(advisedRequest.toPrompt())
 							.map(chatResponse -> new AdvisedResponse(chatResponse, Collections.unmodifiableMap(advisedRequest.adviseContext())))
-							.publishOn(Schedulers.boundedElastic()); // TODO add option to disable.
+							.publishOn(Schedulers.boundedElastic());
 				}
 			});
 			// @formatter:on
@@ -764,10 +721,6 @@ public class DefaultChatClient implements ChatClient {
 			return this.toolContext;
 		}
 
-		/**
-		 * Return a {@code ChatClient2Builder} to create a new {@code ChatClient2} whose
-		 * settings are replicated from this {@code ChatClientRequest}.
-		 */
 		public Builder mutate() {
 			DefaultChatClientBuilder builder = (DefaultChatClientBuilder) ChatClient
 				.builder(this.chatModel, this.observationRegistry, this.customObservationConvention)
@@ -881,12 +834,12 @@ public class DefaultChatClient implements ChatClient {
 			return this;
 		}
 
-		@Deprecated // Use tools()
+		@Deprecated
 		public ChatClientRequestSpec functions(String... functionBeanNames) {
 			return tools(functionBeanNames);
 		}
 
-		@Deprecated // Use tools()
+		@Deprecated
 		public ChatClientRequestSpec functions(FunctionCallback... functionCallbacks) {
 			Assert.notNull(functionCallbacks, "functionCallbacks cannot be null");
 			Assert.noNullElements(functionCallbacks, "functionCallbacks cannot contain null elements");
@@ -981,8 +934,6 @@ public class DefaultChatClient implements ChatClient {
 		}
 
 	}
-
-	// Prompt
 
 	public static class DefaultCallPromptResponseSpec implements CallPromptResponseSpec {
 

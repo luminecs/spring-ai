@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.milvus;
 
 import java.io.IOException;
@@ -58,12 +42,6 @@ import org.springframework.core.io.DefaultResourceLoader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Christian Tzolov
- * @author Eddú Meléndez
- * @author Thomas Vitale
- * @author Soby Chacko
- */
 @Testcontainers
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".+")
 public class MilvusVectorStoreIT extends BaseVectorStoreTests {
@@ -127,7 +105,6 @@ public class MilvusVectorStoreIT extends BaseVectorStoreTests {
 				assertThat(resultDoc.getMetadata()).hasSize(2);
 				assertThat(resultDoc.getMetadata()).containsKeys("meta1", DocumentMetadata.DISTANCE.value());
 
-				// Remove all documents from the store
 				vectorStore.delete(this.documents.stream().map(doc -> doc.getId()).toList());
 
 				results = vectorStore.similaritySearch(SearchRequest.builder().query("Spring").topK(1).build());
@@ -137,10 +114,8 @@ public class MilvusVectorStoreIT extends BaseVectorStoreTests {
 
 	@ParameterizedTest(name = "{0} : {displayName} ")
 	@ValueSource(strings = { "COSINE" })
-	// @ValueSource(strings = { "COSINE", "IP", "L2" })
-	public void searchWithFilters(String metricType) throws InterruptedException {
 
-		// https://milvus.io/docs/json_data_type.md
+	public void searchWithFilters(String metricType) throws InterruptedException {
 
 		this.contextRunner.withPropertyValues("test.spring.ai.vectorstore.milvus.metricType=" + metricType)
 			.run(context -> {
@@ -302,7 +277,6 @@ public class MilvusVectorStoreIT extends BaseVectorStoreTests {
 
 			vectorStore.add(List.of(doc1, doc2, doc3));
 
-			// Complex filter expression: (type == 'A' AND priority > 1)
 			Filter.Expression priorityFilter = new Filter.Expression(Filter.ExpressionType.GT,
 					new Filter.Key("priority"), new Filter.Value(1));
 			Filter.Expression typeFilter = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("type"),
@@ -362,9 +336,7 @@ public class MilvusVectorStoreIT extends BaseVectorStoreTests {
 		@Bean
 		public EmbeddingModel embeddingModel() {
 			return new OpenAiEmbeddingModel(OpenAiApi.builder().apiKey(System.getenv("OPENAI_API_KEY")).build());
-			// return new OpenAiEmbeddingModel(new
-			// OpenAiApi(System.getenv("OPENAI_API_KEY")), MetadataMode.EMBED,
-			// OpenAiEmbeddingOptions.builder().withModel("text-embedding-ada-002").build());
+
 		}
 
 	}

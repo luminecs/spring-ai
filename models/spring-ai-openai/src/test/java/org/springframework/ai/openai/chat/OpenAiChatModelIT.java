@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai.chat;
 
 import java.io.IOException;
@@ -92,7 +76,7 @@ public class OpenAiChatModelIT extends AbstractIT {
 		ChatResponse response = this.chatModel.call(prompt);
 		assertThat(response.getResults()).hasSize(1);
 		assertThat(response.getResults().get(0).getOutput().getText()).contains("Blackbeard");
-		// needs fine tuning... evaluateQuestionAndAnswer(request, response, false);
+
 	}
 
 	@Test
@@ -388,7 +372,7 @@ public class OpenAiChatModelIT extends AbstractIT {
 		List<Message> messages = new ArrayList<>(List.of(userMessage));
 
 		var promptOptions = OpenAiChatOptions.builder()
-			// .withModel(OpenAiApi.ChatModel.GPT_4_TURBO_PREVIEW.getValue())
+
 			.functionCallbacks(List.of(FunctionCallback.builder()
 				.function("getCurrentWeather", new MockWeatherService())
 				.description("Get the weather in location")
@@ -421,7 +405,7 @@ public class OpenAiChatModelIT extends AbstractIT {
 		List<Message> messages = new ArrayList<>(List.of(userMessage));
 
 		var promptOptions = OpenAiChatOptions.builder()
-			// .withModel(OpenAiApi.ChatModel.GPT_4_TURBO_PREVIEW.getValue())
+
 			.functionCallbacks(List.of(FunctionCallback.builder()
 				.function("getCurrentWeather", new MockWeatherService())
 				.description("Get the weather in location")
@@ -450,7 +434,7 @@ public class OpenAiChatModelIT extends AbstractIT {
 		List<Message> messages = new ArrayList<>(List.of(userMessage));
 
 		var promptOptions = OpenAiChatOptions.builder()
-			// .withModel(OpenAiApi.ChatModel.GPT_4_TURBO_PREVIEW.getValue())
+
 			.functionCallbacks(List.of(FunctionCallback.builder()
 				.function("getCurrentWeather", new MockWeatherService())
 				.description("Get the weather in location")
@@ -547,13 +531,13 @@ public class OpenAiChatModelIT extends AbstractIT {
 
 		byte[] audio = response.getResult().getOutput().getMedia().get(0).getDataAsByteArray();
 		assertThat(audio).isNotEmpty();
-		// AudioPlayer.play(audio);
+
 	}
 
 	@ParameterizedTest(name = "{0} : {displayName} ")
 	@ValueSource(strings = { "gpt-4o-audio-preview" })
 	void streamingMultiModalityOutputAudio(String modelName) throws IOException {
-		// var audioResource = new ClassPathResource("speech1.mp3");
+
 		var userMessage = new UserMessage("Tell me joke about Spring Framework");
 
 		assertThatThrownBy(() -> this.chatModel

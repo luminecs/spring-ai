@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.transformer.splitter;
 
 import java.util.ArrayList;
@@ -28,10 +12,6 @@ import org.springframework.ai.document.Document;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-/**
- * @author Christian Tzolov
- * @author Jiwoo Kim
- */
 public class TextSplitterTests {
 
 	static TextSplitter testTextSplitter = new TextSplitter() {
@@ -72,31 +52,25 @@ public class TextSplitterTests {
 
 		assertThat(chunks).hasSize(4);
 
-		// Doc1 chunks:
 		assertThat(chunks.get(0).getText()).isEqualTo("In the end, writing arises when man");
 		assertThat(chunks.get(1).getText()).isEqualTo(" realizes that memory is not enough.");
 
-		// Doc2 chunks:
 		assertThat(chunks.get(2).getText())
 			.isEqualTo("The most oppressive thing about the labyrinth is that you are constantly being forced to ");
 		assertThat(chunks.get(3).getText())
 			.isEqualTo("choose. It isn’t the lack of an exit, but the abundance of exits that is so disorienting.");
 
-		// Verify that the same, merged metadata is copied to all chunks.
 		assertThat(chunks.get(0).getMetadata()).isEqualTo(chunks.get(1).getMetadata());
 		assertThat(chunks.get(2).getMetadata()).isEqualTo(chunks.get(3).getMetadata());
 		assertThat(chunks.get(0).getMetadata()).containsKeys("key1", "key2").doesNotContainKeys("key3");
 		assertThat(chunks.get(2).getMetadata()).containsKeys("key2", "key3").doesNotContainKeys("key1");
 
-		// Verify that the content formatters are copied from the parents to the chunks.
-		// doc1 -> chunk0, chunk1 and doc2 -> chunk2, chunk3
 		assertThat(chunks.get(0).getContentFormatter()).isSameAs(contentFormatter1);
 		assertThat(chunks.get(1).getContentFormatter()).isSameAs(contentFormatter1);
 
 		assertThat(chunks.get(2).getContentFormatter()).isSameAs(contentFormatter2);
 		assertThat(chunks.get(3).getContentFormatter()).isSameAs(contentFormatter2);
 
-		// Disable copy content formatters
 		testTextSplitter.setCopyContentFormatter(false);
 		chunks = testTextSplitter.apply(List.of(doc1, doc2));
 
@@ -110,7 +84,7 @@ public class TextSplitterTests {
 
 	@Test
 	public void pageNoChunkSplit() {
-		// given
+
 		var doc1 = new Document("1In the end, writing arises when man realizes that memory is not enough."
 				+ "1The most oppressive thing about the labyrinth is that you are constantly "
 				+ "1being forced to choose. It isn’t the lack of an exit, but the abundance of exits that is so disorienting.",
@@ -133,10 +107,8 @@ public class TextSplitterTests {
 
 		var tokenTextSplitter = new TokenTextSplitter();
 
-		// when
 		List<Document> splitedDocument = tokenTextSplitter.apply(List.of(doc1, doc2, doc3, doc4));
 
-		// then
 		assertAll(() -> assertThat(splitedDocument).isNotNull(), () -> assertThat(splitedDocument).isNotEmpty(),
 				() -> assertThat(splitedDocument).hasSize(4),
 				() -> assertThat(splitedDocument.get(0).getMetadata().get("page_number")).isEqualTo(1),
@@ -147,7 +119,6 @@ public class TextSplitterTests {
 
 	@Test
 	public void pageWithChunkSplit() {
-		// given
 
 		var doc1 = new Document("1In the end, writing arises when man realizes that memory is not enough."
 				+ "1The most oppressive thing about the labyrinth is that you are constantly "
@@ -202,10 +173,8 @@ public class TextSplitterTests {
 
 		var tokenTextSplitter = new TokenTextSplitter();
 
-		// when
 		List<Document> splitedDocument = tokenTextSplitter.apply(List.of(doc1, doc2, doc3));
 
-		// then
 		assertAll(() -> assertThat(splitedDocument).isNotNull(), () -> assertThat(splitedDocument).isNotEmpty(),
 				() -> assertThat(splitedDocument).hasSize(4),
 				() -> assertThat(splitedDocument.get(0).getMetadata().get("page_number")).isEqualTo(1),
@@ -232,15 +201,12 @@ public class TextSplitterTests {
 
 		assertThat(chunks).hasSize(2);
 
-		// Doc chunks:
 		assertThat(chunks.get(0).getText()).isEqualTo("In the end, writing arises when man");
 		assertThat(chunks.get(1).getText()).isEqualTo(" realizes that memory is not enough.");
 
-		// Verify that the same, merged metadata is copied to all chunks.
 		assertThat(chunks.get(0).getMetadata()).isEqualTo(chunks.get(1).getMetadata());
 		assertThat(chunks.get(1).getMetadata()).containsKeys("key1");
 
-		// Verify that the content formatters are copied from the parents to the chunks.
 		assertThat(chunks.get(0).getContentFormatter()).isSameAs(contentFormatter);
 		assertThat(chunks.get(1).getContentFormatter()).isSameAs(contentFormatter);
 	}

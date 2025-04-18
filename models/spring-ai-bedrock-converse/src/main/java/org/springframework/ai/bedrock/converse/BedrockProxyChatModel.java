@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.bedrock.converse;
 
 import java.io.IOException;
@@ -106,32 +90,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * A {@link ChatModel} implementation that uses the Amazon Bedrock Converse API to
- * interact with the <a href=
- * "https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-supported-models-features.html">Supported
- * models</a>. <br/>
- * <br/>
- * The Converse API doesn't support any embedding models (such as Titan Embeddings G1 -
- * Text) or image generation models (such as Stability AI).
- *
- * <p>
- * https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html
- * <p>
- * https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html
- * <p>
- * https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html
- * <p>
- * https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html
- * <p>
- * https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
- *
- * @author Christian Tzolov
- * @author Wei Jiang
- * @author Alexandros Pappas
- * @author Jihoon Kim
- * @since 1.0.0
- */
 public class BedrockProxyChatModel implements ChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(BedrockProxyChatModel.class);
@@ -146,22 +104,12 @@ public class BedrockProxyChatModel implements ChatModel {
 
 	private ToolCallingChatOptions defaultOptions;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
 	private final ToolCallingManager toolCallingManager;
 
-	/**
-	 * The tool execution eligibility predicate used to determine if a tool can be
-	 * executed.
-	 */
 	private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention;
 
 	public BedrockProxyChatModel(BedrockRuntimeClient bedrockRuntimeClient,
@@ -199,14 +147,6 @@ public class BedrockProxyChatModel implements ChatModel {
 			.build();
 	}
 
-	/**
-	 * Invoke the model and return the response.
-	 *
-	 * https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
-	 * https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html
-	 * https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/bedrockruntime/BedrockRuntimeClient.html#converse
-	 * @return The model invocation response.
-	 */
 	@Override
 	public ChatResponse call(Prompt prompt) {
 		Prompt requestPrompt = buildRequestPrompt(prompt);
@@ -243,14 +183,14 @@ public class BedrockProxyChatModel implements ChatModel {
 				&& chatResponse.hasFinishReasons(Set.of(StopReason.TOOL_USE.toString()))) {
 			var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, chatResponse);
 			if (toolExecutionResult.returnDirect()) {
-				// Return tool execution result directly to the client.
+
 				return ChatResponse.builder()
 					.from(chatResponse)
 					.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 					.build();
 			}
 			else {
-				// Send the tool execution result back to the model.
+
 				return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 						chatResponse);
 			}
@@ -274,7 +214,6 @@ public class BedrockProxyChatModel implements ChatModel {
 			}
 		}
 
-		// Merge runtime options with the default options
 		ToolCallingChatOptions updatedRuntimeOptions = null;
 		if (runtimeOptions == null) {
 			updatedRuntimeOptions = this.defaultOptions.copy();
@@ -385,7 +324,6 @@ public class BedrockProxyChatModel implements ChatModel {
 
 		ToolConfiguration toolConfiguration = null;
 
-		// Add the tool definitions to the request's tools parameter.
 		List<ToolDefinition> toolDefinitions = this.toolCallingManager.resolveToolDefinitions(updatedRuntimeOptions);
 
 		if (!CollectionUtils.isEmpty(toolDefinitions)) {
@@ -431,16 +369,16 @@ public class BedrockProxyChatModel implements ChatModel {
 
 		var mimeType = media.getMimeType();
 
-		if (BedrockMediaFormat.isSupportedVideoFormat(mimeType)) { // Video
+		if (BedrockMediaFormat.isSupportedVideoFormat(mimeType)) {
 			VideoFormat videoFormat = BedrockMediaFormat.getVideoFormat(mimeType);
 			VideoSource videoSource = null;
 			if (media.getData() instanceof byte[] bytes) {
 				videoSource = VideoSource.builder().bytes(SdkBytes.fromByteArrayUnsafe(bytes)).build();
 			}
 			else if (media.getData() instanceof String uriText) {
-				// if (URLValidator.isValidURLBasic(uriText)) {
+
 				videoSource = VideoSource.builder().s3Location(S3Location.builder().uri(uriText).build()).build();
-				// }
+
 			}
 			else if (media.getData() instanceof URL url) {
 				try {
@@ -458,7 +396,7 @@ public class BedrockProxyChatModel implements ChatModel {
 
 			return ContentBlock.fromVideo(VideoBlock.builder().source(videoSource).format(videoFormat).build());
 		}
-		else if (BedrockMediaFormat.isSupportedImageFormat(mimeType)) { // Image
+		else if (BedrockMediaFormat.isSupportedImageFormat(mimeType)) {
 			ImageSource.Builder sourceBuilder = ImageSource.builder();
 			if (media.getData() instanceof byte[] bytes) {
 				sourceBuilder.bytes(SdkBytes.fromByteArrayUnsafe(bytes)).build();
@@ -500,7 +438,7 @@ public class BedrockProxyChatModel implements ChatModel {
 				.format(BedrockMediaFormat.getImageFormat(mimeType))
 				.build());
 		}
-		else if (BedrockMediaFormat.isSupportedDocumentFormat(mimeType)) { // Document
+		else if (BedrockMediaFormat.isSupportedDocumentFormat(mimeType)) {
 
 			return ContentBlock.fromDocument(DocumentBlock.builder()
 				.name(media.getName())
@@ -544,13 +482,6 @@ public class BedrockProxyChatModel implements ChatModel {
 		}
 	}
 
-	/**
-	 * Convert {@link ConverseResponse} to {@link ChatResponse} includes model output,
-	 * stopReason, usage, metrics etc.
-	 * https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html#API_runtime_Converse_ResponseSyntax
-	 * @param response The Bedrock Converse response.
-	 * @return The ChatResponse entity.
-	 */
 	private ChatResponse toChatResponse(ConverseResponse response, ChatResponse perviousChatResponse) {
 
 		Assert.notNull(response, "'response' must not be null.");
@@ -623,14 +554,6 @@ public class BedrockProxyChatModel implements ChatModel {
 		return new ChatResponse(allGenerations, chatResponseMetaData);
 	}
 
-	/**
-	 * Invoke the model and return the response stream.
-	 *
-	 * https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
-	 * https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html
-	 * https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/bedrockruntime/BedrockRuntimeAsyncClient.html#converseStream
-	 * @return The model invocation response stream.
-	 */
 	@Override
 	public Flux<ChatResponse> stream(Prompt prompt) {
 		Prompt requestPrompt = buildRequestPrompt(prompt);
@@ -674,20 +597,18 @@ public class BedrockProxyChatModel implements ChatModel {
 				if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), chatResponse)
 						&& chatResponse.hasFinishReasons(Set.of(StopReason.TOOL_USE.toString()))) {
 
-					// FIXME: bounded elastic needs to be used since tool calling
-					// is currently only synchronous
 					return Flux.defer(() -> {
 						var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, chatResponse);
 
 						if (toolExecutionResult.returnDirect()) {
-							// Return tool execution result directly to the client.
+
 							return Flux.just(ChatResponse.builder()
 								.from(chatResponse)
 								.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 								.build());
 						}
 						else {
-							// Send the tool execution result back to the model.
+
 							return this.internalStream(
 									new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 									chatResponse);
@@ -710,15 +631,6 @@ public class BedrockProxyChatModel implements ChatModel {
 	public static final EmitFailureHandler DEFAULT_EMIT_FAILURE_HANDLER = EmitFailureHandler
 		.busyLooping(Duration.ofSeconds(10));
 
-	/**
-	 * Invoke the model and return the response stream.
-	 *
-	 * https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
-	 * https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html
-	 * https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/bedrockruntime/BedrockRuntimeAsyncClient.html#converseStream
-	 * @param converseStreamRequest Model invocation request.
-	 * @return The model invocation response stream.
-	 */
 	public Flux<ConverseStreamOutput> converseStream(ConverseStreamRequest converseStreamRequest) {
 		Assert.notNull(converseStreamRequest, "'converseStreamRequest' must not be null");
 
@@ -749,10 +661,6 @@ public class BedrockProxyChatModel implements ChatModel {
 
 	}
 
-	/**
-	 * Use the provided convention for reporting observation data
-	 * @param observationConvention The provided convention
-	 */
 	public void setObservationConvention(ChatModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;
@@ -857,7 +765,6 @@ public class BedrockProxyChatModel implements ChatModel {
 
 			if (this.bedrockRuntimeAsyncClient == null) {
 
-				// TODO: Is it ok to configure the NettyNioAsyncHttpClient explicitly???
 				var httpClientBuilder = NettyNioAsyncHttpClient.builder()
 					.tcpKeepAlive(true)
 					.connectionAcquisitionTimeout(Duration.ofSeconds(30))

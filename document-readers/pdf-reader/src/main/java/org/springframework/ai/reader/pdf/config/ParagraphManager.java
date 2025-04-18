@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.reader.pdf.config;
 
 import java.io.IOException;
@@ -31,18 +15,8 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * The ParagraphManager class is responsible for managing the paragraphs and hierarchy of
- * a PDF document. It can process bookmarks and generate a structured tree of paragraphs,
- * representing the table of contents (TOC) of the PDF document.
- *
- * @author Christian Tzolov
- */
 public class ParagraphManager {
 
-	/**
-	 * Root of the paragraphs tree.
-	 */
 	private final Paragraph rootParagraph;
 
 	private final PDDocument document;
@@ -93,18 +67,6 @@ public class ParagraphManager {
 		}
 	}
 
-	/**
-	 * For given {@link PDOutlineNode} bookmark convert all sibling {@link PDOutlineItem}
-	 * items into {@link Paragraph} instances under the parentParagraph. For each
-	 * {@link PDOutlineItem} item, recursively call
-	 * {@link ParagraphManager#generateParagraphs} to process its children items.
-	 * @param parentParagraph Root paragraph that the bookmark sibling items should be
-	 * added to.
-	 * @param bookmark TOC paragraphs to process.
-	 * @param level Current TOC deepness level.
-	 * @return Returns a tree of {@link Paragraph}s that represent the PDF document TOC.
-	 * @throws IOException
-	 */
 	protected Paragraph generateParagraphs(Paragraph parentParagraph, PDOutlineNode bookmark, Integer level)
 			throws IOException {
 
@@ -126,8 +88,6 @@ public class ParagraphManager {
 
 			parentParagraph.children().add(currentParagraph);
 
-			// Recursive call to go the current paragraph's children paragraphs.
-			// E.g. go one level deeper.
 			this.generateParagraphs(currentParagraph, current, level + 1);
 
 			current = current.getNextSibling();
@@ -176,17 +136,6 @@ public class ParagraphManager {
 		return resultList;
 	}
 
-	/**
-	 * Represents a document paragraph metadata and hierarchy.
-	 *
-	 * @param parent Parent paragraph that will contain a children paragraphs.
-	 * @param title Paragraph title as it appears in the PDF document.
-	 * @param level The TOC deepness level for this paragraph. The root is at level 0.
-	 * @param startPageNumber The page number in the PDF where this paragraph begins.
-	 * @param endPageNumber The page number in the PDF where this paragraph ends.
-	 * @param position The vertical position of the paragraph on the page.
-	 * @param children Sub-paragraphs for this paragraph.
-	 */
 	public record Paragraph(Paragraph parent, String title, int level, int startPageNumber, int endPageNumber,
 			int position, List<Paragraph> children) {
 

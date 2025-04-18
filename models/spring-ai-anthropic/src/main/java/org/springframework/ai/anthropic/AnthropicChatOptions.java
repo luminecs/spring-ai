@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.anthropic;
 
 import java.util.ArrayList;
@@ -38,14 +22,6 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-/**
- * The options to be used when sending a chat request to the Anthropic API.
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Alexandros Pappas
- * @since 1.0.0
- */
 @JsonInclude(Include.NON_NULL)
 public class AnthropicChatOptions implements ToolCallingChatOptions {
 
@@ -59,33 +35,18 @@ public class AnthropicChatOptions implements ToolCallingChatOptions {
 	private @JsonProperty("top_k") Integer topK;
 	private @JsonProperty("thinking") ChatCompletionRequest.ThinkingConfig thinking;
 
-	/**
-	 * Collection of {@link ToolCallback}s to be used for tool calling in the chat
-	 * completion requests.
-	 */
 	@JsonIgnore
 	private List<FunctionCallback> toolCallbacks = new ArrayList<>();
 
-	/**
-	 * Collection of tool names to be resolved at runtime and used for tool calling in the
-	 * chat completion requests.
-	 */
 	@JsonIgnore
 	private Set<String> toolNames = new HashSet<>();
 
-	/**
-	 * Whether to enable the tool execution lifecycle internally in ChatModel.
-	 */
 	@JsonIgnore
 	private Boolean internalToolExecutionEnabled;
 
 	@JsonIgnore
 	private Map<String, Object> toolContext = new HashMap<>();
 
-
-	/**
-	 * Optional HTTP headers to be added to the chat completion request.
-	 */
 	@JsonIgnore
 	private Map<String, String> httpHeaders = new HashMap<>();
 

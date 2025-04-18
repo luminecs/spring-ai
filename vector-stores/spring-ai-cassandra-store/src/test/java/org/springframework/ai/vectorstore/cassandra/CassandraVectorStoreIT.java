@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.cassandra;
 
 import java.io.IOException;
@@ -58,14 +42,6 @@ import org.springframework.core.io.DefaultResourceLoader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Use `mvn failsafe:integration-test -Dit.test=CassandraVectorStoreIT`
- *
- * @author Mick Semb Wever
- * @author Thomas Vitale
- * @author Soby Chacko
- * @since 1.0.0
- */
 @Testcontainers
 class CassandraVectorStoreIT extends BaseVectorStoreTests {
 
@@ -163,7 +139,6 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 				assertThat(resultDoc.getMetadata()).hasSize(2);
 				assertThat(resultDoc.getMetadata()).containsKeys("meta1", DocumentMetadata.DISTANCE.value());
 
-				// Remove all documents from the store
 				store.delete(documents().stream().map(doc -> doc.getId()).toList());
 
 				results = store.similaritySearch(SearchRequest.builder().query("Spring").topK(1).build());
@@ -196,7 +171,6 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 				assertThat(resultDoc.getMetadata()).hasSize(1);
 				assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 
-				// Remove all documents from the store
 				store.delete(documents().stream().map(doc -> doc.getId()).toList());
 
 				results = store.similaritySearch(SearchRequest.builder().query("Spring").topK(1).build());
@@ -256,7 +230,6 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 				assertThat(results).hasSize(1);
 				assertThat(results.get(0).getId()).isEqualTo(bgDocument.getId());
 
-				// cassandra server will throw an error
 				Assertions.assertThrows(SyntaxError.class,
 						() -> store.similaritySearch(SearchRequest.builder()
 							.query("The World")
@@ -349,7 +322,6 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 				assertThat(results).hasSize(1);
 				assertThat(results.get(0).getId()).isEqualTo(bgDocument.getId());
 
-				// cassandra server will throw an error
 				Assertions.assertThrows(SyntaxError.class,
 						() -> store.similaritySearch(SearchRequest.builder()
 							.query("The World")
@@ -358,7 +330,6 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 							.filterExpression("country == 'BG' || year == 2020")
 							.build()));
 
-				// cassandra server will throw an error
 				Assertions.assertThrows(SyntaxError.class,
 						() -> store.similaritySearch(SearchRequest.builder()
 							.query("The World")
@@ -458,12 +429,10 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 
 				store.add(List.of(bgDocument, nlDocument, bgDocument2));
 
-				// Verify initial state
 				List<Document> results = store
 					.similaritySearch(SearchRequest.builder().query("The World").topK(5).build());
 				assertThat(results).hasSize(3);
 
-				// Delete documents with country = BG
 				Filter.Expression filterExpression = new Filter.Expression(Filter.ExpressionType.EQ,
 						new Filter.Key("country"), new Filter.Value("BG"));
 
@@ -494,7 +463,6 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 
 				store.add(List.of(bgDocument, nlDocument, bgDocument2));
 
-				// Verify initial state
 				List<Document> results = store
 					.similaritySearch(SearchRequest.builder().query("The World").topK(5).build());
 				assertThat(results).hasSize(3);
@@ -523,7 +491,6 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 
 				store.add(List.of(doc1, doc2, doc3));
 
-				// Complex filter expression: (type == 'A' AND priority > 1)
 				Filter.Expression priorityFilter = new Filter.Expression(Filter.ExpressionType.GT,
 						new Filter.Key("priority"), new Filter.Value((short) 1));
 				Filter.Expression typeFilter = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("type"),
@@ -580,7 +547,7 @@ class CassandraVectorStoreIT extends BaseVectorStoreTests {
 		@Bean
 		public CqlSession cqlSession() {
 			return new CqlSessionBuilder()
-				// comment next two lines out to connect to a local C* cluster
+
 				.addContactPoint(cassandraContainer.getContactPoint())
 				.withLocalDatacenter(cassandraContainer.getLocalDatacenter())
 				.build();

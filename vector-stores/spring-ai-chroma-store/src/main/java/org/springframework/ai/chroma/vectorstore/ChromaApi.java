@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chroma.vectorstore;
 
 import java.util.ArrayList;
@@ -41,18 +25,10 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
 
-/**
- * Single-class Chroma API implementation based on the (unofficial) Chroma REST API.
- *
- * @author Christian Tzolov
- * @author Eddú Meléndez
- */
 public class ChromaApi {
 
-	// Regular expression pattern that looks for a message inside the ValueError(...).
 	private static final Pattern VALUE_ERROR_PATTERN = Pattern.compile("ValueError\\('([^']*)'\\)");
 
-	// Regular expression pattern that looks for a message.
 	private static final Pattern MESSAGE_ERROR_PATTERN = Pattern.compile("\"message\":\"(.*?)\"");
 
 	private final ObjectMapper objectMapper;
@@ -78,22 +54,11 @@ public class ChromaApi {
 		this.objectMapper = objectMapper;
 	}
 
-	/**
-	 * Configure access to ChromaDB secured with static API Token Authentication:
-	 * https://docs.trychroma.com/usage-guide#static-api-token-authentication
-	 * @param keyToken Chroma static API Token Authentication. (Optional)
-	 */
 	public ChromaApi withKeyToken(String keyToken) {
 		this.keyToken = keyToken;
 		return this;
 	}
 
-	/**
-	 * Configure access to ChromaDB secured with Basic Authentication:
-	 * https://docs.trychroma.com/usage-guide#basic-authentication
-	 * @param username Credentials username.
-	 * @param password Credentials password.
-	 */
 	public ChromaApi withBasicAuthCredentials(String username, String password) {
 		this.restClient = this.restClient.mutate()
 			.requestInterceptor(new BasicAuthenticationInterceptor(username, password))
@@ -127,11 +92,6 @@ public class ChromaApi {
 			.getBody();
 	}
 
-	/**
-	 * Delete a collection with the given name.
-	 * @param collectionName the name of the collection to delete.
-	 *
-	 */
 	public void deleteCollection(String collectionName) {
 
 		this.restClient.delete()
@@ -216,9 +176,6 @@ public class ChromaApi {
 			.getBody();
 	}
 
-	//
-	// Chroma Client API (https://docs.trychroma.com/js_reference/Client)
-	//
 	@Nullable
 	public GetEmbeddingResponse getEmbeddings(String collectionId, GetEmbeddingsRequest getEmbeddingsRequest) {
 
@@ -231,7 +188,6 @@ public class ChromaApi {
 			.getBody();
 	}
 
-	// Utils
 	public Map<String, Object> where(String text) {
 		try {
 			return this.objectMapper.readValue(text, Map.class);
@@ -250,34 +206,23 @@ public class ChromaApi {
 	private String getErrorMessage(HttpStatusCodeException e) {
 		var errorMessage = e.getMessage();
 
-		// If the error message is empty or null, return an empty string
 		if (!StringUtils.hasText(errorMessage)) {
 			return "";
 		}
 
-		// If the exception is an HttpServerErrorException, use the VALUE_ERROR_PATTERN
 		Matcher valueErrorMatcher = VALUE_ERROR_PATTERN.matcher(errorMessage);
 		if (e instanceof HttpServerErrorException && valueErrorMatcher.find()) {
 			return valueErrorMatcher.group(1);
 		}
 
-		// Otherwise, use the MESSAGE_ERROR_PATTERN for other cases
 		Matcher messageErrorMatcher = MESSAGE_ERROR_PATTERN.matcher(errorMessage);
 		if (messageErrorMatcher.find()) {
 			return messageErrorMatcher.group(1);
 		}
 
-		// If no pattern matches, return an empty string
 		return "";
 	}
 
-	/**
-	 * Chroma embedding collection.
-	 *
-	 * @param id Collection Id.
-	 * @param name The name of the collection.
-	 * @param metadata Metadata associated with the collection.
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record Collection(// @formatter:off
 		@JsonProperty("id") String id,
@@ -286,12 +231,6 @@ public class ChromaApi {
 
 	}
 
-	/**
-	 * Request to create a new collection with the given name and metadata.
-	 *
-	 * @param name The name of the collection to create.
-	 * @param metadata Optional metadata to associate with the collection.
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record CreateCollectionRequest(// @formatter:off
 		@JsonProperty("name") String name,
@@ -303,19 +242,6 @@ public class ChromaApi {
 
 	}
 
-	//
-	// Chroma Collection API (https://docs.trychroma.com/reference/js-client/Collection)
-	//
-
-	/**
-	 * Add embeddings to the chroma data store.
-	 *
-	 * @param ids The ids of the embeddings to add.
-	 * @param embeddings The embeddings to add.
-	 * @param metadata The metadata to associate with the embeddings. When querying, you
-	 * can filter on this metadata.
-	 * @param documents The documents contents to associate with the embeddings.
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record AddEmbeddingsRequest(// @formatter:off
 			@JsonProperty("ids") List<String> ids,
@@ -323,19 +249,11 @@ public class ChromaApi {
 			@JsonProperty("metadatas") List<Map<String, Object>> metadata,
 			@JsonProperty("documents") List<String> documents) { // @formatter:on
 
-		// Convenance for adding a single embedding.
 		public AddEmbeddingsRequest(String id, float[] embedding, Map<String, Object> metadata, String document) {
 			this(List.of(id), List.of(embedding), List.of(metadata), List.of(document));
 		}
 	}
 
-	/**
-	 * Request to delete embedding from a collection.
-	 *
-	 * @param ids The ids of the embeddings to delete. (Optional)
-	 * @param where Condition to filter items to delete based on metadata values.
-	 * (Optional)
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record DeleteEmbeddingsRequest(// @formatter:off
 		@Nullable @JsonProperty("ids") List<String> ids,
@@ -346,17 +264,6 @@ public class ChromaApi {
 		}
 	}
 
-	/**
-	 * Get embeddings from a collection.
-	 *
-	 * @param ids IDs of the embeddings to get.
-	 * @param where Condition to filter results based on metadata values.
-	 * @param limit Limit on the number of collection embeddings to get.
-	 * @param offset Offset on the embeddings to get.
-	 * @param include A list of what to include in the results. Can contain "embeddings",
-	 * "metadatas", "documents", "distances". Ids are always included. Defaults to
-	 * [metadatas, documents, distances].
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record GetEmbeddingsRequest(// @formatter:off
 		@JsonProperty("ids") List<String> ids,
@@ -379,14 +286,6 @@ public class ChromaApi {
 
 	}
 
-	/**
-	 * Object containing the get embedding results.
-	 *
-	 * @param ids List of document ids. One for each returned document.
-	 * @param embeddings List of document embeddings. One for each returned document.
-	 * @param documents List of document contents. One for each returned document.
-	 * @param metadata List of document metadata. One for each returned document.
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record GetEmbeddingResponse(// @formatter:off
 		@JsonProperty("ids") List<String> ids,
@@ -395,18 +294,6 @@ public class ChromaApi {
 		@JsonProperty("metadatas") List<Map<String, String>> metadata) { // @formatter:on
 	}
 
-	/**
-	 * Request to get the nResults nearest neighbor embeddings for provided
-	 * queryEmbeddings.
-	 *
-	 * @param queryEmbeddings The embeddings to get the closes neighbors of.
-	 * @param nResults The number of neighbors to return for each query_embedding or
-	 * query_texts.
-	 * @param where Condition to filter results based on metadata values.
-	 * @param include A list of what to include in the results. Can contain "embeddings",
-	 * "metadatas", "documents", "distances". Ids are always included. Defaults to
-	 * [metadatas, documents, distances].
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record QueryRequest(// @formatter:off
 		@JsonProperty("query_embeddings") List<float[]> queryEmbeddings,
@@ -414,9 +301,6 @@ public class ChromaApi {
 		@Nullable @JsonProperty("where") Map<String, Object> where,
 		@JsonProperty("include") List<Include> include) { // @formatter:on
 
-		/**
-		 * Convenience to query for a single embedding instead of a batch of embeddings.
-		 */
 		public QueryRequest(float[] queryEmbedding, Integer nResults) {
 			this(List.of(queryEmbedding), nResults, null, Include.all);
 		}
@@ -445,16 +329,6 @@ public class ChromaApi {
 
 	}
 
-	/**
-	 * A QueryResponse object containing the query results.
-	 *
-	 * @param ids List of list of document ids. One for each returned document.
-	 * @param embeddings List of list of document embeddings. One for each returned
-	 * document.
-	 * @param documents List of list of document contents. One for each returned document.
-	 * @param metadata List of list of document metadata. One for each returned document.
-	 * @param distances List of list of search distances. One for each returned document.
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record QueryResponse(// @formatter:off
 		@JsonProperty("ids") List<List<String>> ids,
@@ -464,15 +338,6 @@ public class ChromaApi {
 		@JsonProperty("distances") List<List<Double>> distances) { // @formatter:on
 	}
 
-	/**
-	 * Single query embedding response.
-	 *
-	 * @param id The id of the document.
-	 * @param embedding The embedding of the document.
-	 * @param document The content of the document.
-	 * @param metadata The metadata of the document.
-	 * @param distances The distance of the document to the query embedding.
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record Embedding(// @formatter:off
 		@JsonProperty("id") String id,

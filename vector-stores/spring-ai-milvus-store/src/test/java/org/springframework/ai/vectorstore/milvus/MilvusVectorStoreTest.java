@@ -1,19 +1,3 @@
-/*
- * Copyright 2025-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.milvus;
 
 import java.util.List;
@@ -46,11 +30,6 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Unit test class for {@link MilvusVectorStore}.
- *
- * @author waileong
- */
 @ExtendWith(MockitoExtension.class)
 class MilvusVectorStoreTest {
 
@@ -79,8 +58,8 @@ class MilvusVectorStoreTest {
 				.query(query)
 				.topK(5)
 				.similarityThreshold(0.7)
-				.nativeExpression("metadata[\"age\"] > 30") // this has higher priority
-				.filterExpression("age <= 30") // this will be ignored
+				.nativeExpression("metadata[\"age\"] > 30")
+				.filterExpression("age <= 30")
 				.searchParamsJson("{\"nprobe\":128}")
 				.build();
 
@@ -110,7 +89,7 @@ class MilvusVectorStoreTest {
 			SearchParam capturedParam = performSimilaritySearch(mockedEmbeddingUtils, request);
 
 			assertThat(capturedParam.getTopK()).isEqualTo(request.getTopK());
-			assertThat(capturedParam.getExpr()).isEqualTo("metadata[\"age\"] > 30"); // filter
+			assertThat(capturedParam.getExpr()).isEqualTo("metadata[\"age\"] > 30");
 			assertThat(capturedParam.getParams()).isEqualTo(request.getSearchParamsJson());
 		}
 	}
@@ -133,7 +112,7 @@ class MilvusVectorStoreTest {
 			SearchParam capturedParam = performSimilaritySearch(mockedEmbeddingUtils, request);
 
 			assertThat(capturedParam.getTopK()).isEqualTo(request.getTopK());
-			assertThat(capturedParam.getExpr()).isEqualTo("metadata[\"age\"] > 30"); // filter
+			assertThat(capturedParam.getExpr()).isEqualTo("metadata[\"age\"] > 30");
 			assertThat(capturedParam.getParams()).isEqualTo("{}");
 		}
 	}

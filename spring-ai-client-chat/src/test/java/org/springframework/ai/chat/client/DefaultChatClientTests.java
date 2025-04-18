@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client;
 
 import java.net.MalformedURLException;
@@ -58,22 +42,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-/**
- * Unit tests for {@link DefaultChatClient}.
- *
- * @author Thomas Vitale
- */
 class DefaultChatClientTests {
-
-	// Constructor
 
 	@Test
 	void whenChatClientRequestIsNullThenThrow() {
 		assertThatThrownBy(() -> new DefaultChatClient(null)).isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("defaultChatClientRequest cannot be null");
 	}
-
-	// ChatClient
 
 	@Test
 	void whenPromptThenReturn() {
@@ -137,8 +112,6 @@ class DefaultChatClientTests {
 		assertThat(spec.getUserText()).isEqualTo("my question");
 		assertThat(newSpec.getUserText()).isEqualTo("another question");
 	}
-
-	// DefaultPromptUserSpec
 
 	@Test
 	void buildPromptUserSpec() {
@@ -345,8 +318,6 @@ class DefaultChatClientTests {
 		assertThat(spec.params()).containsEntry("key", "value");
 	}
 
-	// DefaultPromptSystemSpec
-
 	@Test
 	void buildPromptSystemSpec() {
 		DefaultChatClient.DefaultPromptSystemSpec spec = new DefaultChatClient.DefaultPromptSystemSpec();
@@ -474,8 +445,6 @@ class DefaultChatClientTests {
 		assertThat(spec.params()).containsEntry("key", "value");
 	}
 
-	// DefaultAdvisorSpec
-
 	@Test
 	void buildAdvisorSpec() {
 		DefaultChatClient.DefaultAdvisorSpec spec = new DefaultChatClient.DefaultAdvisorSpec();
@@ -591,8 +560,6 @@ class DefaultChatClientTests {
 		assertThat(spec.getAdvisors()).hasSize(1);
 		assertThat(spec.getAdvisors().get(0)).isEqualTo(advisor);
 	}
-
-	// DefaultCallResponseSpec
 
 	@Test
 	void buildCallResponseSpec() {
@@ -1055,8 +1022,6 @@ class DefaultChatClientTests {
 		assertThat(entity.name()).isEqualTo("James Bond");
 	}
 
-	// DefaultStreamResponseSpec
-
 	@Test
 	void buildStreamResponseSpec() {
 		ChatClient chatClient = new DefaultChatClientBuilder(mock(ChatModel.class)).build();
@@ -1189,8 +1154,6 @@ class DefaultChatClientTests {
 		String content = spec.content().blockLast();
 		assertThat(content).isNull();
 	}
-
-	// DefaultChatClientRequestSpec
 
 	@Test
 	void buildChatClientRequestSpec() {
@@ -1385,8 +1348,6 @@ class DefaultChatClientTests {
 		DefaultChatClient.DefaultChatClientRequestSpec defaultSpec = (DefaultChatClient.DefaultChatClientRequestSpec) spec;
 		assertThat(defaultSpec.getFunctionCallbacks()).contains(toolCallback);
 	}
-
-	// FunctionCallback.builder().description("description").function(null,input->"hello").inputType(String.class).build()
 
 	@Test
 	void whenFunctionNameIsNullThenThrow() {

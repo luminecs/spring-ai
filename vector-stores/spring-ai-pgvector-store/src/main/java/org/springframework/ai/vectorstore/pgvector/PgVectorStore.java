@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.pgvector;
 
 import java.sql.PreparedStatement;
@@ -56,105 +40,6 @@ import org.springframework.jdbc.core.StatementCreatorUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * PostgreSQL-based vector store implementation using the pgvector extension.
- *
- * <p>
- * The store uses a database table to persist the vector embeddings along with their
- * associated document content and metadata. By default, it uses the "vector_store" table
- * in the "public" schema, but this can be configured.
- * </p>
- *
- * <p>
- * Features:
- * </p>
- * <ul>
- * <li>Automatic schema initialization with configurable table and index creation</li>
- * <li>Support for different distance metrics: Cosine, Euclidean, and Inner Product</li>
- * <li>Flexible indexing options: HNSW (default), IVFFlat, or exact search (no index)</li>
- * <li>Metadata filtering using JSON path expressions</li>
- * <li>Configurable similarity thresholds for search results</li>
- * <li>Batch processing support with configurable batch sizes</li>
- * </ul>
- *
- * <p>
- * Basic usage example:
- * </p>
- * <pre>{@code
- * PgVectorStore vectorStore = PgVectorStore.builder(jdbcTemplate, embeddingModel)
- *     .dimensions(1536) // Optional: defaults to model dimensions or 1536
- *     .distanceType(PgDistanceType.COSINE_DISTANCE)
- *     .indexType(PgIndexType.HNSW)
- *     .build();
- *
- * // Add documents
- * vectorStore.add(List.of(
- *     new Document("content1", Map.of("key1", "value1")),
- *     new Document("content2", Map.of("key2", "value2"))
- * ));
- *
- * // Search with filters
- * List<Document> results = vectorStore.similaritySearch(
- *     SearchRequest.query("search text")
- *         .withTopK(5)
- *         .withSimilarityThreshold(0.7)
- *         .withFilterExpression("key1 == 'value1'")
- * );
- * }</pre>
- *
- * <p>
- * Advanced configuration example:
- * </p>
- * <pre>{@code
- * PgVectorStore vectorStore = PgVectorStore.builder(jdbcTemplate, embeddingModel)
- *     .schemaName("custom_schema")
- *     .vectorTableName("custom_vectors")
- *     .distanceType(PgDistanceType.NEGATIVE_INNER_PRODUCT)
- *     .removeExistingVectorStoreTable(true)
- *     .initializeSchema(true)
- *     .maxDocumentBatchSize(1000)
- *     .build();
- * }</pre>
- *
- * <p>
- * Database Requirements:
- * </p>
- * <ul>
- * <li>PostgreSQL with pgvector extension installed</li>
- * <li>Required extensions: vector, hstore, uuid-ossp</li>
- * <li>Table schema with id (uuid), content (text), metadata (json), and embedding
- * (vector) columns</li>
- * </ul>
- *
- * <p>
- * Distance Types:
- * </p>
- * <ul>
- * <li>COSINE_DISTANCE: Default, suitable for most use cases</li>
- * <li>EUCLIDEAN_DISTANCE: L2 distance between vectors</li>
- * <li>NEGATIVE_INNER_PRODUCT: Best performance for normalized vectors (e.g., OpenAI
- * embeddings)</li>
- * </ul>
- *
- * <p>
- * Index Types:
- * </p>
- * <ul>
- * <li>HNSW: Default, better query performance but slower builds and more memory</li>
- * <li>IVFFLAT: Faster builds, less memory, but lower query performance</li>
- * <li>NONE: Exact search without indexing</li>
- * </ul>
- *
- * @author Christian Tzolov
- * @author Josh Long
- * @author Muthukumaran Navaneethakrishnan
- * @author Thomas Vitale
- * @author Soby Chacko
- * @author Sebastien Deleuze
- * @author Jihoon Kim
- * @author YeongMin Song
- * @since 1.0.0
- */
 public class PgVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	public static final int OPENAI_EMBEDDING_DIMENSION_SIZE = 1536;
@@ -210,9 +95,6 @@ public class PgVectorStore extends AbstractObservationVectorStore implements Ini
 
 	private final int maxDocumentBatchSize;
 
-	/**
-	 * @param builder {@link VectorStore.Builder} for pg vector store
-	 */
 	protected PgVectorStore(PgVectorStoreBuilder builder) {
 		super(builder);
 
@@ -344,7 +226,6 @@ public class PgVectorStore extends AbstractObservationVectorStore implements Ini
 		String sql = "DELETE FROM " + getFullyQualifiedTableName() + " WHERE metadata::jsonb @@ '"
 				+ nativeFilterExpression + "'::jsonpath";
 
-		// Execute the delete
 		try {
 			this.jdbcTemplate.update(sql);
 		}
@@ -397,9 +278,6 @@ public class PgVectorStore extends AbstractObservationVectorStore implements Ini
 		return this.getDistanceType().operator;
 	}
 
-	// ---------------------------------------------------------------------------------
-	// Initialize
-	// ---------------------------------------------------------------------------------
 	@Override
 	public void afterPropertiesSet() {
 
@@ -417,7 +295,6 @@ public class PgVectorStore extends AbstractObservationVectorStore implements Ini
 			return;
 		}
 
-		// Enable the PGVector, JSONB and UUID support.
 		this.jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
 		this.jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS hstore");
 
@@ -427,7 +304,6 @@ public class PgVectorStore extends AbstractObservationVectorStore implements Ini
 
 		this.jdbcTemplate.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", this.getSchemaName()));
 
-		// Remove existing VectorStoreTable
 		if (this.removeExistingVectorStoreTable) {
 			this.jdbcTemplate.execute(String.format("DROP TABLE IF EXISTS %s", this.getFullyQualifiedTableName()));
 		}
@@ -480,7 +356,7 @@ public class PgVectorStore extends AbstractObservationVectorStore implements Ini
 	}
 
 	int embeddingDimensions() {
-		// The manually set dimensions have precedence over the computed one.
+
 		if (this.dimensions > 0) {
 			return this.dimensions;
 		}
@@ -522,61 +398,27 @@ public class PgVectorStore extends AbstractObservationVectorStore implements Ini
 		return Optional.of(client);
 	}
 
-	/**
-	 * By default, pgvector performs exact nearest neighbor search, which provides perfect
-	 * recall. You can add an index to use approximate nearest neighbor search, which
-	 * trades some recall for speed. Unlike typical indexes, you will see different
-	 * results for queries after adding an approximate index.
-	 */
 	public enum PgIndexType {
 
-		/**
-		 * Performs exact nearest neighbor search, which provides perfect recall.
-		 */
 		NONE,
-		/**
-		 * An IVFFlat index divides vectors into lists, and then searches a subset of
-		 * those lists that are closest to the query vector. It has faster build times and
-		 * uses less memory than HNSW, but has lower query performance (in terms of
-		 * speed-recall tradeoff).
-		 */
+
 		IVFFLAT,
-		/**
-		 * An HNSW index creates a multilayer graph. It has slower build times and uses
-		 * more memory than IVFFlat, but has better query performance (in terms of
-		 * speed-recall tradeoff). There’s no training step like IVFFlat, so the index can
-		 * be created without any data in the table.
-		 */
+
 		HNSW
 
 	}
 
-	/**
-	 * The ID type for the Pg vector store schema. Defaults to UUID.
-	 */
 	public enum PgIdType {
 
 		UUID, TEXT, INTEGER, SERIAL, BIGSERIAL
 
 	}
 
-	/**
-	 * Defaults to CosineDistance. But if vectors are normalized to length 1 (like OpenAI
-	 * embeddings), use inner product (NegativeInnerProduct) for best performance.
-	 */
 	public enum PgDistanceType {
 
-		// NOTE: works only if vectors are normalized to length 1 (like OpenAI
-		// embeddings), use inner product for best performance.
-		// The Sentence transformers are NOT normalized:
-		// https://github.com/UKPLab/sentence-transformers/issues/233
 		EUCLIDEAN_DISTANCE("<->", "vector_l2_ops",
 				"SELECT *, embedding <-> ? AS distance FROM %s WHERE embedding <-> ? < ? %s ORDER BY distance LIMIT ? "),
 
-		// NOTE: works only if vectors are normalized to length 1 (like OpenAI
-		// embeddings), use inner product for best performance.
-		// The Sentence transformers are NOT normalized:
-		// https://github.com/UKPLab/sentence-transformers/issues/233
 		NEGATIVE_INNER_PRODUCT("<#>", "vector_ip_ops",
 				"SELECT *, (1 + (embedding <#> ?)) AS distance FROM %s WHERE (1 + (embedding <#> ?)) < ? %s ORDER BY distance LIMIT ? "),
 

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.tool;
 
 import java.util.ArrayList;
@@ -32,64 +16,29 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * A set of options that can be used to configure the interaction with a chat model,
- * including tool calling.
- *
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- * @since 1.0.0
- */
 public interface ToolCallingChatOptions extends FunctionCallingOptions {
 
 	boolean DEFAULT_TOOL_EXECUTION_ENABLED = true;
 
-	/**
-	 * ToolCallbacks to be registered with the ChatModel.
-	 */
 	List<FunctionCallback> getToolCallbacks();
 
-	/**
-	 * Set the ToolCallbacks to be registered with the ChatModel.
-	 */
 	void setToolCallbacks(List<FunctionCallback> toolCallbacks);
 
-	/**
-	 * Names of the tools to register with the ChatModel.
-	 */
 	Set<String> getToolNames();
 
-	/**
-	 * Set the names of the tools to register with the ChatModel.
-	 */
 	void setToolNames(Set<String> toolNames);
 
-	/**
-	 * Whether the {@link ChatModel} is responsible for executing the tools requested by
-	 * the model or if the tools should be executed directly by the caller.
-	 */
 	@Nullable
 	Boolean getInternalToolExecutionEnabled();
 
-	/**
-	 * Whether the {@link ChatModel} is responsible for executing the tools requested by
-	 * the model or if the tools should be executed directly by the caller.
-	 */
 	@Nullable
 	@Deprecated
 	default Boolean isInternalToolExecutionEnabled() {
 		return getInternalToolExecutionEnabled();
 	}
 
-	/**
-	 * Set whether the {@link ChatModel} is responsible for executing the tools requested
-	 * by the model or if the tools should be executed directly by the caller.
-	 */
 	void setInternalToolExecutionEnabled(@Nullable Boolean internalToolExecutionEnabled);
 
-	/**
-	 * A builder to create a new {@link ToolCallingChatOptions} instance.
-	 */
 	static Builder builder() {
 		return new DefaultToolCallingChatOptions.Builder();
 	}
@@ -150,38 +99,17 @@ public interface ToolCallingChatOptions extends FunctionCallingOptions {
 		}
 	}
 
-	/**
-	 * A builder to create a {@link ToolCallingChatOptions} instance.
-	 */
 	interface Builder extends FunctionCallingOptions.Builder {
 
-		/**
-		 * ToolCallbacks to be registered with the ChatModel.
-		 */
 		Builder toolCallbacks(List<FunctionCallback> functionCallbacks);
 
-		/**
-		 * ToolCallbacks to be registered with the ChatModel.
-		 */
 		Builder toolCallbacks(FunctionCallback... functionCallbacks);
 
-		/**
-		 * Names of the tools to register with the ChatModel.
-		 */
 		Builder toolNames(Set<String> toolNames);
 
-		/**
-		 * Names of the tools to register with the ChatModel.
-		 */
 		Builder toolNames(String... toolNames);
 
-		/**
-		 * Whether the {@link ChatModel} is responsible for executing the tools requested
-		 * by the model or if the tools should be executed directly by the caller.
-		 */
 		Builder internalToolExecutionEnabled(@Nullable Boolean internalToolExecutionEnabled);
-
-		// FunctionCallingOptions.Builder methods
 
 		@Override
 		Builder toolContext(Map<String, Object> context);
@@ -190,26 +118,24 @@ public interface ToolCallingChatOptions extends FunctionCallingOptions {
 		Builder toolContext(String key, Object value);
 
 		@Override
-		@Deprecated // Use toolCallbacks() instead
+		@Deprecated
 		Builder functionCallbacks(List<FunctionCallback> functionCallbacks);
 
 		@Override
-		@Deprecated // Use toolCallbacks() instead
+		@Deprecated
 		Builder functionCallbacks(FunctionCallback... functionCallbacks);
 
 		@Override
-		@Deprecated // Use tools() instead
+		@Deprecated
 		Builder functions(Set<String> functions);
 
 		@Override
-		@Deprecated // Use tools() instead
+		@Deprecated
 		Builder function(String function);
 
 		@Override
-		@Deprecated // Use internalToolExecutionEnabled() instead
+		@Deprecated
 		Builder proxyToolCalls(@Nullable Boolean proxyToolCalls);
-
-		// ChatOptions.Builder methods
 
 		@Override
 		Builder model(@Nullable String model);

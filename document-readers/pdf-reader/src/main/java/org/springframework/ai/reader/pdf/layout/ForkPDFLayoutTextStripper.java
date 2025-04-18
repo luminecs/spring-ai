@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.reader.pdf.layout;
 
 import java.io.IOException;
@@ -28,14 +12,6 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.text.TextPositionComparator;
 
-/**
- * This class extends PDFTextStripper to provide custom text extraction and formatting
- * capabilities for PDF pages. It includes features like processing text lines, sorting
- * text positions, and managing line breaks.
- *
- * @author Jonathan Link
- *
- */
 public class ForkPDFLayoutTextStripper extends PDFTextStripper {
 
 	public static final boolean DEBUG = false;
@@ -48,18 +24,12 @@ public class ForkPDFLayoutTextStripper extends PDFTextStripper {
 
 	private List<TextLine> textLineList;
 
-	/**
-	 * Constructor
-	 */
 	public ForkPDFLayoutTextStripper() throws IOException {
 		super();
 		this.previousTextPosition = null;
 		this.textLineList = new ArrayList<TextLine>();
 	}
 
-	/**
-	 * @param page page to parse
-	 */
 	@Override
 	public void processPage(PDPage page) throws IOException {
 		PDRectangle pageRectangle = page.getMediaBox();
@@ -96,10 +66,6 @@ public class ForkPDFLayoutTextStripper extends PDFTextStripper {
 		}
 	}
 
-	/*
-	 * In order to get rid of the warning: TextPositionComparator class should implement
-	 * Comparator<TextPosition> instead of Comparator
-	 */
 	private void sortTextPositionList(final List<TextPosition> textList) {
 		TextPositionComparator comparator = new TextPositionComparator();
 		Collections.sort(textList, comparator);
@@ -119,7 +85,7 @@ public class ForkPDFLayoutTextStripper extends PDFTextStripper {
 			}
 		}
 		else {
-			this.addNewLine(); // white line
+			this.addNewLine();
 		}
 	}
 
@@ -167,7 +133,7 @@ public class ForkPDFLayoutTextStripper extends PDFTextStripper {
 		if (textYPosition > previousTextYPosition && (textYPosition - previousTextYPosition > 5.5)) {
 			double height = textPosition.getHeight();
 			int numberOfLines = (int) (Math.floor(textYPosition - previousTextYPosition) / height);
-			numberOfLines = Math.max(1, numberOfLines - 1); // exclude current new line
+			numberOfLines = Math.max(1, numberOfLines - 1);
 			if (DEBUG) {
 				System.out.println(height + " " + numberOfLines);
 			}

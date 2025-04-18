@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vertexai.gemini;
 
 import java.io.File;
@@ -28,33 +12,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
-/**
- * Gemini supports the following MIME types:
- *
- * <ul>
- * <li>image/gif
- * <li>image/png
- * <li>image/jpeg
- * <li>video/mov
- * <li>video/mpeg
- * <li>video/mp4
- * <li>video/mpg
- * <li>video/avi
- * <li>video/wmv
- * <li>video/mpegps
- * <li>video/flv
- * </ul>
- *
- * https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/gemini
- *
- * @author Christian Tzolov
- * @since 0.8.1
- */
 public abstract class MimeTypeDetector {
 
-	/**
-	 * List of all MIME types supported by the Vertex Gemini API.
-	 */
 	private static final Map<String, MimeType> GEMINI_MIME_TYPES = new HashMap<>();
 
 	public static MimeType getMimeType(URL url) {
@@ -102,7 +61,7 @@ public abstract class MimeTypeDetector {
 	}
 
 	static {
-		// Custom MIME type mappings here
+
 		GEMINI_MIME_TYPES.put("png", MimeTypeUtils.IMAGE_PNG);
 		GEMINI_MIME_TYPES.put("jpeg", MimeTypeUtils.IMAGE_JPEG);
 		GEMINI_MIME_TYPES.put("jpg", MimeTypeUtils.IMAGE_JPEG);

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.azure.openai;
 
 import java.util.List;
@@ -44,16 +28,6 @@ import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.util.JacksonUtils;
 import org.springframework.util.Assert;
 
-/**
- * {@link ImageModel} implementation for {@literal Microsoft Azure AI} backed by
- * {@link OpenAIClient}.
- *
- * @author Benoit Moussaud
- * @author Sebastien Deleuze
- * @see ImageModel
- * @see com.azure.ai.openai.OpenAIClient
- * @since 1.0.0
- */
 public class AzureOpenAiImageModel implements ImageModel {
 
 	private static final String DEFAULT_DEPLOYMENT_NAME = AzureOpenAiImageOptions.DEFAULT_IMAGE_MODEL;
@@ -120,17 +94,11 @@ public class AzureOpenAiImageModel implements ImageModel {
 		}
 	}
 
-	/**
-	 * Return the deployment-name if provided or use the model name.
-	 * @param prompt the image prompt
-	 * @return Return the deployment-name if provided or use the model name.
-	 */
 	private String getDeploymentName(ImagePrompt prompt) {
 		var runtimeImageOptions = prompt.getOptions();
 
 		if (this.defaultOptions != null) {
-			// Merge options fixed in beta7
-			// https://github.com/Azure/azure-sdk-for-java/issues/38183
+
 			runtimeImageOptions = ModelOptionsUtils.merge(runtimeImageOptions, this.defaultOptions,
 					AzureOpenAiImageOptions.class);
 		}
@@ -144,7 +112,6 @@ public class AzureOpenAiImageModel implements ImageModel {
 
 		}
 
-		// By default the one provided in the image prompt
 		return prompt.getOptions().getModel();
 
 	}
@@ -164,14 +131,13 @@ public class AzureOpenAiImageModel implements ImageModel {
 		ImageGenerationOptions imageGenerationOptions = new ImageGenerationOptions(instructions);
 
 		if (this.defaultOptions != null) {
-			// Merge options fixed in beta7
-			// https://github.com/Azure/azure-sdk-for-java/issues/38183
+
 			runtimeImageOptions = ModelOptionsUtils.merge(runtimeImageOptions, this.defaultOptions,
 					AzureOpenAiImageOptions.class);
 		}
 
 		if (runtimeImageOptions != null) {
-			// Handle portable image options
+
 			if (runtimeImageOptions.getN() != null) {
 				imageGenerationOptions.setN(runtimeImageOptions.getN());
 			}
@@ -179,7 +145,7 @@ public class AzureOpenAiImageModel implements ImageModel {
 				imageGenerationOptions.setModel(runtimeImageOptions.getModel());
 			}
 			if (runtimeImageOptions.getResponseFormat() != null) {
-				// b64_json or url
+
 				imageGenerationOptions.setResponseFormat(
 						ImageGenerationResponseFormat.fromString(runtimeImageOptions.getResponseFormat()));
 			}
@@ -188,7 +154,6 @@ public class AzureOpenAiImageModel implements ImageModel {
 						ImageSize.fromString(runtimeImageOptions.getWidth() + "x" + runtimeImageOptions.getHeight()));
 			}
 
-			// Handle OpenAI specific image options
 			if (runtimeImageOptions instanceof AzureOpenAiImageOptions runtimeAzureOpenAiImageOptions) {
 				if (runtimeAzureOpenAiImageOptions.getQuality() != null) {
 					imageGenerationOptions

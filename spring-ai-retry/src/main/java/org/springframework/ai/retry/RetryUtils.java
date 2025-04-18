@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.retry;
 
 import java.io.IOException;
@@ -32,13 +16,6 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.ResponseErrorHandler;
 
-/**
- * RetryUtils is a utility class for configuring and handling retry operations. It
- * provides a default RetryTemplate and a default ResponseErrorHandler.
- *
- * @author Christian Tzolov
- * @since 0.8.1
- */
 public abstract class RetryUtils {
 
 	public static final ResponseErrorHandler DEFAULT_RESPONSE_ERROR_HANDLER = new ResponseErrorHandler() {
@@ -53,12 +30,7 @@ public abstract class RetryUtils {
 			if (response.getStatusCode().isError()) {
 				String error = StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8);
 				String message = String.format("%s - %s", response.getStatusCode().value(), error);
-				/**
-				 * Thrown on 4xx client errors, such as 401 - Incorrect API key provided,
-				 * 401 - You must be a member of an organization to use the API, 429 -
-				 * Rate limit reached for requests, 429 - You exceeded your current quota
-				 * , please check your plan and billing details.
-				 */
+
 				if (response.getStatusCode().is4xxClientError()) {
 					throw new NonTransientAiException(message);
 				}
@@ -83,10 +55,6 @@ public abstract class RetryUtils {
 		})
 		.build();
 
-	/**
-	 * Useful in testing scenarios where you don't want to wait long for retry and now
-	 * show stack trace
-	 */
 	public static final RetryTemplate SHORT_RETRY_TEMPLATE = RetryTemplate.builder()
 		.maxAttempts(10)
 		.retryOn(TransientAiException.class)

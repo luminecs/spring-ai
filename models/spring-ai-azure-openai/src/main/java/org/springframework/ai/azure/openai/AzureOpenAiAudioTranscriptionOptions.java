@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.azure.openai;
 
 import java.util.List;
@@ -27,42 +11,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.ai.audio.transcription.AudioTranscriptionOptions;
 import org.springframework.util.Assert;
 
-/**
- * Options for audio transcription using Azure Open AI.
- *
- * @author Piotr Olaszewski
- * @author Ilayaperumal Gopinathan
- */
 @JsonInclude(Include.NON_NULL)
 public class AzureOpenAiAudioTranscriptionOptions implements AudioTranscriptionOptions {
 
 	public static final String DEFAULT_AUDIO_TRANSCRIPTION_MODEL = WhisperModel.WHISPER.getValue();
 
 	// @formatter:off
-	/**
-	 * ID of the model to use.
-	 */
+
 	private @JsonProperty("model") String model = DEFAULT_AUDIO_TRANSCRIPTION_MODEL;
 
-	/**
-	 * The deployment name as defined in Azure Open AI Studio when creating a deployment
-	 * backed by an Azure OpenAI base model.
-	 */
 	private @JsonProperty("deployment_name") String deploymentName;
 
-	/**
-	 * The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
-	 */
 	private @JsonProperty("response_format") TranscriptResponseFormat responseFormat = TranscriptResponseFormat.JSON;
 
 	private @JsonProperty("prompt") String prompt;
 
 	private @JsonProperty("language") String language;
 
-	/**
-	 * What sampling temperature to use, between 0 and 1. Higher values like 0.8 will make the output
-	 * more random, while lower values like 0.2 will make it more focused and deterministic.
-	 */
 	private @JsonProperty("temperature") Float temperature = 0F;
 
 	private @JsonProperty("timestamp_granularities") List<GranularityType> granularityType;
@@ -311,16 +276,6 @@ public class AzureOpenAiAudioTranscriptionOptions implements AudioTranscriptionO
 
 	}
 
-	/**
-	 * Structured response of the transcribed audio.
-	 *
-	 * @param language The language of the transcribed text.
-	 * @param duration The duration of the audio in seconds.
-	 * @param text The transcribed text.
-	 * @param words The extracted words and their timestamps.
-	 * @param segments The segments of the transcribed text and their corresponding
-	 * details.
-	 */
 	@JsonInclude(Include.NON_NULL)
 	public record StructuredResponse(
 	// @formatter:off
@@ -331,13 +286,6 @@ public class AzureOpenAiAudioTranscriptionOptions implements AudioTranscriptionO
 		@JsonProperty("segments") List<Segment> segments) {
 		// @formatter:on
 
-		/**
-		 * Extracted word and it's corresponding timestamps.
-		 *
-		 * @param word The text content of the word.
-		 * @param start The start time of the word in seconds.
-		 * @param end The end time of the word in seconds.
-		 */
 		@JsonInclude(Include.NON_NULL)
 		public record Word(
 		// @formatter:off
@@ -347,23 +295,6 @@ public class AzureOpenAiAudioTranscriptionOptions implements AudioTranscriptionO
 			// @formatter:on
 		}
 
-		/**
-		 * Segment of the transcribed text and its corresponding details.
-		 *
-		 * @param id Unique identifier of the segment.
-		 * @param seek Seek offset of the segment.
-		 * @param start Start time of the segment in seconds.
-		 * @param end End time of the segment in seconds.
-		 * @param text The text content of the segment.
-		 * @param tokens Array of token IDs for the text content.
-		 * @param temperature Temperature parameter used for generating the segment.
-		 * @param avgLogprob Average logprob of the segment. If the value is lower than
-		 * -1, consider the logprobs failed.
-		 * @param compressionRatio Compression ratio of the segment. If the value is
-		 * greater than 2.4, consider the compression failed.
-		 * @param noSpeechProb Probability of no speech in the segment. If the value is
-		 * higher than 1.0 and the avg_logprob is below -1, consider this segment silent.
-		 */
 		@JsonInclude(Include.NON_NULL)
 		public record Segment(
 		// @formatter:off

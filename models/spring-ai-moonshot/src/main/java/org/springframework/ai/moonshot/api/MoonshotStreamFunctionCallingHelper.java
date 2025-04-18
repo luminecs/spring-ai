@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.moonshot.api;
 
 import java.util.ArrayList;
@@ -28,12 +12,6 @@ import org.springframework.ai.moonshot.api.MoonshotApi.ChatCompletionMessage.Rol
 import org.springframework.ai.moonshot.api.MoonshotApi.ChatCompletionMessage.ToolCall;
 import org.springframework.util.CollectionUtils;
 
-/**
- * Helper class to support Streaming function calling. It can merge the streamed
- * ChatCompletionChunk in case of function calling message.
- *
- * @author Geng Rong
- */
 public class MoonshotStreamFunctionCallingHelper {
 
 	public ChatCompletionChunk merge(ChatCompletionChunk previous, ChatCompletionChunk current) {
@@ -74,7 +52,7 @@ public class MoonshotStreamFunctionCallingHelper {
 		String content = (current.content() != null ? current.content()
 				: "" + ((previous.content() != null) ? previous.content() : ""));
 		Role role = (current.role() != null ? current.role() : previous.role());
-		role = (role != null ? role : Role.ASSISTANT); // default to ASSISTANT (if null
+		role = (role != null ? role : Role.ASSISTANT);
 		String name = (current.name() != null ? current.name() : previous.name());
 		String toolCallId = (current.toolCallId() != null ? current.toolCallId() : previous.toolCallId());
 
@@ -134,10 +112,6 @@ public class MoonshotStreamFunctionCallingHelper {
 		return new ChatCompletionFunction(name, arguments.toString());
 	}
 
-	/**
-	 * @param chatCompletion the ChatCompletionChunk to check
-	 * @return true if the ChatCompletionChunk is a streaming tool function call.
-	 */
 	public boolean isStreamingToolFunctionCall(ChatCompletionChunk chatCompletion) {
 
 		if (chatCompletion == null || CollectionUtils.isEmpty(chatCompletion.choices())) {
@@ -151,11 +125,6 @@ public class MoonshotStreamFunctionCallingHelper {
 		return !CollectionUtils.isEmpty(choice.delta().toolCalls());
 	}
 
-	/**
-	 * @param chatCompletion the ChatCompletionChunk to check
-	 * @return true if the ChatCompletionChunk is a streaming tool function call and it is
-	 * the last one.
-	 */
 	public boolean isStreamingToolFunctionCallFinish(ChatCompletionChunk chatCompletion) {
 
 		if (chatCompletion == null || CollectionUtils.isEmpty(chatCompletion.choices())) {

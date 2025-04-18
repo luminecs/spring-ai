@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.bedrock.converse.api;
 
 import java.util.Map;
@@ -25,31 +9,6 @@ import software.amazon.awssdk.services.bedrockruntime.model.VideoFormat;
 import org.springframework.ai.content.Media;
 import org.springframework.util.MimeType;
 
-/**
- * The BedrockMediaFormat class provides mappings between MIME types and their
- * corresponding Bedrock media formats for documents, images, and videos. It supports
- * conversion of MIME types to specific formats used by the Bedrock runtime.
- *
- * <p>
- * Supported document formats include PDF, CSV, DOC, DOCX, XLS, XLSX, HTML, TXT, and MD.
- * Supported image formats include JPEG, PNG, GIF, and WEBP. Supported video formats
- * include MKV, MOV, MP4, WEBM, FLV, MPEG, MPG, WMV, and 3GP.
- * </p>
- *
- * <p>
- * Usage example:
- * </p>
- * <pre>
- *     String format = BedrockMediaFormat.getFormatAsString(Media.Format.DOC_PDF);
- * </pre>
- *
- * <p>
- * Throws IllegalArgumentException if the MIME type is unsupported.
- * </p>
- *
- * @author Christian Tzolov
- * @since 1.0.0
- */
 public abstract class BedrockMediaFormat {
 
 	// @formatter:off

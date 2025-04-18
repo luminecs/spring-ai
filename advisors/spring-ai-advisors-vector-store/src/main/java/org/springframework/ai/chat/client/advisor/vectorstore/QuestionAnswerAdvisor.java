@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor.vectorstore;
 
 import java.util.HashMap;
@@ -42,15 +26,6 @@ import org.springframework.ai.vectorstore.filter.FilterExpressionTextParser;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * Context for the question is retrieved from a Vector Store and added to the prompt's
- * user text.
- *
- * @author Christian Tzolov
- * @author Timo Salm
- * @author Ilayaperumal Gopinathan
- * @since 1.0.0
- */
 public class QuestionAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
 
 	public static final String RETRIEVED_DOCUMENTS = "qa_retrieved_documents";
@@ -82,71 +57,23 @@ public class QuestionAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdv
 
 	private final int order;
 
-	/**
-	 * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-	 * combines it with the user's text.
-	 * @param vectorStore The vector store to use
-	 */
 	public QuestionAnswerAdvisor(VectorStore vectorStore) {
 		this(vectorStore, SearchRequest.builder().build(), DEFAULT_USER_TEXT_ADVISE);
 	}
 
-	/**
-	 * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-	 * combines it with the user's text.
-	 * @param vectorStore The vector store to use
-	 * @param searchRequest The search request defined using the portable filter
-	 * expression syntax
-	 */
 	public QuestionAnswerAdvisor(VectorStore vectorStore, SearchRequest searchRequest) {
 		this(vectorStore, searchRequest, DEFAULT_USER_TEXT_ADVISE);
 	}
 
-	/**
-	 * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-	 * combines it with the user's text.
-	 * @param vectorStore The vector store to use
-	 * @param searchRequest The search request defined using the portable filter
-	 * expression syntax
-	 * @param userTextAdvise The user text to append to the existing user prompt. The text
-	 * should contain a placeholder named "question_answer_context".
-	 */
 	public QuestionAnswerAdvisor(VectorStore vectorStore, SearchRequest searchRequest, String userTextAdvise) {
 		this(vectorStore, searchRequest, userTextAdvise, true);
 	}
 
-	/**
-	 * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-	 * combines it with the user's text.
-	 * @param vectorStore The vector store to use
-	 * @param searchRequest The search request defined using the portable filter
-	 * expression syntax
-	 * @param userTextAdvise The user text to append to the existing user prompt. The text
-	 * should contain a placeholder named "question_answer_context".
-	 * @param protectFromBlocking If true the advisor will protect the execution from
-	 * blocking threads. If false the advisor will not protect the execution from blocking
-	 * threads. This is useful when the advisor is used in a non-blocking environment. It
-	 * is true by default.
-	 */
 	public QuestionAnswerAdvisor(VectorStore vectorStore, SearchRequest searchRequest, String userTextAdvise,
 			boolean protectFromBlocking) {
 		this(vectorStore, searchRequest, userTextAdvise, protectFromBlocking, DEFAULT_ORDER);
 	}
 
-	/**
-	 * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-	 * combines it with the user's text.
-	 * @param vectorStore The vector store to use
-	 * @param searchRequest The search request defined using the portable filter
-	 * expression syntax
-	 * @param userTextAdvise The user text to append to the existing user prompt. The text
-	 * should contain a placeholder named "question_answer_context".
-	 * @param protectFromBlocking If true the advisor will protect the execution from
-	 * blocking threads. If false the advisor will not protect the execution from blocking
-	 * threads. This is useful when the advisor is used in a non-blocking environment. It
-	 * is true by default.
-	 * @param order The order of the advisor.
-	 */
 	public QuestionAnswerAdvisor(VectorStore vectorStore, SearchRequest searchRequest, String userTextAdvise,
 			boolean protectFromBlocking, int order) {
 
@@ -188,9 +115,6 @@ public class QuestionAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdv
 	@Override
 	public Flux<AdvisedResponse> aroundStream(AdvisedRequest advisedRequest, StreamAroundAdvisorChain chain) {
 
-		// This can be executed by both blocking and non-blocking Threads
-		// E.g. a command line or Tomcat blocking Thread implementation
-		// or by a WebFlux dispatch in a non-blocking manner.
 		Flux<AdvisedResponse> advisedResponses = (this.protectFromBlocking) ?
 		// @formatter:off
 			Mono.just(advisedRequest)
@@ -212,10 +136,8 @@ public class QuestionAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdv
 
 		var context = new HashMap<>(request.adviseContext());
 
-		// 1. Advise the system text.
 		String advisedUserText = request.userText() + System.lineSeparator() + this.userTextAdvise;
 
-		// 2. Search for similar documents in the vector store.
 		String query = new PromptTemplate(request.userText(), request.userParams()).render();
 		var searchRequestToUse = SearchRequest.from(this.searchRequest)
 			.query(query)
@@ -224,14 +146,12 @@ public class QuestionAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdv
 
 		List<Document> documents = this.vectorStore.similaritySearch(searchRequestToUse);
 
-		// 3. Create the context from the documents.
 		context.put(RETRIEVED_DOCUMENTS, documents);
 
 		String documentContext = documents.stream()
 			.map(Document::getText)
 			.collect(Collectors.joining(System.lineSeparator()));
 
-		// 4. Advise the user parameters.
 		Map<String, Object> advisedUserParams = new HashMap<>(request.userParams());
 		advisedUserParams.put("question_answer_context", documentContext);
 

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.cosmosdb;
 
 import java.util.HashMap;
@@ -44,11 +28,6 @@ import org.springframework.context.annotation.Bean;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * @author Theo van Kraay
- * @author Thomas Vitale
- * @since 1.0.0
- */
 @EnabledIfEnvironmentVariable(named = "AZURE_COSMOSDB_ENDPOINT", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "AZURE_COSMOSDB_KEY", matches = ".+")
 public class CosmosDBVectorStoreIT {
@@ -66,34 +45,26 @@ public class CosmosDBVectorStoreIT {
 	@Test
 	public void testAddSearchAndDeleteDocuments() {
 
-		// Create a sample document
 		Document document1 = new Document(UUID.randomUUID().toString(), "Sample content1", Map.of("key1", "value1"));
 		Document document2 = new Document(UUID.randomUUID().toString(), "Sample content2", Map.of("key2", "value2"));
 
-		// Add the document to the vector store
 		this.vectorStore.add(List.of(document1, document2));
 
-		// create duplicate docs and assert that second one throws exception
 		Document document3 = new Document(document1.getId(), "Sample content3", Map.of("key3", "value3"));
 		assertThatThrownBy(() -> this.vectorStore.add(List.of(document3))).isInstanceOf(Exception.class)
 			.hasMessageContaining("Duplicate document id: " + document1.getId());
 
-		// Perform a similarity search
 		List<Document> results = this.vectorStore
 			.similaritySearch(SearchRequest.builder().query("Sample content").topK(1).build());
 
-		// Verify the search results
 		assertThat(results).isNotEmpty();
 		assertThat(results.get(0).getId()).isEqualTo(document1.getId());
 
-		// Remove the documents from the vector store
 		this.vectorStore.delete(List.of(document1.getId(), document2.getId()));
 
-		// Perform a similarity search again
 		List<Document> results2 = this.vectorStore
 			.similaritySearch(SearchRequest.builder().query("Sample content").topK(1).build());
 
-		// Verify the search results
 		assertThat(results2).isEmpty();
 
 	}
@@ -101,7 +72,6 @@ public class CosmosDBVectorStoreIT {
 	@Test
 	void testSimilaritySearchWithFilter() {
 
-		// Insert documents using vectorStore.add
 		Map<String, Object> metadata1;
 		metadata1 = new HashMap<>();
 		metadata1.put("country", "UK");
@@ -163,11 +133,9 @@ public class CosmosDBVectorStoreIT {
 
 		this.vectorStore.delete(List.of(document1.getId(), document2.getId(), document3.getId(), document4.getId()));
 
-		// Perform a similarity search again
 		List<Document> results4 = this.vectorStore
 			.similaritySearch(SearchRequest.builder().query("The World").topK(1).build());
 
-		// Verify the search results
 		assertThat(results4).isEmpty();
 	}
 
@@ -212,7 +180,7 @@ public class CosmosDBVectorStoreIT {
 
 		@Bean
 		public VectorStoreObservationConvention observationConvention() {
-			// Replace with an actual observation convention or a mock if needed
+
 			return new VectorStoreObservationConvention() {
 
 			};

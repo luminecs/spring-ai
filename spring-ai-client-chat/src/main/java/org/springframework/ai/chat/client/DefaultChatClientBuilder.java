@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client;
 
 import java.io.IOException;
@@ -41,18 +25,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-/**
- * DefaultChatClientBuilder is a builder class for creating a ChatClient.
- *
- * It provides methods to set default values for various properties of the ChatClient.
- *
- * @author Mark Pollack
- * @author Christian Tzolov
- * @author Josh Long
- * @author Arjen Poutsma
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class DefaultChatClientBuilder implements Builder {
 
 	protected final DefaultChatClientRequestSpec defaultRequest;
@@ -180,14 +152,14 @@ public class DefaultChatClientBuilder implements Builder {
 		return this;
 	}
 
-	@Deprecated // Use defaultTools()
+	@Deprecated
 	public <I, O> Builder defaultFunction(String name, String description, java.util.function.Function<I, O> function) {
 		this.defaultRequest
 			.functions(FunctionCallback.builder().function(name, function).description(description).build());
 		return this;
 	}
 
-	@Deprecated // Use defaultTools()
+	@Deprecated
 	public <I, O> Builder defaultFunction(String name, String description,
 			java.util.function.BiFunction<I, ToolContext, O> biFunction) {
 		this.defaultRequest
@@ -195,13 +167,13 @@ public class DefaultChatClientBuilder implements Builder {
 		return this;
 	}
 
-	@Deprecated // Use defaultTools()
+	@Deprecated
 	public Builder defaultFunctions(String... functionNames) {
 		this.defaultRequest.functions(functionNames);
 		return this;
 	}
 
-	@Deprecated // Use defaultTools()
+	@Deprecated
 	public Builder defaultFunctions(FunctionCallback... functionCallbacks) {
 		this.defaultRequest.functions(functionCallbacks);
 		return this;

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -34,14 +18,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 
-/**
- * OpenAI Moderation API.
- *
- * @author Ahmed Yousri
- * @author Ilayaperumal Gopinathan
- * @see <a href=
- * "https://platform.openai.com/docs/api-reference/moderations">https://platform.openai.com/docs/api-reference/moderations</a>
- */
 public class OpenAiModerationApi {
 
 	public static final String DEFAULT_MODERATION_MODEL = "text-moderation-latest";
@@ -52,12 +28,6 @@ public class OpenAiModerationApi {
 
 	private final ObjectMapper objectMapper;
 
-	/**
-	 * Create a new OpenAI Moderation API with the provided base URL.
-	 * @param baseUrl the base URL for the OpenAI API.
-	 * @param apiKey OpenAI apiKey.
-	 * @param restClientBuilder the rest client builder to use.
-	 */
 	public OpenAiModerationApi(String baseUrl, ApiKey apiKey, MultiValueMap<String, String> headers,
 			RestClient.Builder restClientBuilder, ResponseErrorHandler responseErrorHandler) {
 
@@ -145,7 +115,6 @@ public class OpenAiModerationApi {
 			@JsonProperty("violence") double violence) {
 
 	}
-	// @formatter:onn
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record Data(@JsonProperty("url") String url, @JsonProperty("b64_json") String b64Json,
@@ -153,9 +122,6 @@ public class OpenAiModerationApi {
 
 	}
 
-	/**
-	 * Builder to construct {@link OpenAiModerationApi} instance.
-	 */
 	public static class Builder {
 
 		private String baseUrl = OpenAiApiConstants.DEFAULT_BASE_URL;

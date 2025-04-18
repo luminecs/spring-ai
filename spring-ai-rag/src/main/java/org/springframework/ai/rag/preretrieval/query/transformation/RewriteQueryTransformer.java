@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.rag.preretrieval.query.transformation;
 
 import org.slf4j.Logger;
@@ -28,17 +12,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * Uses a large language model to rewrite a user query to provide better results when
- * querying a target system, such as a vector store or a web search engine.
- * <p>
- * This transformer is useful when the user query is verbose, ambiguous, or contains
- * irrelevant information that may affect the quality of the search results.
- *
- * @author Thomas Vitale
- * @since 1.0.0
- * @see <a href="https://arxiv.org/pdf/2305.14283">arXiv:2305.14283</a>
- */
 public class RewriteQueryTransformer implements QueryTransformer {
 
 	private static final Logger logger = LoggerFactory.getLogger(RewriteQueryTransformer.class);

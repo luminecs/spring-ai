@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.bedrock.converse;
 
 import java.io.IOException;
@@ -315,7 +299,6 @@ class BedrockConverseChatClientIT {
 
 		List<ChatResponse> chatResponses = response.collectList().block();
 
-		// chatResponses.forEach(cr -> logger.info("Response: {}", cr));
 		var lastChatResponse = chatResponses.get(chatResponses.size() - 1);
 		var metadata = lastChatResponse.getMetadata();
 		assertThat(metadata.getUsage()).isNotNull();
@@ -382,12 +365,11 @@ class BedrockConverseChatClientIT {
 	@Deprecated
 	void multiModalityImageUrl2(String modelName) throws IOException {
 
-		// TODO: add url method that wrapps the checked exception.
 		URL url = new URL("https://docs.spring.io/spring-ai/reference/_images/multimodal.test.png");
 
 		// @formatter:off
 		String response = ChatClient.create(this.chatModel).prompt()
-		// TODO consider adding model(...) method to ChatClient as a shortcut to
+
 		.options(ToolCallingChatOptions.builder().model(modelName).build())
 		.user(u -> u.text("Explain what do you see on this picture?").media(MimeTypeUtils.IMAGE_PNG, url))
 		.call()
@@ -402,12 +384,11 @@ class BedrockConverseChatClientIT {
 	@ValueSource(strings = { "anthropic.claude-3-5-sonnet-20240620-v1:0" })
 	void multiModalityImageUrl(String modelName) throws IOException {
 
-		// TODO: add url method that wrapps the checked exception.
 		URL url = new URL("https://docs.spring.io/spring-ai/reference/_images/multimodal.test.png");
 
 		// @formatter:off
 		String response = ChatClient.create(this.chatModel).prompt()
-		// TODO consider adding model(...) method to ChatClient as a shortcut to
+
 		.options(ToolCallingChatOptions.builder().model(modelName).build())
 		.user(u -> u.text("Explain what do you see on this picture?").media(MimeTypeUtils.IMAGE_PNG, url))
 		.call()
@@ -421,7 +402,6 @@ class BedrockConverseChatClientIT {
 	@Test
 	void streamingMultiModalityImageUrl() throws IOException {
 
-		// TODO: add url method that wrapps the checked exception.
 		URL url = new URL("https://docs.spring.io/spring-ai/reference/_images/multimodal.test.png");
 
 		// @formatter:off

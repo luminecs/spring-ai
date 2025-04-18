@@ -1,19 +1,3 @@
-/*
- * Copyright 2025-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.bedrock.converse.client;
 
 import java.io.IOException;
@@ -43,10 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * @author Christian Tzolov
- */
-// @Disabled
 @SpringBootTest(classes = BedrockNovaChatClientIT.Config.class)
 @RequiresAwsCredentials
 public class BedrockNovaChatClientIT {
@@ -87,7 +67,7 @@ public class BedrockNovaChatClientIT {
 
 	@Test
 	void videoMultiModalityTest() throws IOException {
-		// Define sets of semantically similar words for different concepts
+
 		Set<String> youngDescriptors = Set.of("baby", "small", "young", "little", "tiny", "juvenile", "newborn",
 				"infant", "hatchling", "downy", "fluffy");
 
@@ -103,25 +83,20 @@ public class BedrockNovaChatClientIT {
 
 		logger.info(response);
 
-		// Convert response to lowercase for case-insensitive matching
 		String lowerResponse = response.toLowerCase();
 
-		// Test for presence of young/small descriptors
 		boolean hasYoungDescriptor = youngDescriptors.stream()
 			.anyMatch(word -> lowerResponse.contains(word.toLowerCase()));
 
-		// Test for presence of bird/chicken descriptors
 		boolean hasBirdDescriptor = birdDescriptors.stream()
 			.anyMatch(word -> lowerResponse.contains(word.toLowerCase()));
 
-		// Additional semantic checks
 		boolean describesMovement = lowerResponse.contains("mov") || lowerResponse.contains("walk")
 				|| lowerResponse.contains("peck");
 
 		boolean describesAppearance = lowerResponse.contains("feather") || lowerResponse.contains("fluff")
 				|| lowerResponse.contains("color");
 
-		// Comprehensive assertions with detailed failure messages
 		assertAll("Video content analysis",
 				() -> assertTrue(hasYoungDescriptor,
 						String.format("Response should contain at least one young descriptor. Response: '%s'",

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.mistralai.api.tool;
 
 import java.util.ArrayList;
@@ -40,10 +24,6 @@ import org.springframework.util.ObjectUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Christian Tzolov
- * @author Ricken Bazolo
- */
 @EnabledIfEnvironmentVariable(named = "MISTRAL_AI_API_KEY", matches = ".+")
 public class MistralAiApiToolFunctionCallIT {
 
@@ -68,7 +48,6 @@ public class MistralAiApiToolFunctionCallIT {
 	@SuppressWarnings("null")
 	public void toolFunctionCall() throws JsonProcessingException {
 
-		// Step 1: send the conversation and available functions to the model
 		var message = new ChatCompletionMessage(
 				"What's the weather like in San Francisco, Tokyo, and Paris? Show the temperature in Celsius.",
 				Role.USER);
@@ -93,15 +72,6 @@ public class MistralAiApiToolFunctionCallIT {
 								}
 								""")));
 
-		// Or you can use the
-		// ModelOptionsUtils.getJsonSchema(FakeWeatherService.Request.class))) to
-		// auto-generate the JSON schema like:
-		// var functionTool = new MistralAiApi.FunctionTool(Type.FUNCTION, new
-		// MistralAiApi.FunctionTool.Function(
-		// "Get the weather in location. Return temperature in 30°F or 30°C format.",
-		// "getCurrentWeather",
-		// ModelOptionsUtils.getJsonSchema(MockWeatherService.Request.class)));
-
 		List<ChatCompletionMessage> messages = new ArrayList<>(List.of(message));
 
 		ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest(messages, MISTRAL_AI_CHAT_MODEL,
@@ -120,13 +90,10 @@ public class MistralAiApiToolFunctionCallIT {
 		assertThat(responseMessage.role()).isEqualTo(Role.ASSISTANT);
 		assertThat(responseMessage.toolCalls()).isNotNull();
 
-		// Check if the model wanted to call a function
 		if (!ObjectUtils.isEmpty(responseMessage.toolCalls())) {
 
-			// extend conversation with assistant's reply.
 			messages.add(responseMessage);
 
-			// Send the info for each function call and function response to the model.
 			for (ToolCall toolCall : responseMessage.toolCalls()) {
 				var functionName = toolCall.function().name();
 				if ("getCurrentWeather".equals(functionName)) {
@@ -135,7 +102,6 @@ public class MistralAiApiToolFunctionCallIT {
 
 					MockWeatherService.Response weatherResponse = this.weatherService.apply(weatherRequest);
 
-					// extend conversation with function response.
 					messages.add(new ChatCompletionMessage("" + weatherResponse.temp() + weatherRequest.unit(),
 							Role.TOOL, functionName, null, toolCall.id()));
 				}

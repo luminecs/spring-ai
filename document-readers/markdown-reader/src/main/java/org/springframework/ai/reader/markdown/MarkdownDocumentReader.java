@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.reader.markdown;
 
 import java.io.IOException;
@@ -40,62 +24,28 @@ import org.springframework.ai.reader.markdown.config.MarkdownDocumentReaderConfi
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 
-/**
- * Reads the given Markdown resource and groups headers, paragraphs, or text divided by
- * horizontal lines (depending on the
- * {@link MarkdownDocumentReaderConfig#horizontalRuleCreateDocument} configuration) into
- * {@link Document}s.
- *
- * @author Piotr Olaszewski
- */
 public class MarkdownDocumentReader implements DocumentReader {
 
-	/**
-	 * The resource points to the Markdown document.
-	 */
 	private final Resource markdownResource;
 
-	/**
-	 * Configuration to a parsing process.
-	 */
 	private final MarkdownDocumentReaderConfig config;
 
-	/**
-	 * Markdown parser.
-	 */
 	private final Parser parser;
 
-	/**
-	 * Create a new {@link MarkdownDocumentReader} instance.
-	 * @param markdownResource the resource to read
-	 */
 	public MarkdownDocumentReader(String markdownResource) {
 		this(new DefaultResourceLoader().getResource(markdownResource), MarkdownDocumentReaderConfig.defaultConfig());
 	}
 
-	/**
-	 * Create a new {@link MarkdownDocumentReader} instance.
-	 * @param markdownResource the resource to read
-	 * @param config the configuration to use
-	 */
 	public MarkdownDocumentReader(String markdownResource, MarkdownDocumentReaderConfig config) {
 		this(new DefaultResourceLoader().getResource(markdownResource), config);
 	}
 
-	/**
-	 * Create a new {@link MarkdownDocumentReader} instance.
-	 * @param markdownResource the resource to read
-	 */
 	public MarkdownDocumentReader(Resource markdownResource, MarkdownDocumentReaderConfig config) {
 		this.markdownResource = markdownResource;
 		this.config = config;
 		this.parser = Parser.builder().build();
 	}
 
-	/**
-	 * Extracts and returns a list of documents from the resource.
-	 * @return List of extracted {@link Document}
-	 */
 	@Override
 	public List<Document> get() {
 		try (var input = this.markdownResource.getInputStream()) {
@@ -111,9 +61,6 @@ public class MarkdownDocumentReader implements DocumentReader {
 		}
 	}
 
-	/**
-	 * A convenient class for visiting handled nodes in the Markdown document.
-	 */
 	static class DocumentVisitor extends AbstractVisitor {
 
 		private final List<Document> documents = new ArrayList<>();
@@ -128,9 +75,6 @@ public class MarkdownDocumentReader implements DocumentReader {
 			this.config = config;
 		}
 
-		/**
-		 * Visits the document node and initializes the current document builder.
-		 */
 		@Override
 		public void visit(org.commonmark.node.Document document) {
 			this.currentDocumentBuilder = Document.builder();

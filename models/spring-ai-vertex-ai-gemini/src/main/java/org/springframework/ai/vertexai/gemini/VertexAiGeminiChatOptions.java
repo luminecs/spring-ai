@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vertexai.gemini;
 
 import java.util.ArrayList;
@@ -38,90 +22,39 @@ import org.springframework.ai.vertexai.gemini.common.VertexAiGeminiSafetySetting
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-/**
- * Options for the Vertex AI Gemini Chat API.
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Grogdunn
- * @author Ilayaperumal Gopinathan
- * @since 1.0.0
- */
 @JsonInclude(Include.NON_NULL)
 public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 
-	// https://cloud.google.com/vertex-ai/docs/reference/rest/v1/GenerationConfig
-
-	/**
-	 * Optional. Stop sequences.
-	 */
 	private @JsonProperty("stopSequences") List<String> stopSequences;
 
 	// @formatter:off
 
-	/**
-	 * Optional. Controls the randomness of predictions.
-	 */
 	private @JsonProperty("temperature") Double temperature;
 
-	/**
-	 * Optional. If specified, nucleus sampling will be used.
-	 */
 	private @JsonProperty("topP") Double topP;
 
-	/**
-	 * Optional. If specified, top k sampling will be used.
-	 */
 	private @JsonProperty("topK") Integer topK;
 
-	/**
-	 * Optional. The maximum number of tokens to generate.
-	 */
 	private @JsonProperty("candidateCount") Integer candidateCount;
 
-	/**
-	 * Optional. The maximum number of tokens to generate.
-	 */
 	private @JsonProperty("maxOutputTokens") Integer maxOutputTokens;
 
-	/**
-	 * Gemini model name.
-	 */
 	private @JsonProperty("modelName") String model;
 
-	/**
-	 * Optional. Output response mimetype of the generated candidate text.
-	 * - text/plain: (default) Text output.
-	 * - application/json: JSON response in the candidates.
-	 */
 	private @JsonProperty("responseMimeType") String responseMimeType;
 
-	/**
-	 * Collection of {@link ToolCallback}s to be used for tool calling in the chat
-	 * completion requests.
-	 */
 	@JsonIgnore
 	private List<FunctionCallback> toolCallbacks = new ArrayList<>();
 
-	/**
-     * Collection of tool names to be resolved at runtime and used for tool calling in the
-	 * chat completion requests.
-	 */
 	@JsonIgnore
 	private Set<String> toolNames = new HashSet<>();
 
-	/**
-	 * Whether to enable the tool execution lifecycle internally in ChatModel.
-	 */
 	@JsonIgnore
 	private Boolean internalToolExecutionEnabled;
 
 	@JsonIgnore
 	private Map<String, Object> toolContext = new HashMap<>();
 
-	/**
-	 * Use Google search Grounding feature
-	 */
 	@JsonIgnore
 	private Boolean googleSearchRetrieval = false;
 

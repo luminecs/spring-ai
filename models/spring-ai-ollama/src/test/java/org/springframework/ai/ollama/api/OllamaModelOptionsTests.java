@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.ollama.api;
 
 import java.util.HashSet;
@@ -25,10 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Christian Tzolov
- * @author Mark Pollack
- */
 public class OllamaModelOptionsTests {
 
 	@Test
@@ -134,12 +114,10 @@ public class OllamaModelOptionsTests {
 			.toolContext(Map.of("key1", "value1", "key2", "value2"))
 			.build();
 
-		// Function-related fields are not included in the map due to @JsonIgnore
 		var optionsMap = options.toMap();
 		assertThat(optionsMap).doesNotContainKey("functions");
 		assertThat(optionsMap).doesNotContainKey("tool_context");
 
-		// But they are accessible through getters
 		assertThat(options.getFunctions()).containsExactlyInAnyOrder("function1", "function2", "function3");
 		assertThat(options.getToolContext())
 			.containsExactlyInAnyOrderEntriesOf(Map.of("key1", "value1", "key2", "value2"));
@@ -167,7 +145,6 @@ public class OllamaModelOptionsTests {
 
 		var copiedOptions = OllamaOptions.fromOptions(originalOptions);
 
-		// Test the copied options directly rather than through toMap()
 		assertThat(copiedOptions.getModel()).isEqualTo("llama2");
 		assertThat(copiedOptions.getTemperature()).isEqualTo(0.7);
 		assertThat(copiedOptions.getTopK()).isEqualTo(40);
@@ -180,14 +157,12 @@ public class OllamaModelOptionsTests {
 
 		var optionsMap = options.toMap();
 
-		// Verify function-related fields are not included in the map due to @JsonIgnore
 		assertThat(optionsMap).containsEntry("model", "llama2");
 		assertThat(optionsMap).doesNotContainKey("functions");
 		assertThat(optionsMap).doesNotContainKey("functionCallbacks");
 		assertThat(optionsMap).doesNotContainKey("proxyToolCalls");
 		assertThat(optionsMap).doesNotContainKey("toolContext");
 
-		// But verify they are still accessible through getters
 		assertThat(options.getFunctions()).containsExactly("function1");
 	}
 
@@ -201,7 +176,6 @@ public class OllamaModelOptionsTests {
 		assertThat(optionsMap).containsEntry("temperature", 0.7);
 		assertThat(optionsMap).containsEntry("top_k", 40);
 
-		// Function is not in map but accessible via getter
 		assertThat(options.getFunctions()).containsExactly("function1");
 	}
 

@@ -1,26 +1,7 @@
-/*
- * Copyright 2024-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vertexai.gemini.common;
 
 public class VertexAiGeminiSafetySetting {
 
-	/**
-	 * Enum representing different threshold levels for blocking harmful content.
-	 */
 	public enum HarmBlockThreshold {
 
 		HARM_BLOCK_THRESHOLD_UNSPECIFIED(0), BLOCK_LOW_AND_ABOVE(1), BLOCK_MEDIUM_AND_ABOVE(2), BLOCK_ONLY_HIGH(3),
@@ -38,9 +19,6 @@ public class VertexAiGeminiSafetySetting {
 
 	}
 
-	/**
-	 * Enum representing methods for evaluating harmful content.
-	 */
 	public enum HarmBlockMethod {
 
 		HARM_BLOCK_METHOD_UNSPECIFIED(0), SEVERITY(1), PROBABILITY(2);
@@ -57,9 +35,6 @@ public class VertexAiGeminiSafetySetting {
 
 	}
 
-	/**
-	 * Enum representing different categories of harmful content.
-	 */
 	public enum HarmCategory {
 
 		HARM_CATEGORY_UNSPECIFIED(0), HARM_CATEGORY_HATE_SPEECH(1), HARM_CATEGORY_DANGEROUS_CONTENT(2),
@@ -83,21 +58,18 @@ public class VertexAiGeminiSafetySetting {
 
 	private HarmBlockMethod method;
 
-	// Default constructor
 	public VertexAiGeminiSafetySetting() {
 		this.category = HarmCategory.HARM_CATEGORY_UNSPECIFIED;
 		this.threshold = HarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED;
 		this.method = HarmBlockMethod.HARM_BLOCK_METHOD_UNSPECIFIED;
 	}
 
-	// Constructor with all fields
 	public VertexAiGeminiSafetySetting(HarmCategory category, HarmBlockThreshold threshold, HarmBlockMethod method) {
 		this.category = category;
 		this.threshold = threshold;
 		this.method = method;
 	}
 
-	// Getters and setters
 	public HarmCategory getCategory() {
 		return this.category;
 	}

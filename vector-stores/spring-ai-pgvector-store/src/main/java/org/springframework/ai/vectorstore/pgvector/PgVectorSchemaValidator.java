@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.pgvector;
 
 import java.util.ArrayList;
@@ -26,13 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-/**
- * Validates the schema of a PostgreSQL table used as a PGVectorStore.
- *
- * @author Muthukumaran Navaneethakrishnan
- * @author Christian Tzolov
- * @since 1.0.0
- */
 public class PgVectorSchemaValidator {
 
 	private static final Logger logger = LoggerFactory.getLogger(PgVectorSchemaValidator.class);
@@ -49,13 +26,10 @@ public class PgVectorSchemaValidator {
 			return false;
 		}
 
-		// Check if the table or schema has Only alphanumeric characters and underscores
-		// and should be less than 64 characters
 		if (!name.matches("^[a-zA-Z0-9_]{1,64}$")) {
 			return false;
 		}
 
-		// Check to ensure the table or schema name is not purely numeric
 		if (name.matches("^[0-9]+$")) {
 			return false;
 		}
@@ -67,7 +41,7 @@ public class PgVectorSchemaValidator {
 	public boolean isTableExists(String schemaName, String tableName) {
 		String sql = "SELECT 1 FROM information_schema.tables WHERE table_schema = ? AND table_name = ?";
 		try {
-			// Query for a single integer value, if it exists, table exists
+
 			this.jdbcTemplate.queryForObject(sql, Integer.class, schemaName, tableName);
 			return true;
 		}
@@ -100,8 +74,6 @@ public class PgVectorSchemaValidator {
 			expectedColumns.add("metadata");
 			expectedColumns.add("embedding");
 
-			// Query to check if the table exists with the required fields and types
-			// Include the schema name in the query to target the correct table
 			String query = "SELECT column_name, data_type FROM information_schema.columns "
 					+ "WHERE table_schema = ? AND table_name = ?";
 			List<Map<String, Object>> columns = this.jdbcTemplate.queryForList(query,
@@ -112,7 +84,6 @@ public class PgVectorSchemaValidator {
 						+ " does not exist in schema " + schemaName);
 			}
 
-			// Check each column against expected fields
 			List<String> availableColumns = new ArrayList<>();
 			for (Map<String, Object> column : columns) {
 				String columnName = (String) column.get("column_name");

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.weaviate;
 
 import java.util.Date;
@@ -30,15 +14,8 @@ import org.springframework.ai.vectorstore.filter.FilterHelper;
 import org.springframework.ai.vectorstore.filter.converter.AbstractFilterExpressionConverter;
 import org.springframework.util.Assert;
 
-/**
- * Converts {@link Expression} into Weaviate metadata filter expression format.
- * (https://weaviate.io/developers/weaviate/api/graphql/filters)
- *
- * @author Christian Tzolov
- */
 public class WeaviateFilterExpressionConverter extends AbstractFilterExpressionConverter {
 
-	// https://weaviate.io/developers/weaviate/api/graphql/filters#special-cases
 	private static final List<String> SYSTEM_IDENTIFIERS = List.of("id", "_creationTimeUnix", "_lastUpdateTimeUnix");
 
 	private boolean mapIntegerToNumberValue = true;
@@ -122,7 +99,7 @@ public class WeaviateFilterExpressionConverter extends AbstractFilterExpressionC
 	@Override
 	protected void doValue(Filter.Value filterValue, StringBuilder context) {
 		if (filterValue.value() instanceof List) {
-			// nothing
+
 			throw new IllegalStateException("");
 		}
 		else {
@@ -172,8 +149,7 @@ public class WeaviateFilterExpressionConverter extends AbstractFilterExpressionC
 
 	@Override
 	protected void doGroup(Group group, StringBuilder context) {
-		// Replaces the group: AND((foo == "bar" OR bar == "foo"), "boza" == "koza") into
-		// AND(AND(id != -1, (foo == "bar" OR bar == "foo")), "boza" == "koza") into
+
 		this.convertOperand(new Expression(ExpressionType.AND,
 				new Expression(ExpressionType.NE, new Filter.Key("id"), new Filter.Value("-1")), group.content()),
 				context);

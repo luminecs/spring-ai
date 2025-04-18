@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.watsonx;
 
 import java.util.List;
@@ -36,22 +20,6 @@ import org.springframework.ai.watsonx.api.WatsonxAiChatResponse;
 import org.springframework.ai.watsonx.utils.MessageToPromptConverter;
 import org.springframework.util.Assert;
 
-/**
- * {@link ChatModel} implementation for {@literal watsonx.ai}.
- * <p>
- * watsonx.ai allows developers to use large language models within a SaaS service. It
- * supports multiple open-source models as well as IBM created models.
- * <p>
- * Please refer to the <a href=
- * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx">watsonx.ai
- * models</a> for the most up-to-date information about the available models.
- *
- * @author Pablo Sanchidrian Herrera
- * @author John Jario Moreno Rojas
- * @author Christian Tzolov
- * @author Alexandros Pappas
- * @since 1.0.0
- */
 public class WatsonxAiChatModel implements ChatModel, StreamingChatModel {
 
 	private final WatsonxAiApi watsonxAiApi;

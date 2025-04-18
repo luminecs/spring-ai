@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.stabilityai;
 
 import org.junit.jupiter.api.Test;
@@ -31,7 +15,7 @@ public class StabilityAiImageOptionsTests {
 	void shouldPreferRuntimeOptionsOverDefaultOptions() {
 
 		StabilityAiApi stabilityAiApi = mock(StabilityAiApi.class);
-		// Default options
+
 		StabilityAiImageOptions defaultOptions = StabilityAiImageOptions.builder()
 			.N(1)
 			.model("default-model")
@@ -46,7 +30,6 @@ public class StabilityAiImageOptionsTests {
 			.stylePreset("3d-model")
 			.build();
 
-		// Runtime options with different values
 		StabilityAiImageOptions runtimeOptions = StabilityAiImageOptions.builder()
 			.N(2)
 			.model("runtime-model")
@@ -66,7 +49,7 @@ public class StabilityAiImageOptionsTests {
 		StabilityAiImageOptions mergedOptions = imageModel.mergeOptions(runtimeOptions, defaultOptions);
 
 		assertThat(mergedOptions).satisfies(options -> {
-			// Verify that all options match the runtime values, not the defaults
+
 			assertThat(options.getN()).isEqualTo(2);
 			assertThat(options.getModel()).isEqualTo("runtime-model");
 			assertThat(options.getWidth()).isEqualTo(1024);
@@ -113,7 +96,6 @@ public class StabilityAiImageOptionsTests {
 			.cfgScale(7.0f)
 			.build();
 
-		// Create a non-StabilityAi ImageOptions implementation
 		ImageOptions genericOptions = new ImageOptions() {
 			@Override
 			public Integer getN() {
@@ -150,12 +132,10 @@ public class StabilityAiImageOptionsTests {
 
 		StabilityAiImageOptions mergedOptions = imageModel.mergeOptions(genericOptions, defaultOptions);
 
-		// Generic options should override defaults
 		assertThat(mergedOptions.getN()).isEqualTo(2);
 		assertThat(mergedOptions.getModel()).isEqualTo("generic-model");
 		assertThat(mergedOptions.getWidth()).isEqualTo(1024);
 
-		// Stability-specific options should retain default values
 		assertThat(mergedOptions.getCfgScale()).isEqualTo(7.0f);
 	}
 

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor;
 
 import java.util.ArrayList;
@@ -46,9 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-/**
- * @author Christian Tzolov
- */
 @ExtendWith(MockitoExtension.class)
 public class AdvisorsTests {
 
@@ -61,8 +42,6 @@ public class AdvisorsTests {
 	@Test
 	public void callAdvisorsContextPropagation() {
 
-		// Order==0 has higher priority thant order == 1. The lower the order the higher
-		// the priority.
 		var mockAroundAdvisor1 = new MockAroundAdvisor("Advisor1", 0);
 		var mockAroundAdvisor2 = new MockAroundAdvisor("Advisor2", 1);
 
@@ -83,7 +62,6 @@ public class AdvisorsTests {
 
 		assertThat(content).isEqualTo("Hello John");
 
-		// AROUND
 		assertThat(mockAroundAdvisor1.advisedResponse.response()).isNotNull();
 		assertThat(mockAroundAdvisor1.advisedResponse.adviseContext()).containsEntry("key1", "value1")
 			.containsEntry("key2", "value2")
@@ -91,8 +69,8 @@ public class AdvisorsTests {
 			.containsEntry("aroundCallAfterAdvisor1", "AROUND_CALL_AFTER Advisor1")
 			.containsEntry("aroundCallBeforeAdvisor2", "AROUND_CALL_BEFORE Advisor2")
 			.containsEntry("aroundCallAfterAdvisor2", "AROUND_CALL_AFTER Advisor2")
-			.containsEntry("lastBefore", "Advisor2") // inner
-			.containsEntry("lastAfter", "Advisor1"); // outer
+			.containsEntry("lastBefore", "Advisor2")
+			.containsEntry("lastAfter", "Advisor1");
 
 		verify(this.chatModel).call(this.promptCaptor.capture());
 	}
@@ -125,7 +103,6 @@ public class AdvisorsTests {
 
 		assertThat(content).isEqualTo("Hello John");
 
-		// AROUND
 		assertThat(mockAroundAdvisor1.aroundAdvisedResponses).isNotEmpty();
 
 		mockAroundAdvisor1.aroundAdvisedResponses.stream()
@@ -135,9 +112,8 @@ public class AdvisorsTests {
 				.containsEntry("aroundStreamAfterAdvisor1", "AROUND_STREAM_AFTER Advisor1")
 				.containsEntry("aroundStreamBeforeAdvisor2", "AROUND_STREAM_BEFORE Advisor2")
 				.containsEntry("aroundStreamAfterAdvisor2", "AROUND_STREAM_AFTER Advisor2")
-				.containsEntry("lastBefore", "Advisor2") // inner
-				.containsEntry("lastAfter", "Advisor1") // outer
-			);
+				.containsEntry("lastBefore", "Advisor2")
+				.containsEntry("lastAfter", "Advisor1"));
 
 		verify(this.chatModel).stream(this.promptCaptor.capture());
 	}

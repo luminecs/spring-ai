@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.watsonx;
 
 import java.util.List;
@@ -35,29 +19,12 @@ import org.springframework.ai.watsonx.api.WatsonxAiEmbeddingResponse;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * {@link EmbeddingModel} implementation for {@literal Watsonx.ai}.
- * <p>
- * Watsonx.ai allows developers to run large language models and generate embeddings. It
- * supports open-source models available on <a href=
- * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx">Watsonx.ai
- * models</a>.
- * <p>
- * Please refer to the <a href="https://www.ibm.com/products/watsonx-ai/">official
- * Watsonx.ai website</a> for the most up-to-date information on available models.
- *
- * @author Pablo Sanchidrian Herrera
- * @since 1.0.0
- */
 public class WatsonxAiEmbeddingModel extends AbstractEmbeddingModel {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private final WatsonxAiApi watsonxAiApi;
 
-	/**
-	 * Default options to be used for all embedding requests.
-	 */
 	private WatsonxAiEmbeddingOptions defaultOptions = WatsonxAiEmbeddingOptions.create()
 		.withModel(WatsonxAiEmbeddingOptions.DEFAULT_MODEL);
 

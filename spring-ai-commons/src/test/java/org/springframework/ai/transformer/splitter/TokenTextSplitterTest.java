@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.transformer.splitter;
 
 import java.util.List;
@@ -26,9 +10,6 @@ import org.springframework.ai.document.Document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Ricken Bazolo
- */
 public class TokenTextSplitterTest {
 
 	@Test
@@ -54,10 +35,9 @@ public class TokenTextSplitterTest {
 
 		assertThat(chunks.size()).isEqualTo(2);
 
-		// Doc 1
 		assertThat(chunks.get(0).getText())
 			.isEqualTo("In the end, writing arises when man realizes that memory is not enough.");
-		// Doc 2
+
 		assertThat(chunks.get(1).getText()).isEqualTo(
 				"The most oppressive thing about the labyrinth is that you are constantly being forced to choose. It isn’t the lack of an exit, but the abundance of exits that is so disorienting.");
 
@@ -94,17 +74,14 @@ public class TokenTextSplitterTest {
 
 		assertThat(chunks.size()).isEqualTo(6);
 
-		// Doc 1
 		assertThat(chunks.get(0).getText()).isEqualTo("In the end, writing arises when man realizes that");
 		assertThat(chunks.get(1).getText()).isEqualTo("memory is not enough.");
 
-		// Doc 2
 		assertThat(chunks.get(2).getText()).isEqualTo("The most oppressive thing about the labyrinth is that you");
 		assertThat(chunks.get(3).getText()).isEqualTo("are constantly being forced to choose.");
 		assertThat(chunks.get(4).getText()).isEqualTo("It isn’t the lack of an exit, but");
 		assertThat(chunks.get(5).getText()).isEqualTo("the abundance of exits that is so disorienting");
 
-		// Verify that the same, merged metadata is copied to all chunks.
 		assertThat(chunks.get(0).getMetadata()).isEqualTo(chunks.get(1).getMetadata());
 		assertThat(chunks.get(2).getMetadata()).isEqualTo(chunks.get(3).getMetadata());
 

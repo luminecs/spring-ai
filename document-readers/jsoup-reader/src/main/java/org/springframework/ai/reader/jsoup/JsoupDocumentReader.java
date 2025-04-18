@@ -1,19 +1,3 @@
-/*
- * Copyright 2025-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.reader.jsoup;
 
 import java.io.IOException;
@@ -34,15 +18,6 @@ import org.springframework.ai.reader.jsoup.config.JsoupDocumentReaderConfig;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 
-/**
- * Reads HTML documents and extracts text content using JSoup.
- *
- * This reader provides options for selecting specific HTML elements to extract, handling
- * links, and extracting metadata. It leverages the JSoup library for parsing HTML.
- *
- * @see <a href="https://jsoup.org/">JSoup Website</a>
- * @author Alexandros Pappas
- */
 public class JsoupDocumentReader implements DocumentReader {
 
 	private final Resource htmlResource;
@@ -74,25 +49,25 @@ public class JsoupDocumentReader implements DocumentReader {
 			List<Document> documents = new ArrayList<>();
 
 			if (this.config.allElements) {
-				// Extract text from all elements and create a single document
-				String allText = doc.body().text(); // .body to exclude head
+
+				String allText = doc.body().text();
 				Document document = new Document(allText);
 				addMetadata(doc, document);
 				documents.add(document);
 			}
 			else if (this.config.groupByElement) {
-				// Extract text on a per-element base using the defined selector.
+
 				Elements selectedElements = doc.select(this.config.selector);
 				for (Element element : selectedElements) {
 					String elementText = element.text();
 					Document document = new Document(elementText);
 					addMetadata(doc, document);
-					// Do not add metadata from element to avoid duplication.
+
 					documents.add(document);
 				}
 			}
 			else {
-				// Extract text from specific elements based on the selector
+
 				Elements elements = doc.select(this.config.selector);
 				String text = elements.stream().map(Element::text).collect(Collectors.joining(this.config.separator));
 				Document document = new Document(text);
@@ -125,10 +100,8 @@ public class JsoupDocumentReader implements DocumentReader {
 			metadata.put("linkUrls", linkUrls);
 		}
 
-		// Use putAll to add all entries from additionalMetadata
 		metadata.putAll(this.config.additionalMetadata);
 
-		// Add all collected metadata to the Spring Document
 		springDoc.getMetadata().putAll(metadata);
 	}
 

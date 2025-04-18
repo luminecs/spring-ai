@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.minimax.autoconfigure;
 
 import java.util.List;
@@ -44,9 +28,6 @@ import org.springframework.context.annotation.Description;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Geng Rong
- */
 @EnabledIfEnvironmentVariable(named = "MINIMAX_API_KEY", matches = ".*")
 class FunctionCallbackWithPlainFunctionBeanIT {
 
@@ -58,14 +39,12 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 				RestClientAutoConfiguration.class, MiniMaxChatAutoConfiguration.class))
 		.withUserConfiguration(Config.class);
 
-	// FIXME: multiple function calls may stop prematurely due to model performance
 	@Test
 	void functionCallTest() {
 		this.contextRunner.withPropertyValues("spring.ai.minimax.chat.options.model=abab6.5s-chat").run(context -> {
 
 			MiniMaxChatModel chatModel = context.getBean(MiniMaxChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage(
 					"What's the weather like in San Francisco, Tokyo, and Paris? Return the temperature in Celsius.");
 
@@ -76,7 +55,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			assertThat(response.getResult().getOutput().getText()).contains("30", "10", "15");
 
-			// Test weatherFunctionTwo
 			response = chatModel.call(new Prompt(List.of(userMessage),
 					MiniMaxChatOptions.builder().function("weatherFunctionTwo").build()));
 
@@ -93,7 +71,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			MiniMaxChatModel chatModel = context.getBean(MiniMaxChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage(
 					"What's the weather like in San Francisco, Tokyo, and Paris? Return the temperature in Celsius.");
 
@@ -107,14 +84,12 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 		});
 	}
 
-	// FIXME: multiple function calls may stop prematurely due to model performance
 	@Test
 	void streamFunctionCallTest() {
 		this.contextRunner.withPropertyValues("spring.ai.minimax.chat.options.model=abab6.5s-chat").run(context -> {
 
 			MiniMaxChatModel chatModel = context.getBean(MiniMaxChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage(
 					"What's the weather like in San Francisco, Tokyo, and Paris? Return the temperature in Celsius.");
 
@@ -135,7 +110,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 			assertThat(content).containsAnyOf("10.0", "10");
 			assertThat(content).containsAnyOf("15.0", "15");
 
-			// Test weatherFunctionTwo
 			response = chatModel.stream(new Prompt(List.of(userMessage),
 					MiniMaxChatOptions.builder().function("weatherFunctionTwo").build()));
 
@@ -164,8 +138,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 			return new MockWeatherService();
 		}
 
-		// Relies on the Request's JsonClassDescription annotation to provide the
-		// function description.
 		@Bean
 		public Function<MockWeatherService.Request, MockWeatherService.Response> weatherFunctionTwo() {
 			MockWeatherService weatherService = new MockWeatherService();

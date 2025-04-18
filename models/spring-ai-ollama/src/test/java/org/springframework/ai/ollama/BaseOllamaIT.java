@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.ollama;
 
 import java.time.Duration;
@@ -37,8 +21,6 @@ public abstract class BaseOllamaIT {
 
 	private static final int DEFAULT_MAX_RETRIES = 2;
 
-	// Environment variable to control whether to create a new container or use existing
-	// Ollama instance
 	private static final boolean SKIP_CONTAINER_CREATION = Boolean
 		.parseBoolean(System.getenv().getOrDefault("OLLAMA_WITH_REUSE", "false"));
 
@@ -46,13 +28,6 @@ public abstract class BaseOllamaIT {
 
 	private static final ThreadLocal<OllamaApi> ollamaApi = new ThreadLocal<>();
 
-	/**
-	 * Initialize the Ollama container and API with the specified model. This method
-	 * should be called from @BeforeAll in subclasses.
-	 * @param model the Ollama model to initialize (must not be null or empty)
-	 * @return configured OllamaApi instance
-	 * @throws IllegalArgumentException if model is null or empty
-	 */
 	protected static OllamaApi initializeOllama(final String model) {
 		Assert.hasText(model, "Model name must be provided");
 
@@ -66,11 +41,6 @@ public abstract class BaseOllamaIT {
 		return api;
 	}
 
-	/**
-	 * Get the initialized OllamaApi instance.
-	 * @return the OllamaApi instance
-	 * @throws IllegalStateException if called before initialization
-	 */
 	protected static OllamaApi getOllamaApi() {
 		OllamaApi api = ollamaApi.get();
 		Assert.state(api != null, "OllamaApi not initialized. Call initializeOllama first.");

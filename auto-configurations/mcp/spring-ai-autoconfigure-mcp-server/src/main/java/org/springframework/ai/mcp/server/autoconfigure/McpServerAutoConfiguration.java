@@ -1,19 +1,3 @@
-/*
- * Copyright 2025-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.mcp.server.autoconfigure;
 
 import java.util.ArrayList;
@@ -57,55 +41,6 @@ import org.springframework.core.log.LogAccessor;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MimeType;
 
-/**
- * {@link EnableAutoConfiguration Auto-configuration} for the Model Context Protocol (MCP)
- * Server.
- * <p>
- * This configuration class sets up the core MCP server components with support for both
- * synchronous and asynchronous operation modes. The server type is controlled through the
- * {@code spring.ai.mcp.server.type} property, defaulting to SYNC mode.
- * <p>
- * Core features and capabilities include:
- * <ul>
- * <li>Tools: Extensible tool registration system supporting both sync and async
- * execution</li>
- * <li>Resources: Static and dynamic resource management with optional change
- * notifications</li>
- * <li>Prompts: Configurable prompt templates with change notification support</li>
- * <li>Transport: Flexible transport layer with built-in support for:
- * <ul>
- * <li>STDIO (default): Standard input/output based communication</li>
- * <li>WebMvc: HTTP-based transport when Spring MVC is available</li>
- * <li>WebFlux: Reactive transport when Spring WebFlux is available</li>
- * </ul>
- * </li>
- * </ul>
- * <p>
- * The configuration is activated when:
- * <ul>
- * <li>The required MCP classes ({@link McpSchema} and {@link McpSyncServer}) are on the
- * classpath</li>
- * <li>The {@code spring.ai.mcp.server.enabled} property is true (default)</li>
- * </ul>
- * <p>
- * Server configuration is managed through {@link McpServerProperties} with support for:
- * <ul>
- * <li>Server identification (name, version)</li>
- * <li>Transport selection</li>
- * <li>Change notification settings for tools, resources, and prompts</li>
- * <li>Sync/Async operation mode selection</li>
- * </ul>
- * <p>
- * WebMvc transport support is provided separately by
- * {@link McpWebMvcServerAutoConfiguration}.
- *
- * @author Christian Tzolov
- * @since 1.0.0
- * @see McpServerProperties
- * @see McpWebMvcServerAutoConfiguration
- * @see McpWebFluxServerAutoConfiguration
- * @see ToolCallback
- */
 @AutoConfiguration(after = { McpWebMvcServerAutoConfiguration.class, McpWebFluxServerAutoConfiguration.class })
 @ConditionalOnClass({ McpSchema.class, McpSyncServer.class })
 @EnableConfigurationProperties(McpServerProperties.class)
@@ -145,15 +80,11 @@ public class McpServerAutoConfiguration {
 	private List<McpServerFeatures.SyncToolSpecification> toSyncToolSpecifications(List<ToolCallback> tools,
 			McpServerProperties serverProperties) {
 
-		// De-duplicate tools by their name, keeping the first occurrence of each tool
-		// name
 		return tools.stream()
-			.collect(Collectors.toMap(tool -> tool.getToolDefinition().name(), // Key:
-																				// tool
-																				// name
-					tool -> tool, // Value: the tool itself
-					(existing, replacement) -> existing)) // On duplicate key, keep the
-															// existing tool
+			.collect(Collectors.toMap(tool -> tool.getToolDefinition().name(),
+
+					tool -> tool, (existing, replacement) -> existing))
+
 			.values()
 			.stream()
 			.map(tool -> {
@@ -179,7 +110,6 @@ public class McpServerAutoConfiguration {
 		McpSchema.Implementation serverInfo = new Implementation(serverProperties.getName(),
 				serverProperties.getVersion());
 
-		// Create the server with both tool and resource capabilities
 		SyncSpecification serverBuilder = McpServer.sync(transportProvider).serverInfo(serverInfo);
 
 		List<SyncToolSpecification> toolSpecifications = new ArrayList<>(tools.stream().flatMap(List::stream).toList());
@@ -241,15 +171,12 @@ public class McpServerAutoConfiguration {
 
 	private List<McpServerFeatures.AsyncToolSpecification> toAsyncToolSpecification(List<ToolCallback> tools,
 			McpServerProperties serverProperties) {
-		// De-duplicate tools by their name, keeping the first occurrence of each tool
-		// name
+
 		return tools.stream()
-			.collect(Collectors.toMap(tool -> tool.getToolDefinition().name(), // Key:
-																				// tool
-																				// name
-					tool -> tool, // Value: the tool itself
-					(existing, replacement) -> existing)) // On duplicate key, keep the
-															// existing tool
+			.collect(Collectors.toMap(tool -> tool.getToolDefinition().name(),
+
+					tool -> tool, (existing, replacement) -> existing))
+
 			.values()
 			.stream()
 			.map(tool -> {
@@ -274,7 +201,6 @@ public class McpServerAutoConfiguration {
 		McpSchema.Implementation serverInfo = new Implementation(serverProperties.getName(),
 				serverProperties.getVersion());
 
-		// Create the server with both tool and resource capabilities
 		AsyncSpecification serverBuilder = McpServer.async(transportProvider).serverInfo(serverInfo);
 
 		List<AsyncToolSpecification> toolSpecifications = new ArrayList<>(

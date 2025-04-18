@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai.chat;
 
 import java.util.List;
@@ -59,14 +43,6 @@ public class OpenAiCompatibleChatModelIT {
 			.openAiApi(OpenAiApi.builder().apiKey(System.getenv("OPENAI_API_KEY")).build())
 			.defaultOptions(forModelName("gpt-3.5-turbo"))
 			.build());
-
-		// (26.01.2025) Disable because the Groq API is down. TODO: Re-enable when the API
-		// is back up.
-		// if (System.getenv("GROQ_API_KEY") != null) {
-		// builder.add(new OpenAiChatModel(new OpenAiApi("https://api.groq.com/openai",
-		// System.getenv("GROQ_API_KEY")),
-		// forModelName("llama3-8b-8192")));
-		// }
 
 		if (System.getenv("OPEN_ROUTER_API_KEY") != null) {
 			builder.add(OpenAiChatModel.builder()

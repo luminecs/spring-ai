@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.moonshot;
 
 import java.util.ArrayList;
@@ -31,110 +15,35 @@ import org.springframework.ai.model.function.FunctionCallingOptions;
 import org.springframework.ai.moonshot.api.MoonshotApi;
 import org.springframework.util.Assert;
 
-/**
- * Options for Moonshot chat completions.
- *
- * @author Geng Rong
- * @author Thomas Vitale
- * @author Alexandros Pappas
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MoonshotChatOptions implements FunctionCallingOptions {
 
-	/**
-	 * ID of the model to use
-	 */
 	private @JsonProperty("model") String model;
 
-	/**
-	 * The maximum number of tokens to generate in the chat completion. The total length
-	 * of input tokens and generated tokens is limited by the model's context length.
-	 */
 	private @JsonProperty("max_tokens") Integer maxTokens;
 
-	/**
-	 * What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will
-	 * make the output more random, while lower values like 0.2 will make it more focused
-	 * and deterministic. We generally recommend altering this or top_p but not both.
-	 */
 	private @JsonProperty("temperature") Double temperature;
 
-	/**
-	 * An alternative to sampling with temperature, called nucleus sampling, where the
-	 * model considers the results of the tokens with top_p probability mass. So 0.1 means
-	 * only the tokens comprising the top 10% probability mass are considered. We
-	 * generally recommend altering this or temperature but not both.
-	 */
 	private @JsonProperty("top_p") Double topP;
 
-	/**
-	 * How many chat completion choices to generate for each input message. Note that you
-	 * will be charged based on the number of generated tokens across all the choices.
-	 * Keep n as 1 to minimize costs.
-	 */
 	private @JsonProperty("n") Integer n;
 
-	/**
-	 * Number between -2.0 and 2.0. Positive values penalize new tokens based on whether
-	 * they appear in the text so far, increasing the model's likelihood to talk about new
-	 * topics.
-	 */
 	private @JsonProperty("presence_penalty") Double presencePenalty;
 
-	/**
-	 * Number between -2.0 and 2.0. Positive values penalize new tokens based on their
-	 * existing frequency in the text so far, decreasing the model's likelihood to repeat
-	 * the same line verbatim.
-	 */
 	private @JsonProperty("frequency_penalty") Double frequencyPenalty;
 
-	/**
-	 * Up to 5 sequences where the API will stop generating further tokens.
-	 */
 	private @JsonProperty("stop") List<String> stop;
 
 	private @JsonProperty("tools") List<MoonshotApi.FunctionTool> tools;
 
-	/**
-	 * Controls which (if any) function is called by the model. none means the model will
-	 * not call a function and instead generates a message. auto means the model can pick
-	 * between generating a message or calling a function. Specifying a particular
-	 * function via {"type: "function", "function": {"name": "my_function"}} forces the
-	 * model to call that function. none is the default when no functions are present.
-	 * auto is the default if functions are present. Use the
-	 * {@link MoonshotApi.ChatCompletionRequest.ToolChoiceBuilder} to create a tool choice
-	 * object.
-	 */
 	private @JsonProperty("tool_choice") String toolChoice;
 
-	/**
-	 * Moonshot Tool Function Callbacks to register with the ChatModel. For Prompt Options
-	 * the functionCallbacks are automatically enabled for the duration of the prompt
-	 * execution. For Default Options the functionCallbacks are registered but disabled by
-	 * default. Use the enableFunctions to set the functions from the registry to be used
-	 * by the ChatModel chat completion requests.
-	 */
 	@JsonIgnore
 	private List<FunctionCallback> functionCallbacks = new ArrayList<>();
 
-	/**
-	 * List of functions, identified by their names, to configure for function calling in
-	 * the chat completion requests. Functions with those names must exist in the
-	 * functionCallbacks registry. The {@link #functionCallbacks} from the PromptOptions
-	 * are automatically enabled for the duration of the prompt execution.
-	 *
-	 * Note that function enabled with the default options are enabled for all chat
-	 * completion requests. This could impact the token count and the billing. If the
-	 * functions is set in a prompt options, then the enabled functions are only active
-	 * for the duration of this prompt execution.
-	 */
 	@JsonIgnore
 	private Set<String> functions = new HashSet<>();
 
-	/**
-	 * A unique identifier representing your end-user, which can help Moonshot to monitor
-	 * and detect abuse.
-	 */
 	private @JsonProperty("user") String user;
 
 	@JsonIgnore

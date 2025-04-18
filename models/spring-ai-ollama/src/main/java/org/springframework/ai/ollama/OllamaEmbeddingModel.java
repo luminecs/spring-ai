@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.ollama;
 
 import java.time.Duration;
@@ -49,19 +33,6 @@ import org.springframework.ai.ollama.management.PullModelStrategy;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * {@link EmbeddingModel} implementation for {@literal Ollama}. Ollama allows developers
- * to run large language models and generate embeddings locally. It supports open-source
- * models available on [Ollama AI Library](<a href="https://ollama.ai/library">...</a>)
- * and on Hugging Face. Please refer to the <a href="https://ollama.ai/">official Ollama
- * website</a> for the most up-to-date information on available models.
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- * @author Jonghoon Park
- * @since 0.8.0
- */
 public class OllamaEmbeddingModel extends AbstractEmbeddingModel {
 
 	private static final EmbeddingModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultEmbeddingModelObservationConvention();
@@ -104,8 +75,6 @@ public class OllamaEmbeddingModel extends AbstractEmbeddingModel {
 	public EmbeddingResponse call(EmbeddingRequest request) {
 		Assert.notEmpty(request.getInstructions(), "At least one text is required!");
 
-		// Before moving any further, build the final request EmbeddingRequest,
-		// merging runtime and default options.
 		EmbeddingRequest embeddingRequest = buildEmbeddingRequest(request);
 
 		OllamaApi.EmbeddingsRequest ollamaEmbeddingRequest = ollamaEmbeddingRequest(embeddingRequest);
@@ -145,18 +114,16 @@ public class OllamaEmbeddingModel extends AbstractEmbeddingModel {
 	}
 
 	EmbeddingRequest buildEmbeddingRequest(EmbeddingRequest embeddingRequest) {
-		// Process runtime options
+
 		OllamaOptions runtimeOptions = null;
 		if (embeddingRequest.getOptions() != null) {
 			runtimeOptions = ModelOptionsUtils.copyToTarget(embeddingRequest.getOptions(), EmbeddingOptions.class,
 					OllamaOptions.class);
 		}
 
-		// Define request options by merging runtime options and default options
 		OllamaOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				OllamaOptions.class);
 
-		// Validate request options
 		if (!StringUtils.hasText(requestOptions.getModel())) {
 			throw new IllegalArgumentException("model cannot be null or empty");
 		}
@@ -164,9 +131,6 @@ public class OllamaEmbeddingModel extends AbstractEmbeddingModel {
 		return new EmbeddingRequest(embeddingRequest.getInstructions(), requestOptions);
 	}
 
-	/**
-	 * Package access for testing.
-	 */
 	OllamaApi.EmbeddingsRequest ollamaEmbeddingRequest(EmbeddingRequest embeddingRequest) {
 		OllamaOptions requestOptions = (OllamaOptions) embeddingRequest.getOptions();
 		return new OllamaApi.EmbeddingsRequest(requestOptions.getModel(), embeddingRequest.getInstructions(),
@@ -174,19 +138,12 @@ public class OllamaEmbeddingModel extends AbstractEmbeddingModel {
 				OllamaOptions.filterNonSupportedFields(requestOptions.toMap()), requestOptions.getTruncate());
 	}
 
-	/**
-	 * Pull the given model into Ollama based on the specified strategy.
-	 */
 	private void initializeModel(String model, PullModelStrategy pullModelStrategy) {
 		if (pullModelStrategy != null && !PullModelStrategy.NEVER.equals(pullModelStrategy)) {
 			this.modelManager.pullModel(model, pullModelStrategy);
 		}
 	}
 
-	/**
-	 * Use the provided convention for reporting observation data
-	 * @param observationConvention The provided convention
-	 */
 	public void setObservationConvention(EmbeddingModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;

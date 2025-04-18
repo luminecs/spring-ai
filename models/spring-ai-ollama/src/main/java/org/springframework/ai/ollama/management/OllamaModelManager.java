@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.ollama.management;
 
 import java.time.Duration;
@@ -29,13 +13,6 @@ import org.springframework.ai.ollama.api.OllamaApi.PullModelRequest;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * Manage the lifecycle of models in Ollama.
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class OllamaModelManager {
 
 	private final Logger logger = LoggerFactory.getLogger(OllamaModelManager.class);
@@ -67,11 +44,6 @@ public class OllamaModelManager {
 		return false;
 	}
 
-	/**
-	 * If the name follows the format "<string>:<string>", leave it as is. If the name
-	 * follows the format "<string>" and doesn't include any ":" sign, then add ":latest"
-	 * as a suffix.
-	 */
 	private String normalizeModelName(String modelName) {
 		var modelNameWithoutSpaces = modelName.trim();
 		if (modelNameWithoutSpaces.contains(":")) {

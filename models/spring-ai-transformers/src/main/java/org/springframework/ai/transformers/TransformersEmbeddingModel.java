@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.transformers;
 
 import java.nio.FloatBuffer;
@@ -58,33 +42,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * An implementation of the AbstractEmbeddingModel that uses ONNX-based Transformer models
- * for text embeddings.
- *
- * <p>
- * By default, it uses the all-MiniLM-L6-v2 model, but can be configured to use other
- * ONNX-compatible models. The class supports both CPU and GPU inference, caching of model
- * resources, and various tokenization options.
- * </p>
- *
- * <p>
- * For more information on the underlying SBERT framework, see:
- * <a href="https://www.sbert.net/index.html">SBERT Documentation</a>
- * <a href="https://www.sbert.net/docs/pretrained_models.html">SBERT Pre-trained
- * Models</a>
- * </p>
- *
- * @author Christian Tzolov
- * @since 1.0.0
- */
 public class TransformersEmbeddingModel extends AbstractEmbeddingModel implements InitializingBean {
 
-	// ONNX tokenizer for the all-MiniLM-L6-v2 generative
 	public static final String DEFAULT_ONNX_TOKENIZER_URI = "https://raw.githubusercontent.com/spring-projects/spring-ai/main/models/spring-ai-transformers/src/main/resources/onnx/all-MiniLM-L6-v2/tokenizer.json";
 
-	// ONNX generative for all-MiniLM-L6-v2 pre-trained transformer:
-	// https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
 	public static final String DEFAULT_ONNX_MODEL_URI = "https://github.com/spring-projects/spring-ai/raw/main/models/spring-ai-transformers/src/main/resources/onnx/all-MiniLM-L6-v2/model.onnx";
 
 	public static final String DEFAULT_MODEL_OUTPUT_NAME = "last_hidden_state";
@@ -95,17 +56,8 @@ public class TransformersEmbeddingModel extends AbstractEmbeddingModel implement
 
 	private static final int EMBEDDING_AXIS = 1;
 
-	/**
-	 * Specifies what parts of the {@link Document}'s content and metadata will be used
-	 * for computing the embeddings. Applicable for the {@link #embed(Document)} method
-	 * only. Has no effect on the {@link #embed(String)} or {@link #embed(List)}. Defaults
-	 * to {@link MetadataMode#NONE}.
-	 */
 	private final MetadataMode metadataMode;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
 	public Map<String, String> tokenizerOptions = Map.of();
@@ -116,48 +68,22 @@ public class TransformersEmbeddingModel extends AbstractEmbeddingModel implement
 
 	private int gpuDeviceId = -1;
 
-	/**
-	 * DJL, Huggingface tokenizer implementation of the {@link Tokenizer} interface that
-	 * converts sentences into token.
-	 */
 	private HuggingFaceTokenizer tokenizer;
 
-	/**
-	 * ONNX runtime configurations: https://onnxruntime.ai/docs/get-started/with-java.html
-	 */
 	private OrtEnvironment environment;
 
-	/**
-	 * Runtime session that wraps the ONNX generative and enables inference calls.
-	 */
 	private OrtSession session;
 
-	/**
-	 * Resource cache directory. Used to cache remote resources, such as the ONNX models,
-	 * to the local file system.
-	 */
 	private String resourceCacheDirectory;
 
-	/**
-	 * Allow disabling the resource caching.
-	 */
 	private boolean disableCaching = false;
 
-	/**
-	 * Cache service for caching large {@link Resource} contents, such as the
-	 * tokenizerResource and modelResource, on the local file system. Can be
-	 * enabled/disabled with the {@link #disableCaching} property and uses the
-	 * {@link #resourceCacheDirectory} for local storage.
-	 */
 	private ResourceCacheService cacheService;
 
 	private String modelOutputName = DEFAULT_MODEL_OUTPUT_NAME;
 
 	private Set<String> onnxModelInputs;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private EmbeddingModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
 	public TransformersEmbeddingModel() {
@@ -221,18 +147,15 @@ public class TransformersEmbeddingModel extends AbstractEmbeddingModel implement
 		this.cacheService = StringUtils.hasText(this.resourceCacheDirectory)
 				? new ResourceCacheService(this.resourceCacheDirectory) : new ResourceCacheService();
 
-		// Create a pre-trained HuggingFaceTokenizer instance from tokenizerResource
-		// InputStream.
 		this.tokenizer = HuggingFaceTokenizer.newInstance(getCachedResource(this.tokenizerResource).getInputStream(),
 				this.tokenizerOptions);
 
-		// onnxruntime
 		this.environment = OrtEnvironment.getEnvironment();
 
 		try (var sessionOptions = new OrtSession.SessionOptions()) {
 			if (this.gpuDeviceId >= 0) {
-				sessionOptions.addCUDA(this.gpuDeviceId); // Run on a GPU or with another
-				// provider
+				sessionOptions.addCUDA(this.gpuDeviceId);
+
 			}
 			this.session = this.environment.createSession(getCachedResource(this.modelResource).getContentAsByteArray(),
 					sessionOptions);
@@ -321,17 +244,10 @@ public class TransformersEmbeddingModel extends AbstractEmbeddingModel implement
 
 						modelInputs = removeUnknownModelInputs(modelInputs);
 
-						// The Run result object is AutoCloseable to prevent references
-						// from leaking out. Once the Result object is
-						// closed, all it’s child OnnxValues are closed too.
 						try (OrtSession.Result results = this.session.run(modelInputs)) {
 
-							// OnnxValue lastHiddenState = results.get(0);
 							OnnxValue lastHiddenState = results.get(this.modelOutputName).get();
 
-							// 0 - batch_size (1..x)
-							// 1 - sequence_length (128)
-							// 2 - embedding dimensions (384)
 							float[][][] tokenEmbeddings = (float[][][]) lastHiddenState.getValue();
 
 							try (NDManager manager = NDManager.newBaseManager()) {
@@ -370,7 +286,6 @@ public class TransformersEmbeddingModel extends AbstractEmbeddingModel implement
 
 	}
 
-	// Build a NDArray from 3D float array.
 	private NDArray create(float[][][] data3d, NDManager manager) {
 
 		FloatBuffer buffer = FloatBuffer.allocate(data3d.length * data3d[0].length * data3d[0][0].length);
@@ -391,23 +306,15 @@ public class TransformersEmbeddingModel extends AbstractEmbeddingModel implement
 			.broadcast(tokenEmbeddings.getShape())
 			.toType(DataType.FLOAT32, false);
 
-		// Multiply token embeddings with expanded attention mask
 		NDArray weightedEmbeddings = tokenEmbeddings.mul(attentionMaskExpanded);
 
-		// Sum along the appropriate axis
 		NDArray sumEmbeddings = weightedEmbeddings.sum(new int[] { EMBEDDING_AXIS });
 
-		// Clamp the attention mask sum to avoid division by zero
 		NDArray sumMask = attentionMaskExpanded.sum(new int[] { EMBEDDING_AXIS }).clip(1e-9f, Float.MAX_VALUE);
 
-		// Divide sum embeddings by sum mask
 		return sumEmbeddings.div(sumMask);
 	}
 
-	/**
-	 * Use the provided convention for reporting observation data
-	 * @param observationConvention The provided convention
-	 */
 	public void setObservationConvention(EmbeddingModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;

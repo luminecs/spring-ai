@@ -1,19 +1,3 @@
-/*
- * Copyright 2025-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.mcp;
 
 import java.util.List;
@@ -144,8 +128,6 @@ class SyncMcpToolCallbackProviderTests {
 		when(listToolsResult.tools()).thenReturn(List.of(tool1, tool2));
 		when(this.mcpClient.listTools()).thenReturn(listToolsResult);
 
-		// Using the constructor without explicit filter (should use default filter that
-		// accepts all)
 		SyncMcpToolCallbackProvider provider = new SyncMcpToolCallbackProvider(this.mcpClient);
 
 		var callbacks = provider.getToolCallbacks();
@@ -163,7 +145,6 @@ class SyncMcpToolCallbackProviderTests {
 		when(listToolsResult.tools()).thenReturn(List.of(tool1, tool2));
 		when(this.mcpClient.listTools()).thenReturn(listToolsResult);
 
-		// Create a filter that rejects all tools
 		BiPredicate<McpSyncClient, Tool> rejectAllFilter = (client, tool) -> false;
 
 		SyncMcpToolCallbackProvider provider = new SyncMcpToolCallbackProvider(rejectAllFilter, this.mcpClient);
@@ -191,7 +172,6 @@ class SyncMcpToolCallbackProviderTests {
 		when(listToolsResult.tools()).thenReturn(List.of(tool1, tool2, tool3));
 		when(this.mcpClient.listTools()).thenReturn(listToolsResult);
 
-		// Create a filter that only accepts tools with names containing "2" or "3"
 		BiPredicate<McpSyncClient, Tool> nameFilter = (client, tool) -> tool.name().contains("2")
 				|| tool.name().contains("3");
 
@@ -227,7 +207,6 @@ class SyncMcpToolCallbackProviderTests {
 		var clientInfo2 = new Implementation("testClient2", "1.0.0");
 		when(mcpClient2.getClientInfo()).thenReturn(clientInfo2);
 
-		// Create a filter that only accepts tools from client1
 		BiPredicate<McpSyncClient, Tool> clientFilter = (client,
 				tool) -> client.getClientInfo().name().equals("testClient1");
 
@@ -255,7 +234,6 @@ class SyncMcpToolCallbackProviderTests {
 		var weatherClientInfo = new Implementation("weather-service", "1.0.0");
 		when(weatherClient.getClientInfo()).thenReturn(weatherClientInfo);
 
-		// Create a filter that only accepts weather tools from the weather service
 		BiPredicate<McpSyncClient, Tool> complexFilter = (client,
 				tool) -> client.getClientInfo().name().equals("weather-service") && tool.name().equals("weather");
 

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.function;
 
 import java.lang.reflect.Method;
@@ -40,65 +24,25 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
 
-/**
- * A {@link FunctionCallback} that invokes methods on objects via reflection, supporting:
- * <ul>
- * <li>Static and non-static methods</li>
- * <li>Any number of parameters (including none)</li>
- * <li>Any parameter/return types (primitives, objects, collections)</li>
- * <li>Special handling for {@link ToolContext} parameters</li>
- * </ul>
- * Automatically infers the input parameters JSON schema from method's argument types.
- *
- * @author Christian Tzolov
- * @since 1.0.0
- * @deprecated in favor of {@link MethodToolCallback}.
- */
 @Deprecated
 public class MethodInvokingFunctionCallback implements FunctionCallback {
 
 	private static final Logger logger = LoggerFactory.getLogger(MethodInvokingFunctionCallback.class);
 
-	/**
-	 * Object instance that contains the method to be invoked. If the method is static
-	 * this object can be null.
-	 */
 	private final Object functionObject;
 
-	/**
-	 * The method to be invoked.
-	 */
 	private final Method method;
 
-	/**
-	 * Description to help the LLM model to understand worth the method does and when to
-	 * use it.
-	 */
 	private final String description;
 
-	/**
-	 * Internal ObjectMapper used to serialize/deserialize the method input and output.
-	 */
 	private final ObjectMapper mapper;
 
-	/**
-	 * The JSON schema generated from the method input parameters.
-	 */
 	private final String inputSchema;
 
-	/**
-	 * Flag indicating if the method accepts a {@link ToolContext} as input parameter.
-	 */
 	private boolean isToolContextMethod = false;
 
-	/**
-	 * Optional function name. If not provided the method name is used as the function.
-	 */
 	private final String name;
 
-	/**
-	 *
-	 */
 	private final Function<Object, String> responseConverter;
 
 	MethodInvokingFunctionCallback(Object functionObject, Method method, String description, ObjectMapper mapper,
@@ -119,7 +63,6 @@ public class MethodInvokingFunctionCallback implements FunctionCallback {
 		Assert.isTrue(this.functionObject != null || Modifier.isStatic(this.method.getModifiers()),
 				"Function object must be provided for non-static methods!");
 
-		// Generate the JSON schema from the method input parameters
 		Map<String, Class<?>> methodParameters = Stream.of(method.getParameters())
 			.collect(Collectors.toMap(param -> param.getName(), param -> param.getType()));
 
@@ -153,9 +96,6 @@ public class MethodInvokingFunctionCallback implements FunctionCallback {
 
 		try {
 
-			// If the toolContext is not empty but the method does not accept ToolContext
-			// as
-			// input parameter then throw an exception.
 			if (toolContext != null && !CollectionUtils.isEmpty(toolContext.getContext())
 					&& !this.isToolContextMethod) {
 				throw new IllegalArgumentException("Configured method does not accept ToolContext as input parameter!");
@@ -164,7 +104,6 @@ public class MethodInvokingFunctionCallback implements FunctionCallback {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = this.mapper.readValue(functionInput, Map.class);
 
-			// ReflectionUtils.findMethod
 			Object[] methodArgs = Stream.of(this.method.getParameters()).map(parameter -> {
 				Class<?> type = parameter.getType();
 				if (ClassUtils.isAssignable(type, ToolContext.class)) {
@@ -193,11 +132,6 @@ public class MethodInvokingFunctionCallback implements FunctionCallback {
 		}
 	}
 
-	/**
-	 * Generates a JSON schema from the given named classes.
-	 * @param namedClasses The named classes to generate the schema from.
-	 * @return The generated JSON schema.
-	 */
 	protected String generateJsonSchema(Map<String, Class<?>> namedClasses) {
 		try {
 			JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(this.mapper);
@@ -212,7 +146,7 @@ public class MethodInvokingFunctionCallback implements FunctionCallback {
 				Class<?> clazz = entry.getValue();
 
 				if (ClassUtils.isAssignable(clazz, ToolContext.class)) {
-					// Skip the ToolContext class from the schema generation.
+
 					this.isToolContextMethod = true;
 					continue;
 				}
@@ -229,12 +163,6 @@ public class MethodInvokingFunctionCallback implements FunctionCallback {
 		}
 	}
 
-	/**
-	 * Converts the given value to the specified Java type.
-	 * @param value The value to convert.
-	 * @param javaType The Java type to convert to.
-	 * @return Returns the converted value.
-	 */
 	protected Object toJavaType(Object value, Class<?> javaType) {
 
 		if (value == null) {

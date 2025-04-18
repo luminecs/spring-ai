@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.typesense;
 
 import java.util.HashMap;
@@ -52,34 +36,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-/**
- * A vector store implementation that uses Typesense as the backend. This implementation
- * supports storing and searching document embeddings using Typesense's vector search
- * capabilities.
- *
- * <p>
- * Example usage: <pre>{@code
- * TypesenseVectorStore vectorStore = TypesenseVectorStore.builder(client, embeddingModel)
- *     .collectionName("my_collection")
- *     .embeddingDimension(1536)
- *     .initializeSchema(true)
- *     .build();
- * }</pre>
- *
- * @author Dhanush Anumula
- * @author Christian Tzolov
- * @author Eddú Meléndez
- * @author Mark Pollack
- * @author Soby Chacko
- * @see org.springframework.ai.vectorstore.VectorStore
- * @see org.springframework.ai.embedding.EmbeddingModel
- */
 public class TypesenseVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
-	/**
-	 * The name of the field that contains the document ID. It is mandatory to set "id" as
-	 * the field name because that is the name that typesense is going to look for.
-	 */
 	public static final String DOC_ID_FIELD_NAME = "id";
 
 	public static final String CONTENT_FIELD_NAME = "content";
@@ -106,16 +64,6 @@ public class TypesenseVectorStore extends AbstractObservationVectorStore impleme
 
 	private final int embeddingDimension;
 
-	/**
-	 * Protected constructor for creating a TypesenseVectorStore instance using the
-	 * builder pattern. This constructor initializes the vector store with the configured
-	 * settings from the builder and performs necessary validations.
-	 * @param builder the {@link Builder} containing all configuration settings
-	 * @throws IllegalArgumentException if the client is null
-	 * @throws IllegalArgumentException if the embeddingModel is null
-	 * @see Builder
-	 * @since 1.0.0
-	 */
 	protected TypesenseVectorStore(Builder builder) {
 		super(builder);
 
@@ -127,11 +75,6 @@ public class TypesenseVectorStore extends AbstractObservationVectorStore impleme
 		this.embeddingDimension = builder.embeddingDimension;
 	}
 
-	/**
-	 * Creates a new TypesenseBuilder instance. This is the recommended way to instantiate
-	 * a TypesenseVectorStore.
-	 * @return a new TypesenseBuilder instance
-	 */
 	public static Builder builder(Client client, EmbeddingModel embeddingModel) {
 		return new Builder(client, embeddingModel);
 	}
@@ -229,7 +172,7 @@ public class TypesenseVectorStore extends AbstractObservationVectorStore impleme
 		multiSearchCollectionParameters.q("*");
 
 		Stream<Float> floatStream = IntStream.range(0, embedding.length).mapToObj(i -> embedding[i]);
-		// typesense uses only cosine similarity
+
 		String vectorQuery = EMBEDDING_FIELD_NAME + ":(" + "["
 				+ String.join(",", floatStream.map(String::valueOf).toList()) + "], " + "k: " + request.getTopK() + ", "
 				+ "distance_threshold: " + (1 - request.getSimilarityThreshold()) + ")";
@@ -288,9 +231,6 @@ public class TypesenseVectorStore extends AbstractObservationVectorStore impleme
 		return OPENAI_EMBEDDING_DIMENSION_SIZE;
 	}
 
-	// ---------------------------------------------------------------------------------
-	// Initialization
-	// ---------------------------------------------------------------------------------
 	@Override
 	public void afterPropertiesSet() {
 		if (this.initializeSchema) {
@@ -391,48 +331,24 @@ public class TypesenseVectorStore extends AbstractObservationVectorStore impleme
 
 		private boolean initializeSchema = false;
 
-		/**
-		 * Constructs a new TypesenseBuilder instance.
-		 * @param client The Typesense client instance used for database operations. Must
-		 * not be null.
-		 * @param embeddingModel The embedding model used for vector transformations.
-		 * @throws IllegalArgumentException if client is null
-		 */
 		public Builder(Client client, EmbeddingModel embeddingModel) {
 			super(embeddingModel);
 			Assert.notNull(client, "client must not be null");
 			this.client = client;
 		}
 
-		/**
-		 * Configures the collection name.
-		 * @param collectionName the collection name to use
-		 * @return this builder instance
-		 * @throws IllegalArgumentException if collectionName is null or empty
-		 */
 		public Builder collectionName(String collectionName) {
 			Assert.hasText(collectionName, "collectionName must not be empty");
 			this.collectionName = collectionName;
 			return this;
 		}
 
-		/**
-		 * Configures the dimension size of the embedding vectors.
-		 * @param embeddingDimension The dimension of the embedding
-		 * @return this builder instance
-		 * @throws IllegalArgumentException if dimension is invalid
-		 */
 		public Builder embeddingDimension(int embeddingDimension) {
 			Assert.isTrue(embeddingDimension > 0, "Embedding dimension must be greater than 0");
 			this.embeddingDimension = embeddingDimension;
 			return this;
 		}
 
-		/**
-		 * Configures whether to initialize the collection schema automatically.
-		 * @param initializeSchema true to initialize schema automatically
-		 * @return this builder instance
-		 */
 		public Builder initializeSchema(boolean initializeSchema) {
 			this.initializeSchema = initializeSchema;
 			return this;

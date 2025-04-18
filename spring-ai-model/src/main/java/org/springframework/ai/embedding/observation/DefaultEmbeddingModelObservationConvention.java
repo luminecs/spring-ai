@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.embedding.observation;
 
 import io.micrometer.common.KeyValue;
@@ -21,12 +5,6 @@ import io.micrometer.common.KeyValues;
 
 import org.springframework.util.StringUtils;
 
-/**
- * Default conventions to populate observations for embedding model operations.
- *
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class DefaultEmbeddingModelObservationConvention implements EmbeddingModelObservationConvention {
 
 	public static final String DEFAULT_NAME = "gen_ai.client.operation";
@@ -87,15 +65,13 @@ public class DefaultEmbeddingModelObservationConvention implements EmbeddingMode
 	@Override
 	public KeyValues getHighCardinalityKeyValues(EmbeddingModelObservationContext context) {
 		var keyValues = KeyValues.empty();
-		// Request
+
 		keyValues = requestEmbeddingDimension(keyValues, context);
-		// Response
+
 		keyValues = usageInputTokens(keyValues, context);
 		keyValues = usageTotalTokens(keyValues, context);
 		return keyValues;
 	}
-
-	// Request
 
 	protected KeyValues requestEmbeddingDimension(KeyValues keyValues, EmbeddingModelObservationContext context) {
 		if (context.getRequestOptions().getDimensions() != null) {
@@ -105,8 +81,6 @@ public class DefaultEmbeddingModelObservationConvention implements EmbeddingMode
 		}
 		return keyValues;
 	}
-
-	// Response
 
 	protected KeyValues usageInputTokens(KeyValues keyValues, EmbeddingModelObservationContext context) {
 		if (context.getResponse() != null && context.getResponse().getMetadata() != null

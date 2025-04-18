@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.azure.openai;
 
 import java.util.ArrayList;
@@ -95,27 +79,6 @@ import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * {@link ChatModel} implementation for {@literal Microsoft Azure AI} backed by
- * {@link OpenAIClient}.
- *
- * @author Mark Pollack
- * @author Ueibin Kim
- * @author John Blum
- * @author Christian Tzolov
- * @author Grogdunn
- * @author Benoit Moussaud
- * @author Thomas Vitale
- * @author luocongqiu
- * @author timostark
- * @author Soby Chacko
- * @author Jihoon Kim
- * @author Ilayaperumal Gopinathan
- * @author Alexandros Pappas
- * @see ChatModel
- * @see com.azure.ai.openai.OpenAIClient
- * @since 1.0.0
- */
 public class AzureOpenAiChatModel implements ChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(AzureOpenAiChatModel.class);
@@ -128,40 +91,18 @@ public class AzureOpenAiChatModel implements ChatModel {
 
 	private static final ToolCallingManager DEFAULT_TOOL_CALLING_MANAGER = ToolCallingManager.builder().build();
 
-	/**
-	 * The {@link OpenAIClient} used to interact with the Azure OpenAI service.
-	 */
 	private final OpenAIClient openAIClient;
 
-	/**
-	 * The {@link OpenAIAsyncClient} used for streaming async operations.
-	 */
 	private final OpenAIAsyncClient openAIAsyncClient;
 
-	/**
-	 * The configuration information for a chat completions request.
-	 */
 	private final AzureOpenAiChatOptions defaultOptions;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
-	/**
-	 * ToolCalling manager used for ToolCalling support.
-	 */
 	private final ToolCallingManager toolCallingManager;
 
-	/**
-	 * The tool execution eligibility predicate used to determine if a tool can be
-	 * executed.
-	 */
 	private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
 
 	public AzureOpenAiChatModel(OpenAIClientBuilder openAIClientBuilder, AzureOpenAiChatOptions defaultOptions,
@@ -234,8 +175,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 
 	@Override
 	public ChatResponse call(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return this.internalCall(requestPrompt, null);
 	}
@@ -264,14 +204,14 @@ public class AzureOpenAiChatModel implements ChatModel {
 		if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), response)) {
 			var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
 			if (toolExecutionResult.returnDirect()) {
-				// Return tool execution result directly to the client.
+
 				return ChatResponse.builder()
 					.from(response)
 					.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 					.build();
 			}
 			else {
-				// Send the tool execution result back to the model.
+
 				return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 						response);
 			}
@@ -282,8 +222,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 
 	@Override
 	public Flux<ChatResponse> stream(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return this.internalStream(requestPrompt, null);
 	}
@@ -312,9 +251,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 			final var isFunctionCall = new AtomicBoolean(false);
 
 			final Flux<ChatCompletions> accessibleChatCompletionsFlux = chatCompletionsStream
-				// Note: the first chat completions can be ignored when using Azure OpenAI
-				// service which is a known service bug.
-				// The last element, when using stream_options will contain the usage data
+
 				.filter(chatCompletions -> !CollectionUtils.isEmpty(chatCompletions.getChoices())
 						|| chatCompletions.getUsage() != null)
 				.map(chatCompletions -> {
@@ -348,7 +285,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 				if (previousChatResponse == null) {
 					return toChatResponse(chatCompletion);
 				}
-				// Accumulate the usage from the previous chat response
+
 				CompletionsUsage usage = chatCompletion.getUsage();
 				Usage currentChatResponseUsage = usage != null ? getDefaultUsage(usage) : new EmptyUsage();
 				Usage accumulatedUsage = UsageUtils.getCumulativeUsage(currentChatResponseUsage, previousChatResponse);
@@ -369,19 +306,18 @@ public class AzureOpenAiChatModel implements ChatModel {
 
 			return chatResponseFlux.flatMap(chatResponse -> {
 				if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), chatResponse)) {
-					// FIXME: bounded elastic needs to be used since tool calling
-					// is currently only synchronous
+
 					return Flux.defer(() -> {
 						var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, chatResponse);
 						if (toolExecutionResult.returnDirect()) {
-							// Return tool execution result directly to the client.
+
 							return Flux.just(ChatResponse.builder()
 								.from(chatResponse)
 								.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 								.build());
 						}
 						else {
-							// Send the tool execution result back to the model.
+
 							return this.internalStream(
 									new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 									chatResponse);
@@ -479,9 +415,6 @@ public class AzureOpenAiChatModel implements ChatModel {
 		return new Generation(assistantMessage, generationMetadata);
 	}
 
-	/**
-	 * Test access.
-	 */
 	ChatCompletionsOptions toAzureChatCompletionsOptions(Prompt prompt) {
 
 		List<ToolDefinition> functionsForThisRequest = new ArrayList<>();
@@ -508,11 +441,9 @@ public class AzureOpenAiChatModel implements ChatModel {
 			}
 			options = this.merge(updatedRuntimeOptions, options);
 
-			// Add the tool definitions to the request's tools parameter.
 			functionsForThisRequest.addAll(this.toolCallingManager.resolveToolDefinitions(updatedRuntimeOptions));
 		}
 
-		// Add the enabled functions definitions to the request's tools parameter.
 		if (!CollectionUtils.isEmpty(functionsForThisRequest)) {
 			List<ChatCompletionsFunctionToolDefinition> tools = this.getFunctionTools(functionsForThisRequest);
 			List<ChatCompletionsToolDefinition> tools2 = tools.stream()
@@ -539,7 +470,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 
 		switch (message.getMessageType()) {
 			case USER:
-				// https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/openai/azure-ai-openai/README.md#text-completions-with-images
+
 				List<ChatMessageContentItem> items = new ArrayList<>();
 				items.add(new ChatMessageTextContentItem(message.getText()));
 				if (message instanceof UserMessage userMessage) {
@@ -560,9 +491,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 					toolCalls = assistantMessage.getToolCalls().stream().map(toolCall -> {
 						var function = new FunctionCall(toolCall.name(), toolCall.arguments());
 						return new ChatCompletionsFunctionToolCall(toolCall.id(), function);
-					})
-						.map(tc -> ((ChatCompletionsToolCall) tc)) // !!!
-						.toList();
+					}).map(tc -> ((ChatCompletionsToolCall) tc)).toList();
 				}
 				var azureAssistantMessage = new ChatRequestAssistantMessage(message.getText());
 				azureAssistantMessage.setToolCalls(toolCalls);
@@ -621,7 +550,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 	}
 
 	Prompt buildRequestPrompt(Prompt prompt) {
-		// Process runtime options
+
 		AzureOpenAiChatOptions runtimeOptions = null;
 		if (prompt.getOptions() != null) {
 			if (prompt.getOptions() instanceof ToolCallingChatOptions toolCallingChatOptions) {
@@ -634,12 +563,9 @@ public class AzureOpenAiChatModel implements ChatModel {
 			}
 		}
 
-		// Define request options by merging runtime options and default options
 		AzureOpenAiChatOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				AzureOpenAiChatOptions.class);
 
-		// Merge @JsonIgnore-annotated options explicitly since they are ignored by
-		// Jackson, used by ModelOptionsUtils.
 		if (runtimeOptions != null) {
 			requestOptions.setInternalToolExecutionEnabled(
 					ModelOptionsUtils.mergeOption(runtimeOptions.getInternalToolExecutionEnabled(),
@@ -663,11 +589,6 @@ public class AzureOpenAiChatModel implements ChatModel {
 		return new Prompt(prompt.getInstructions(), requestOptions);
 	}
 
-	/**
-	 * Merges the Azure's {@link ChatCompletionsOptions} (fromAzureOptions) into the
-	 * Spring AI's {@link AzureOpenAiChatOptions} (toSpringAiOptions) and return a new
-	 * {@link ChatCompletionsOptions} instance.
-	 */
 	private ChatCompletionsOptions merge(ChatCompletionsOptions fromAzureOptions,
 			AzureOpenAiChatOptions toSpringAiOptions) {
 
@@ -741,14 +662,6 @@ public class AzureOpenAiChatModel implements ChatModel {
 		return mergedAzureOptions;
 	}
 
-	/**
-	 * Merges the {@link AzureOpenAiChatOptions}, fromSpringAiOptions, into the
-	 * {@link ChatCompletionsOptions}, toAzureOptions, and returns a new
-	 * {@link ChatCompletionsOptions} instance.
-	 * @param fromSpringAiOptions the {@link AzureOpenAiChatOptions} to merge from.
-	 * @param toAzureOptions the {@link ChatCompletionsOptions} to merge to.
-	 * @return a new {@link ChatCompletionsOptions} instance.
-	 */
 	private ChatCompletionsOptions merge(AzureOpenAiChatOptions fromSpringAiOptions,
 			ChatCompletionsOptions toAzureOptions) {
 
@@ -830,11 +743,6 @@ public class AzureOpenAiChatModel implements ChatModel {
 		return mergedAzureOptions;
 	}
 
-	/**
-	 * Copy the fromOptions into a new ChatCompletionsOptions instance.
-	 * @param fromOptions the ChatCompletionsOptions to copy from.
-	 * @return a new ChatCompletionsOptions instance.
-	 */
 	private ChatCompletionsOptions copy(ChatCompletionsOptions fromOptions) {
 
 		ChatCompletionsOptions copyOptions = new ChatCompletionsOptions(fromOptions.getMessages());
@@ -895,11 +803,6 @@ public class AzureOpenAiChatModel implements ChatModel {
 		return copyOptions;
 	}
 
-	/**
-	 * Maps the SpringAI response format to the Azure response format
-	 * @param responseFormat SpringAI response format
-	 * @return Azure response format
-	 */
 	private ChatCompletionsResponseFormat toAzureResponseFormat(AzureOpenAiResponseFormat responseFormat) {
 		if (responseFormat == AzureOpenAiResponseFormat.JSON) {
 			return new ChatCompletionsJsonResponseFormat();
@@ -907,10 +810,6 @@ public class AzureOpenAiChatModel implements ChatModel {
 		return new ChatCompletionsTextResponseFormat();
 	}
 
-	/**
-	 * Use the provided convention for reporting observation data
-	 * @param observationConvention The provided convention
-	 */
 	public void setObservationConvention(ChatModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;
@@ -920,9 +819,6 @@ public class AzureOpenAiChatModel implements ChatModel {
 		return new Builder();
 	}
 
-	/**
-	 * Builder to construct {@link AzureOpenAiChatModel}.
-	 */
 	public static final class Builder {
 
 		private OpenAIClientBuilder openAIClientBuilder;

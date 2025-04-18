@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.ollama.api.tool;
 
 import java.io.IOException;
@@ -36,10 +20,6 @@ import org.springframework.ai.ollama.api.OllamaApi.Message.ToolCall;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Christian Tzolov
- * @author Thomas Vitale
- */
 public class OllamaApiToolFunctionCallIT extends BaseOllamaIT {
 
 	private static final String MODEL = "qwen2.5:3b";
@@ -58,7 +38,7 @@ public class OllamaApiToolFunctionCallIT extends BaseOllamaIT {
 	@SuppressWarnings("null")
 	@Test
 	public void toolFunctionCall() {
-		// Step 1: send the conversation and available functions to the model
+
 		var message = Message.builder(Role.USER)
 			.content(
 					"What's the weather like in San Francisco, Tokyo, and Paris? Return a list with the temperature in Celsius for each of the three locations.")
@@ -100,12 +80,8 @@ public class OllamaApiToolFunctionCallIT extends BaseOllamaIT {
 		assertThat(responseMessage.role()).isEqualTo(Role.ASSISTANT);
 		assertThat(responseMessage.toolCalls()).isNotNull();
 
-		// Check if the model wanted to call a function
-
-		// extend conversation with assistant's reply.
 		messages.add(responseMessage);
 
-		// Send the info for each function call and function response to the model.
 		for (ToolCall toolCall : responseMessage.toolCalls()) {
 			var functionName = toolCall.function().name();
 			if ("getCurrentWeather".equals(functionName)) {
@@ -115,7 +91,6 @@ public class OllamaApiToolFunctionCallIT extends BaseOllamaIT {
 
 				MockWeatherService.Response weatherResponse = this.weatherService.apply(weatherRequest);
 
-				// extend conversation with function response.
 				messages.add(Message.builder(Role.TOOL)
 					.content("" + weatherResponse.temp() + weatherRequest.unit())
 					.build());

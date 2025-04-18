@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.tool.resolution;
 
 import java.lang.reflect.Method;
@@ -38,74 +22,35 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
-/**
- * A utility class that provides methods for resolving types and classes related to
- * functions.
- *
- * @author Christian Tzolov
- * @author Sebastien Dekeuze
- */
 public final class TypeResolverHelper {
 
 	private TypeResolverHelper() {
-		// Avoids instantiation
+
 	}
 
-	/**
-	 * Returns the input class of a given Consumer class.
-	 * @param consumerClass The consumer class.
-	 * @return The input class of the consumer.
-	 */
 	public static Class<?> getConsumerInputClass(Class<? extends Consumer<?>> consumerClass) {
 		ResolvableType resolvableType = ResolvableType.forClass(consumerClass).as(Consumer.class);
 		return (resolvableType == ResolvableType.NONE ? Object.class : resolvableType.getGeneric(0).toClass());
 	}
 
-	/**
-	 * Returns the input class of a given function class.
-	 * @param biFunctionClass The function class.
-	 * @return The input class of the function.
-	 */
 	public static Class<?> getBiFunctionInputClass(Class<? extends BiFunction<?, ?, ?>> biFunctionClass) {
 		return getBiFunctionArgumentClass(biFunctionClass, 0);
 	}
 
-	/**
-	 * Returns the input class of a given function class.
-	 * @param functionClass The function class.
-	 * @return The input class of the function.
-	 */
 	public static Class<?> getFunctionInputClass(Class<? extends Function<?, ?>> functionClass) {
 		return getFunctionArgumentClass(functionClass, 0);
 	}
 
-	/**
-	 * Returns the output class of a given function class.
-	 * @param functionClass The function class.
-	 * @return The output class of the function.
-	 */
 	public static Class<?> getFunctionOutputClass(Class<? extends Function<?, ?>> functionClass) {
 		return getFunctionArgumentClass(functionClass, 1);
 	}
 
-	/**
-	 * Retrieves the class of a specific argument in a given function class.
-	 * @param functionClass The function class.
-	 * @param argumentIndex The index of the argument whose class should be retrieved.
-	 * @return The class of the specified function argument.
-	 */
 	public static Class<?> getFunctionArgumentClass(Class<? extends Function<?, ?>> functionClass, int argumentIndex) {
 		ResolvableType resolvableType = ResolvableType.forClass(functionClass).as(Function.class);
 		return (resolvableType == ResolvableType.NONE ? Object.class
 				: resolvableType.getGeneric(argumentIndex).toClass());
 	}
 
-	/**
-	 * Retrieves the class of a specific argument in a given function class.
-	 * @param biFunctionClass The function class.
-	 * @param argumentIndex The index of the argument whose class should be retrieved.
-	 * @return The class of the specified function argument.
-	 */
 	public static Class<?> getBiFunctionArgumentClass(Class<? extends BiFunction<?, ?, ?>> biFunctionClass,
 			int argumentIndex) {
 		ResolvableType resolvableType = ResolvableType.forClass(biFunctionClass).as(BiFunction.class);
@@ -113,32 +58,18 @@ public final class TypeResolverHelper {
 				: resolvableType.getGeneric(argumentIndex).toClass());
 	}
 
-	/**
-	 * Resolve bean type, either directly with {@link BeanDefinition#getResolvableType()}
-	 * or by resolving the factory method (duplicating
-	 * {@code ConstructorResolver#resolveFactoryMethodIfPossible} logic as it is not
-	 * public).
-	 * @param applicationContext The application context.
-	 * @param beanName The name of the bean to find a definition for.
-	 * @return The resolved type.
-	 * @throws IllegalArgumentException if the type of the bean definition is not
-	 * resolvable.
-	 */
 	public static ResolvableType resolveBeanType(GenericApplicationContext applicationContext, String beanName) {
 		BeanDefinition beanDefinition = getBeanDefinition(applicationContext, beanName);
 
-		// Try to resolve directly
 		ResolvableType functionType = beanDefinition.getResolvableType();
 		if (functionType.resolve() != null) {
 			return functionType;
 		}
 
-		// Handle root bean definitions with factory methods
 		if (beanDefinition instanceof RootBeanDefinition rootBeanDefinition) {
 			return resolveRootBeanDefinitionType(applicationContext, rootBeanDefinition);
 		}
 
-		// Handle @Component beans
 		return resolveComponentBeanType(applicationContext, beanDefinition, beanName);
 	}
 
@@ -226,13 +157,6 @@ public final class TypeResolverHelper {
 				|| !Arrays.equals(uniqueCandidate.getParameterTypes(), candidate.getParameterTypes()));
 	}
 
-	/**
-	 * Retrieves the type of a specific argument in a given function class.
-	 * @param functionType The function type.
-	 * @param argumentIndex The index of the argument whose type should be retrieved.
-	 * @return The type of the specified function argument.
-	 * @throws IllegalArgumentException if functionType is not a supported type
-	 */
 	public static ResolvableType getFunctionArgumentType(ResolvableType functionType, int argumentIndex) {
 
 		Class<?> resolvableClass = functionType.toClass();

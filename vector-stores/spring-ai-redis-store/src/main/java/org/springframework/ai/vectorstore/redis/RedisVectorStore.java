@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.redis;
 
 import java.text.MessageFormat;
@@ -64,121 +48,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * Redis-based vector store implementation using Redis Stack with RediSearch and
- * RedisJSON.
- *
- * <p>
- * The store uses Redis JSON documents to persist vector embeddings along with their
- * associated document content and metadata. It leverages RediSearch for creating and
- * querying vector similarity indexes. The RedisVectorStore manages and queries vector
- * data, offering functionalities like adding, deleting, and performing similarity
- * searches on documents.
- * </p>
- *
- * <p>
- * The store utilizes RedisJSON and RedisSearch to handle JSON documents and to index and
- * search vector data. It supports various vector algorithms (e.g., FLAT, HNSW) for
- * efficient similarity searches. Additionally, it allows for custom metadata fields in
- * the documents to be stored alongside the vector and content data.
- * </p>
- *
- * <p>
- * Features:
- * </p>
- * <ul>
- * <li>Automatic schema initialization with configurable index creation</li>
- * <li>Support for HNSW and FLAT vector indexing algorithms</li>
- * <li>Cosine similarity metric for vector comparisons</li>
- * <li>Flexible metadata field types (TEXT, TAG, NUMERIC) for advanced filtering</li>
- * <li>Configurable similarity thresholds for search results</li>
- * <li>Batch processing support with configurable batching strategies</li>
- * </ul>
- *
- * <p>
- * Basic usage example:
- * </p>
- * <pre>{@code
- * RedisVectorStore vectorStore = RedisVectorStore.builder(jedisPooled, embeddingModel)
- *     .indexName("custom-index")     // Optional: defaults to "spring-ai-index"
- *     .prefix("custom-prefix")       // Optional: defaults to "embedding:"
- *     .vectorAlgorithm(Algorithm.HNSW)
- *     .build();
- *
- * // Add documents
- * vectorStore.add(List.of(
- *     new Document("content1", Map.of("meta1", "value1")),
- *     new Document("content2", Map.of("meta2", "value2"))
- * ));
- *
- * // Search with filters
- * List<Document> results = vectorStore.similaritySearch(
- *     SearchRequest.query("search text")
- *         .withTopK(5)
- *         .withSimilarityThreshold(0.7)
- *         .withFilterExpression("meta1 == 'value1'")
- * );
- * }</pre>
- *
- * <p>
- * Advanced configuration example:
- * </p>
- * <pre>{@code
- * RedisVectorStore vectorStore = RedisVectorStore.builder()
- *     .jedis(jedisPooled)
- *     .embeddingModel(embeddingModel)
- *     .indexName("custom-index")
- *     .prefix("custom-prefix")
- *     .contentFieldName("custom_content")
- *     .embeddingFieldName("custom_embedding")
- *     .vectorAlgorithm(Algorithm.FLAT)
- *     .metadataFields(
- *         MetadataField.tag("category"),
- *         MetadataField.numeric("year"),
- *         MetadataField.text("description"))
- *     .initializeSchema(true)
- *     .batchingStrategy(new TokenCountBatchingStrategy())
- *     .build();
- * }</pre>
- *
- * <p>
- * Database Requirements:
- * </p>
- * <ul>
- * <li>Redis Stack with RediSearch and RedisJSON modules</li>
- * <li>Redis version 7.0 or higher</li>
- * <li>Sufficient memory for storing vectors and indexes</li>
- * </ul>
- *
- * <p>
- * Vector Algorithms:
- * </p>
- * <ul>
- * <li>HNSW: Default algorithm, provides better search performance with slightly higher
- * memory usage</li>
- * <li>FLAT: Brute force algorithm, provides exact results but slower for large
- * datasets</li>
- * </ul>
- *
- * <p>
- * Metadata Field Types:
- * </p>
- * <ul>
- * <li>TAG: For exact match filtering on categorical data</li>
- * <li>TEXT: For full-text search capabilities</li>
- * <li>NUMERIC: For range queries on numerical data</li>
- * </ul>
- *
- * @author Julien Ruaux
- * @author Christian Tzolov
- * @author Eddú Meléndez
- * @author Thomas Vitale
- * @author Soby Chacko
- * @author Jihoon Kim
- * @see VectorStore
- * @see EmbeddingModel
- * @since 1.0.0
- */
 public class RedisVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	public static final String DEFAULT_INDEX_NAME = "spring-ai-index";
@@ -307,8 +176,8 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 
 			for (redis.clients.jedis.search.Document doc : searchResult.getDocuments()) {
 				String docId = doc.getId();
-				matchingIds.add(docId.replace(key(""), "")); // Remove the key prefix to
-																// get original ID
+				matchingIds.add(docId.replace(key(""), ""));
+
 			}
 
 			if (!matchingIds.isEmpty()) {
@@ -396,7 +265,6 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 			return;
 		}
 
-		// If index already exists don't do anything
 		if (this.jedis.ftList().contains(this.indexName)) {
 			return;
 		}
@@ -521,11 +389,6 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 			this.jedis = jedis;
 		}
 
-		/**
-		 * Sets the Redis index name.
-		 * @param indexName the index name to use
-		 * @return the builder instance
-		 */
 		public Builder indexName(String indexName) {
 			if (StringUtils.hasText(indexName)) {
 				this.indexName = indexName;
@@ -533,11 +396,6 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the Redis key prefix (default: "embedding:").
-		 * @param prefix the prefix to use
-		 * @return the builder instance
-		 */
 		public Builder prefix(String prefix) {
 			if (StringUtils.hasText(prefix)) {
 				this.prefix = prefix;
@@ -545,11 +403,6 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the Redis content field name.
-		 * @param fieldName the content field name to use
-		 * @return the builder instance
-		 */
 		public Builder contentFieldName(String fieldName) {
 			if (StringUtils.hasText(fieldName)) {
 				this.contentFieldName = fieldName;
@@ -557,11 +410,6 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the Redis embedding field name.
-		 * @param fieldName the embedding field name to use
-		 * @return the builder instance
-		 */
 		public Builder embeddingFieldName(String fieldName) {
 			if (StringUtils.hasText(fieldName)) {
 				this.embeddingFieldName = fieldName;
@@ -569,11 +417,6 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the Redis vector algorithm.
-		 * @param algorithm the vector algorithm to use
-		 * @return the builder instance
-		 */
 		public Builder vectorAlgorithm(@Nullable Algorithm algorithm) {
 			if (algorithm != null) {
 				this.vectorAlgorithm = algorithm;
@@ -581,20 +424,10 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the metadata fields.
-		 * @param fields the metadata fields to include
-		 * @return the builder instance
-		 */
 		public Builder metadataFields(MetadataField... fields) {
 			return metadataFields(Arrays.asList(fields));
 		}
 
-		/**
-		 * Sets the metadata fields.
-		 * @param fields the list of metadata fields to include
-		 * @return the builder instance
-		 */
 		public Builder metadataFields(@Nullable List<MetadataField> fields) {
 			if (fields != null && !fields.isEmpty()) {
 				this.metadataFields = new ArrayList<>(fields);
@@ -602,11 +435,6 @@ public class RedisVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets whether to initialize the schema.
-		 * @param initializeSchema true to initialize schema, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder initializeSchema(boolean initializeSchema) {
 			this.initializeSchema = initializeSchema;
 			return this;

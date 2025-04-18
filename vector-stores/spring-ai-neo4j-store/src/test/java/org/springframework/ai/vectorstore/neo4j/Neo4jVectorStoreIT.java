@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.neo4j;
 
 import java.util.Collections;
@@ -53,13 +37,6 @@ import org.springframework.context.annotation.Bean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Gerrit Meier
- * @author Michael Simons
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Soby Chacko
- */
 @Testcontainers
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".+")
 class Neo4jVectorStoreIT extends BaseVectorStoreTests {
@@ -111,7 +88,6 @@ class Neo4jVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(resultDoc.getMetadata()).containsKey("meta2");
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(Document::getId).toList());
 
 			List<Document> results2 = vectorStore
@@ -296,10 +272,9 @@ class Neo4jVectorStoreIT extends BaseVectorStoreTests {
 					"SHOW indexes yield name, type WHERE name = 'spring-ai-document-index' AND type = 'VECTOR' return count(*) > 0")
 			.execute()
 			.records()
-			.get(0) // get first record
 			.get(0)
-			.asBoolean()) // get returned result
-			.isTrue());
+			.get(0)
+			.asBoolean()).isTrue());
 	}
 
 	@Test
@@ -309,10 +284,9 @@ class Neo4jVectorStoreIT extends BaseVectorStoreTests {
 					"SHOW indexes yield labelsOrTypes, properties, type WHERE any(x in labelsOrTypes where x = 'Document')  AND any(x in properties where x = 'id') AND type = 'RANGE' return count(*) > 0")
 			.execute()
 			.records()
-			.get(0) // get first record
 			.get(0)
-			.asBoolean()) // get returned result
-			.isTrue());
+			.get(0)
+			.asBoolean()).isTrue());
 	}
 
 	@Test
@@ -326,7 +300,6 @@ class Neo4jVectorStoreIT extends BaseVectorStoreTests {
 
 			vectorStore.add(List.of(doc1, doc2, doc3));
 
-			// Complex filter expression: (type == 'A' AND priority > 1)
 			Filter.Expression priorityFilter = new Filter.Expression(Filter.ExpressionType.GT,
 					new Filter.Key("priority"), new Filter.Value(1));
 			Filter.Expression typeFilter = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("type"),

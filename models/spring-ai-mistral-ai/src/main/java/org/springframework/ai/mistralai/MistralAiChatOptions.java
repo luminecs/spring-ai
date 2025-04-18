@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.mistralai;
 
 import java.util.ArrayList;
@@ -39,99 +23,35 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-/**
- * Options for the Mistral AI Chat API.
- *
- * @author Ricken Bazolo
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Alexandros Pappas
- * @since 0.8.1
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MistralAiChatOptions implements ToolCallingChatOptions {
 
-	/**
-	 * ID of the model to use
-	 */
 	private @JsonProperty("model") String model;
 
-	/**
-	 * What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will
-	 * make the output more random, while lower values like 0.2 will make it more focused
-	 * and deterministic. We generally recommend altering this or top_p but not both.
-	 */
 	private @JsonProperty("temperature") Double temperature;
 
-	/**
-	 * Nucleus sampling, where the model considers the results of the tokens with top_p
-	 * probability mass. So 0.1 means only the tokens comprising the top 10% probability
-	 * mass are considered. We generally recommend altering this or temperature but not
-	 * both.
-	 */
 	private @JsonProperty("top_p") Double topP;
 
-	/**
-	 * The maximum number of tokens to generate in the completion. The token count of your
-	 * prompt plus max_tokens cannot exceed the model's context length.
-	 */
 	private @JsonProperty("max_tokens") Integer maxTokens;
 
-	/**
-	 * Whether to inject a safety prompt before all conversations.
-	 */
 	private @JsonProperty("safe_prompt") Boolean safePrompt;
 
-	/**
-	 * The seed to use for random sampling. If set, different calls will generate
-	 * deterministic results.
-	 */
 	private @JsonProperty("random_seed") Integer randomSeed;
 
-	/**
-	 * An object specifying the format that the model must output. Setting to { "type":
-	 * "json_object" } enables JSON mode, which guarantees the message the model generates
-	 * is valid JSON.
-	 */
 	private @JsonProperty("response_format") ResponseFormat responseFormat;
 
-	/**
-	 * Stop generation if this token is detected. Or if one of these tokens is detected
-	 * when providing an array.
-	 */
 	private @JsonProperty("stop") List<String> stop;
 
-	/**
-	 * A list of tools the model may call. Currently, only functions are supported as a
-	 * tool. Use this to provide a list of functions the model may generate JSON inputs
-	 * for.
-	 */
 	private @JsonProperty("tools") List<FunctionTool> tools;
 
-	/**
-	 * Controls which (if any) function is called by the model. none means the model will
-	 * not call a function and instead generates a message. auto means the model can pick
-	 * between generating a message or calling a function.
-	 */
 	private @JsonProperty("tool_choice") ToolChoice toolChoice;
 
-	/**
-	 * Collection of {@link ToolCallback}s to be used for tool calling in the chat
-	 * completion requests.
-	 */
 	@JsonIgnore
 	private List<FunctionCallback> toolCallbacks = new ArrayList<>();
 
-	/**
-	 * Collection of tool names to be resolved at runtime and used for tool calling in the
-	 * chat completion requests.
-	 */
 	@JsonIgnore
 	private Set<String> toolNames = new HashSet<>();
 
-	/**
-	 * Whether to enable the tool execution lifecycle internally in ChatModel.
-	 */
 	@JsonIgnore
 	private Boolean internalToolExecutionEnabled;
 

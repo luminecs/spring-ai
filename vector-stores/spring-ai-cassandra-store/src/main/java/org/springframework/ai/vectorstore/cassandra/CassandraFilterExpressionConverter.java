@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.cassandra;
 
 import java.util.Collection;
@@ -33,13 +17,6 @@ import org.springframework.ai.vectorstore.filter.Filter.Key;
 import org.springframework.ai.vectorstore.filter.Filter.Value;
 import org.springframework.ai.vectorstore.filter.converter.AbstractFilterExpressionConverter;
 
-/**
- * Converts {@link org.springframework.ai.vectorstore.filter.Filter.Expression} into CQL
- * where clauses.
- *
- * @author Mick Semb Wever
- * @since 1.0.0
- */
 class CassandraFilterExpressionConverter extends AbstractFilterExpressionConverter {
 
 	private final Map<String, ColumnMetadata> columnsByName;
@@ -59,10 +36,7 @@ class CassandraFilterExpressionConverter extends AbstractFilterExpressionConvert
 			case IN -> context.append(" IN ");
 			case LT -> context.append(" < ");
 			case LTE -> context.append(" <= ");
-			// TODO SAI supports collections
-			// reach out to mck@apache.org if you'd like these implemented
-			// case CONTAINS -> context.append(" CONTAINS ");
-			// case CONTAINS_KEY -> context.append(" CONTAINS_KEY ");
+
 			default -> throw new UnsupportedOperationException(
 					String.format("Expression type %s not yet implemented. Patches welcome.", type));
 		}
@@ -127,8 +101,6 @@ class CassandraFilterExpressionConverter extends AbstractFilterExpressionConvert
 	private Optional<ColumnMetadata> getColumn(String name) {
 		Optional<ColumnMetadata> column = Optional.ofNullable(this.columnsByName.get(name));
 
-		// work around the need to escape filter keys the ANTLR parser doesn't like
-		// e.g. with underscores like chunk_no
 		if (column.isEmpty()) {
 			if (name.startsWith("\"") && name.endsWith("\"")) {
 				name = name.substring(1, name.length() - 1);

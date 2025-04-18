@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.azure;
 
 import java.util.ArrayList;
@@ -63,19 +47,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * Uses Azure Cognitive Search as a backing vector store. Documents can be preloaded into
- * a Cognitive Search index and managed via Azure tools or added and managed through this
- * VectorStore. The underlying index is configured in the provided Azure
- * SearchIndexClient.
- *
- * @author Greg Meyer
- * @author Xiangyang Yu
- * @author Christian Tzolov
- * @author Josh Long
- * @author Thomas Vitale
- * @author Soby Chacko
- */
 public class AzureVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	public static final String DEFAULT_INDEX_NAME = "spring_ai_azure_vector_store";
@@ -106,15 +77,6 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 
 	private final boolean initializeSchema;
 
-	/**
-	 * List of metadata fields (as field name and type) that can be used in similarity
-	 * search query filter expressions. The {@link Document#getMetadata()} can contain
-	 * arbitrary number of metadata entries, but only the fields listed here can be used
-	 * in the search filter expressions.
-	 * <p>
-	 * If new entries are added ot the filterMetadataFields the affected documents must be
-	 * (re)updated.
-	 */
 	private final List<MetadataField> filterMetadataFields;
 
 	@Nullable
@@ -126,11 +88,6 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 
 	private String indexName;
 
-	/**
-	 * Protected constructor that accepts a builder instance. This is the preferred way to
-	 * create new AzureVectorStore instances.
-	 * @param builder the configured builder instance
-	 */
 	protected AzureVectorStore(Builder builder) {
 		super(builder);
 
@@ -155,7 +112,7 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 
 		Assert.notNull(documents, "The document list should not be null.");
 		if (CollectionUtils.isEmpty(documents)) {
-			return; // nothing to do;
+			return;
 		}
 
 		List<float[]> embeddings = this.embeddingModel.embed(documents, EmbeddingOptionsBuilder.builder().build(),
@@ -168,8 +125,6 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 			searchDocument.put(CONTENT_FIELD_NAME, document.getText());
 			searchDocument.put(METADATA_FIELD_NAME, new JSONObject(document.getMetadata()).toJSONString());
 
-			// Add the filterable metadata fields as top level fields, allowing filler
-			// expressions on them.
 			for (MetadataField mf : this.filterMetadataFields) {
 				if (document.getMetadata().containsKey(mf.name())) {
 					searchDocument.put(METADATA_FIELD_PREFIX + mf.name(), document.getMetadata().get(mf.name()));
@@ -219,8 +174,7 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 
 		final var vectorQuery = new VectorizedQuery(EmbeddingUtils.toList(searchEmbedding))
 			.setKNearestNeighborsCount(request.getTopK())
-			// Set the fields to compare the vector against. This is a comma-delimited
-			// list of field names.
+
 			.setFields(EMBEDDING_FIELD_NAME);
 
 		var searchOptions = new SearchOptions()
@@ -275,7 +229,7 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 			.setSearchable(true)
 			.setHidden(false)
 			.setVectorSearchDimensions(dimensions)
-			// This must match a vector search configuration name.
+
 			.setVectorSearchProfileName(SPRING_AI_VECTOR_PROFILE));
 		fields.add(new SearchField(CONTENT_FIELD_NAME, SearchFieldDataType.STRING).setSearchable(true)
 			.setFilterable(true));
@@ -290,9 +244,7 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 		}
 
 		SearchIndex searchIndex = new SearchIndex(this.indexName).setFields(fields)
-			// VectorSearch configuration is required for a vector field. The name used
-			// for the vector search algorithm configuration must match the configuration
-			// used by the search field used for vector search.
+
 			.setVectorSearch(new VectorSearch()
 				.setProfiles(Collections
 					.singletonList(new VectorSearchProfile(SPRING_AI_VECTOR_PROFILE, SPRING_AI_VECTOR_CONFIG)))
@@ -353,20 +305,10 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 
 	}
 
-	/**
-	 * Internal data structure for retrieving and storing documents.
-	 */
 	private record AzureSearchDocument(String id, String content, List<Float> embedding, String metadata) {
 
 	}
 
-	/**
-	 * Builder class for creating {@link AzureVectorStore} instances.
-	 * <p>
-	 * Provides a fluent API for configuring all aspects of the Azure vector store.
-	 *
-	 * @since 1.0.0
-	 */
 	public static class Builder extends AbstractVectorStoreBuilder<Builder> {
 
 		private final SearchIndexClient searchIndexClient;
@@ -387,58 +329,28 @@ public class AzureVectorStore extends AbstractObservationVectorStore implements 
 			this.searchIndexClient = searchIndexClient;
 		}
 
-		/**
-		 * Sets whether to initialize the schema.
-		 * @param initializeSchema true to initialize schema, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder initializeSchema(boolean initializeSchema) {
 			this.initializeSchema = initializeSchema;
 			return this;
 		}
 
-		/**
-		 * Sets the metadata fields for filtering.
-		 * @param filterMetadataFields the list of metadata fields
-		 * @return the builder instance
-		 */
 		public Builder filterMetadataFields(List<MetadataField> filterMetadataFields) {
 			this.filterMetadataFields = filterMetadataFields != null ? filterMetadataFields : List.of();
 			return this;
 		}
 
-		/**
-		 * Sets the index name for the Azure Vector Store.
-		 * @param indexName the name of the index to use
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if indexName is null or empty
-		 */
 		public Builder indexName(String indexName) {
 			Assert.hasText(indexName, "The index name can not be empty.");
 			this.indexName = indexName;
 			return this;
 		}
 
-		/**
-		 * Sets the default maximum number of similar documents to return.
-		 * @param defaultTopK the maximum number of documents
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if defaultTopK is negative
-		 */
 		public Builder defaultTopK(int defaultTopK) {
 			Assert.isTrue(defaultTopK >= 0, "The topK should be positive value.");
 			this.defaultTopK = defaultTopK;
 			return this;
 		}
 
-		/**
-		 * Sets the default similarity threshold for returned documents.
-		 * @param defaultSimilarityThreshold the similarity threshold (must be between 0.0
-		 * and 1.0)
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if defaultSimilarityThreshold is not between
-		 * 0.0 and 1.0
-		 */
 		public Builder defaultSimilarityThreshold(Double defaultSimilarityThreshold) {
 			Assert.isTrue(defaultSimilarityThreshold >= 0.0 && defaultSimilarityThreshold <= 1.0,
 					"The similarity threshold must be in range [0.0:1.00].");

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.filter;
 
 import java.util.ArrayList;
@@ -38,66 +22,6 @@ import org.springframework.ai.vectorstore.filter.antlr4.FiltersParser.NotExpress
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.util.Assert;
 
-/**
- *
- * Parse a textual, vector-store agnostic, filter expression language into
- * {@link Filter.Expression}.
- *
- * The vector-store agnostic, filter expression language is defined by a formal ANTLR4
- * grammar (Filters.g4). The language looks and feels like a subset of the well known SQL
- * WHERE filter expressions. For example, you can use the parser like this:
- *
- * <pre>{@code
- *
- * var parser = new FilterExpressionTextParser();
- *
- * exp1 = parser.parse("country == 'BG'"); // creates:
- *  |
- *  +->	new Expression(EQ, new Key("country"), new Value("BG"));
- *
- * exp2 = parser.parse("genre == 'drama' && year >= 2020"); // creates:
- *  |
- *  +->	new Expression(AND,
- * 			new Expression(EQ, new Key("genre"), new Value("drama")),
- * 			new Expression(GTE, new Key("year"), new Value(2020)));
- *
- * exp3 = parser.parse("genre in ['comedy', 'documentary', 'drama']");
- *  |
- *  +->	new Expression(IN, new Key("genre"), new Value(List.of("comedy", "documentary", "drama")));
- *
- * exp4 = parser.parse("year >= 2020 || country == 'BG' && city != 'Sofia'");
- *  |
- *  +->	new Expression(OR,
- * 			new Expression(GTE, new Key("year"), new Value(2020)),
- * 			new Expression(AND,
- * 					new Expression(EQ, new Key("country"), new Value("BG")),
- * 					new Expression(NE, new Key("city"), new Value("Sofia"))));
- *
- * exp5 = parser.parse("(year >= 2020 || country == \"BG\") && city NOT IN ['Sofia', \"Plovdiv\"]"); // creates:
- *  |
- *  +->	new Expression(AND,
- * 			new Group(new Expression(OR, new Expression(EQ, new Key("country"), new Value("BG")),
- * 				new Expression(GTE, new Key("year"), new Value(2020)))),
- * 			new Expression(NIN, new Key("city"), new Value(List.of("Sofia", "Varna"))));
- *
- * exp6 = parser.parse("isOpen == true && year >= 2020 && country IN ['BG', 'NL', 'US']"); // creates:
- *  |
- *  +->	new Expression(AND,
- * 			new Expression(EQ, new Key("isOpen"), new Value(true)),
- * 			new Expression(AND,
- * 				new Expression(GTE, new Key("year"), new Value(2020)),
- * 				new Expression(IN, new Key("country"), new Value(List.of("BG", "NL", "US")))));
- *
- * exp7 = parser.parse("price >= 15.6 && price <= 20.13"); // creates:
- *  |
- *  +->	new Expression(AND,
- * 			new Expression(GTE, new Key("price"), new Value(15.6)),
- * 			new Expression(LTE, new Key("price"), new Value(20.13)));
- *
- * }</pre>
- *
- * @author Christian Tzolov
- */
 public class FilterExpressionTextParser {
 
 	private static final String WHERE_PREFIX = "WHERE";
@@ -121,7 +45,6 @@ public class FilterExpressionTextParser {
 
 		Assert.hasText(textFilterExpression, "Expression should not be empty!");
 
-		// Prefix the expression with the compulsory WHERE keyword.
 		if (!textFilterExpression.toUpperCase().startsWith(WHERE_PREFIX)) {
 			textFilterExpression = String.format("%s %s", WHERE_PREFIX, textFilterExpression);
 		}
@@ -160,7 +83,6 @@ public class FilterExpressionTextParser {
 		this.cache.clear();
 	}
 
-	/** For testing only */
 	Map<String, Filter.Expression> getCache() {
 		return this.cache;
 	}
@@ -268,7 +190,7 @@ public class FilterExpressionTextParser {
 
 		public Filter.Expression castToExpression(Filter.Operand expression) {
 			if (expression instanceof Filter.Group group) {
-				// Remove the top-level grouping.
+
 				return group.content();
 			}
 			else if (expression instanceof Filter.Expression exp) {

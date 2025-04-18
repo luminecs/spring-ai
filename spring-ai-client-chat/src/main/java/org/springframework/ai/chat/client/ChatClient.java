@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client;
 
 import java.net.URL;
@@ -43,18 +27,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 
-/**
- * Client to perform stateless requests to an AI Model, using a fluent API.
- *
- * Use {@link ChatClient#builder(ChatModel)} to prepare an instance.
- *
- * @author Mark Pollack
- * @author Christian Tzolov
- * @author Josh Long
- * @author Arjen Poutsma
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public interface ChatClient {
 
 	static ChatClient create(ChatModel chatModel) {
@@ -89,11 +61,6 @@ public interface ChatClient {
 
 	ChatClientRequestSpec prompt(Prompt prompt);
 
-	/**
-	 * Return a {@link ChatClient.Builder} to create a new {@link ChatClient} whose
-	 * settings are replicated from the default {@link ChatClientRequestSpec} of this
-	 * client.
-	 */
 	Builder mutate();
 
 	interface PromptUserSpec {
@@ -116,9 +83,6 @@ public interface ChatClient {
 
 	}
 
-	/**
-	 * Specification for a prompt system.
-	 */
 	interface PromptSystemSpec {
 
 		PromptSystemSpec text(String text);
@@ -198,10 +162,6 @@ public interface ChatClient {
 
 	interface ChatClientRequestSpec {
 
-		/**
-		 * Return a {@code ChatClient.Builder} to create a new {@code ChatClient} whose
-		 * settings are replicated from this {@code ChatClientRequest}.
-		 */
 		Builder mutate();
 
 		ChatClientRequestSpec advisors(Consumer<AdvisorSpec> consumer);
@@ -256,9 +216,6 @@ public interface ChatClient {
 
 	}
 
-	/**
-	 * A mutable builder for creating a {@link ChatClient}.
-	 */
 	interface Builder {
 
 		Builder defaultAdvisors(Advisor... advisor);
@@ -295,15 +252,9 @@ public interface ChatClient {
 
 		Builder defaultTools(ToolCallbackProvider... toolCallbackProviders);
 
-		/**
-		 * @deprecated in favor of {@link #defaultTools(String...)}
-		 */
 		@Deprecated
 		Builder defaultFunctions(String... functionNames);
 
-		/**
-		 * @deprecated in favor of {@link #defaultTools(Object...)}
-		 */
 		@Deprecated
 		Builder defaultFunctions(FunctionCallback... functionCallbacks);
 

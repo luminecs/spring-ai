@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.vertexai.autoconfigure.gemini.tool;
 
 import java.util.List;
@@ -55,12 +39,6 @@ public class FunctionCallWithPromptFunctionIT {
 
 				VertexAiGeminiChatModel chatModel = context.getBean(VertexAiGeminiChatModel.class);
 
-				// var systemMessage = new SystemMessage("""
-				// Use Multi-turn function calling.
-				// Answer for all listed locations.
-				// If the information was not fetched call the function again. Repeat at
-				// most 3 times.
-				// """);
 				var userMessage = new UserMessage("""
 						What's the weather like in San Francisco, Paris and in Tokyo?
 						Return the temperature in Celsius.
@@ -80,7 +58,6 @@ public class FunctionCallWithPromptFunctionIT {
 
 				assertThat(response.getResult().getOutput().getText()).contains("30", "10", "15");
 
-				// Verify that no function call is made.
 				response = chatModel
 					.call(new Prompt(List.of(userMessage), VertexAiGeminiChatOptions.builder().build()));
 

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chroma.vectorstore;
 
 import java.util.Collections;
@@ -45,11 +29,6 @@ import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Christian Tzolov
- * @author Eddú Meléndez
- * @author Thomas Vitale
- */
 @Testcontainers
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".+")
 public class ChromaVectorStoreIT extends BaseVectorStoreTests {
@@ -95,7 +74,6 @@ public class ChromaVectorStoreIT extends BaseVectorStoreTests {
 					"Great Depression Great Depression Great Depression Great Depression Great Depression Great Depression");
 			assertThat(resultDoc.getMetadata()).containsKeys("meta2", DocumentMetadata.DISTANCE.value());
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(doc -> doc.getId()).toList());
 
 			List<Document> results2 = vectorStore
@@ -124,7 +102,6 @@ public class ChromaVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(resultDoc.getId()).isEqualTo(document.getId());
 			assertThat(resultDoc.getText()).isEqualTo("The sky is blue because of Rayleigh scattering.");
 
-			// Remove all documents from the store
 			vectorStore.delete(List.of(document.getId()));
 
 			results = vectorStore.similaritySearch(SearchRequest.builder().query("Why is the sky blue?").build());
@@ -172,7 +149,6 @@ public class ChromaVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(results).hasSize(1);
 			assertThat(results.get(0).getId()).isEqualTo(bgDocument.getId());
 
-			// Remove all documents from the store
 			vectorStore.delete(List.of(bgDocument, nlDocument).stream().map(doc -> doc.getId()).toList());
 		});
 	}
@@ -180,7 +156,6 @@ public class ChromaVectorStoreIT extends BaseVectorStoreTests {
 	@Test
 	public void documentUpdateTest() {
 
-		// Note ,using OpenAI to calculate embeddings
 		this.contextRunner.run(context -> {
 
 			VectorStore vectorStore = context.getBean(VectorStore.class);
@@ -215,7 +190,6 @@ public class ChromaVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(resultDoc.getMetadata()).containsKey("meta2");
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 
-			// Remove all documents from the store
 			vectorStore.delete(List.of(document.getId()));
 		});
 	}
@@ -251,7 +225,6 @@ public class ChromaVectorStoreIT extends BaseVectorStoreTests {
 			assertThat(resultDoc.getMetadata()).containsKey(DocumentMetadata.DISTANCE.value());
 			assertThat(resultDoc.getScore()).isGreaterThanOrEqualTo(similarityThreshold);
 
-			// Remove all documents from the store
 			vectorStore.delete(this.documents.stream().map(doc -> doc.getId()).toList());
 		});
 	}

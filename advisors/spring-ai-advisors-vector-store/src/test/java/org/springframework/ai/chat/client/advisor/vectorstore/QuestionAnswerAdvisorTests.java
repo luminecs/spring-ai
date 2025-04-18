@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor.vectorstore;
 
 import java.time.Duration;
@@ -48,11 +32,6 @@ import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
-/**
- * @author Christian Tzolov
- * @author Timo Salm
- * @author Alexandros Pappas
- */
 @ExtendWith(MockitoExtension.class)
 public class QuestionAnswerAdvisorTests {
 
@@ -126,9 +105,7 @@ public class QuestionAnswerAdvisorTests {
 			.advisors(a -> a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION, "type == 'Spring'"))
 			.call()
 			.chatResponse();
-		//formatter:on
 
-		// Ensure the metadata is correctly copied over
 		Assertions.assertThat(response.getMetadata().getModel()).isEqualTo("model1");
 		Assertions.assertThat(response.getMetadata().getId()).isEqualTo("678");
 		Assertions.assertThat(response.getMetadata().getRateLimit().getRequestsLimit()).isEqualTo(5L);
@@ -196,7 +173,6 @@ public class QuestionAnswerAdvisorTests {
 				.advisors(qaAdvisor)
 				.call()
 				.chatResponse();
-		//formatter:on
 
 		var expectedQuery = "Please answer my question XYZ";
 		var userPrompt = this.promptCaptor.getValue().getInstructions().get(0).getText();
@@ -225,7 +201,6 @@ public class QuestionAnswerAdvisorTests {
 				.advisors(qaAdvisor)
 				.call()
 				.chatResponse();
-		//formatter:on
 
 		var expectedQuery = "Please answer my question XYZ";
 		var userPrompt = this.promptCaptor.getValue().getInstructions().get(0).getText();

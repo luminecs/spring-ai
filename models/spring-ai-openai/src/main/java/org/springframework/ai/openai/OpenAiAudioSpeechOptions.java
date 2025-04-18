@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -23,49 +7,21 @@ import org.springframework.ai.model.ModelOptions;
 import org.springframework.ai.openai.api.OpenAiAudioApi.SpeechRequest.AudioResponseFormat;
 import org.springframework.ai.openai.api.OpenAiAudioApi.SpeechRequest.Voice;
 
-/**
- * Options for OpenAI text to audio - speech synthesis.
- *
- * @author Ahmed Yousri
- * @author Hyunjoon Choi
- * @author Ilayaperumal Gopinathan
- * @author Jonghoon Park
- * @since 1.0.0-M1
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OpenAiAudioSpeechOptions implements ModelOptions {
 
-	/**
-	 * ID of the model to use for generating the audio. For OpenAI's TTS API, use one of
-	 * the available models: tts-1 or tts-1-hd.
-	 */
 	@JsonProperty("model")
 	private String model;
 
-	/**
-	 * The input text to synthesize. Must be at most 4096 tokens long.
-	 */
 	@JsonProperty("input")
 	private String input;
 
-	/**
-	 * The voice to use for synthesis. For OpenAI's TTS API, One of the available voices
-	 * for the chosen model: 'alloy', 'echo', 'fable', 'onyx', 'nova', and 'shimmer'.
-	 */
 	@JsonProperty("voice")
 	private String voice;
 
-	/**
-	 * The format of the audio output. Supported formats are mp3, opus, aac, and flac.
-	 * Defaults to mp3.
-	 */
 	@JsonProperty("response_format")
 	private AudioResponseFormat responseFormat;
 
-	/**
-	 * The speed of the voice synthesis. The acceptable range is from 0.25 (slowest) to
-	 * 4.0 (fastest). Defaults to 1 (normal)
-	 */
 	@JsonProperty("speed")
 	private Float speed;
 

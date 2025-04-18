@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.prompt;
 
 import java.io.IOException;
@@ -64,7 +48,7 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 
 	public PromptTemplate(String template) {
 		this.template = template;
-		// If the template string is not valid, an exception will be thrown
+
 		try {
 			this.st = new ST(this.template, '{', '}');
 		}
@@ -75,7 +59,7 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 
 	public PromptTemplate(String template, Map<String, Object> model) {
 		this.template = template;
-		// If the template string is not valid, an exception will be thrown
+
 		try {
 			this.st = new ST(this.template, '{', '}');
 			for (Entry<String, Object> entry : model.entrySet()) {
@@ -94,7 +78,7 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 		catch (IOException ex) {
 			throw new RuntimeException("Failed to read resource", ex);
 		}
-		// If the template string is not valid, an exception will be thrown
+
 		try {
 			this.st = new ST(this.template, '{', '}');
 			for (Entry<String, Object> entry : model.entrySet()) {
@@ -119,7 +103,6 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 		return this.templateFormat;
 	}
 
-	// Render Methods
 	@Override
 	public String render() {
 		validate(this.dynamicModel);
@@ -226,7 +209,6 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 		Set<String> templateTokens = getInputVariables();
 		Set<String> modelKeys = getModelKeys(model);
 
-		// Check if model provides all keys required by the template
 		if (!modelKeys.containsAll(templateTokens)) {
 			templateTokens.removeAll(modelKeys);
 			throw new IllegalStateException(

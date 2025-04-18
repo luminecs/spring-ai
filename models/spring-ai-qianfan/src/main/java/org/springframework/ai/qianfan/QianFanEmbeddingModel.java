@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.qianfan;
 
 import java.util.List;
@@ -44,13 +28,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
 
-/**
- * QianFan Embedding Client implementation.
- *
- * @author Geng Rong
- * @author Thomas Vitale
- * @since 1.0
- */
 public class QianFanEmbeddingModel extends AbstractEmbeddingModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(QianFanEmbeddingModel.class);
@@ -65,65 +42,29 @@ public class QianFanEmbeddingModel extends AbstractEmbeddingModel {
 
 	private final MetadataMode metadataMode;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private EmbeddingModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
-	/**
-	 * Constructor for the QianFanEmbeddingModel class.
-	 * @param qianFanApi The QianFanApi instance to use for making API requests.
-	 */
 	public QianFanEmbeddingModel(QianFanApi qianFanApi) {
 		this(qianFanApi, MetadataMode.EMBED);
 	}
 
-	/**
-	 * Initializes a new instance of the QianFanEmbeddingModel class.
-	 * @param qianFanApi The QianFanApi instance to use for making API requests.
-	 * @param metadataMode The mode for generating metadata.
-	 */
 	public QianFanEmbeddingModel(QianFanApi qianFanApi, MetadataMode metadataMode) {
 		this(qianFanApi, metadataMode,
 				QianFanEmbeddingOptions.builder().model(QianFanApi.DEFAULT_EMBEDDING_MODEL).build());
 	}
 
-	/**
-	 * Initializes a new instance of the QianFanEmbeddingModel class.
-	 * @param qianFanApi The QianFanApi instance to use for making API requests.
-	 * @param metadataMode The mode for generating metadata.
-	 * @param qianFanEmbeddingOptions The options for QianFan embedding.
-	 */
 	public QianFanEmbeddingModel(QianFanApi qianFanApi, MetadataMode metadataMode,
 			QianFanEmbeddingOptions qianFanEmbeddingOptions) {
 		this(qianFanApi, metadataMode, qianFanEmbeddingOptions, RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
-	/**
-	 * Initializes a new instance of the QianFanEmbeddingModel class.
-	 * @param qianFanApi The QianFanApi instance to use for making API requests.
-	 * @param metadataMode The mode for generating metadata.
-	 * @param qianFanEmbeddingOptions The options for QianFan embedding.
-	 * @param retryTemplate - The RetryTemplate for retrying failed API requests.
-	 */
 	public QianFanEmbeddingModel(QianFanApi qianFanApi, MetadataMode metadataMode,
 			QianFanEmbeddingOptions qianFanEmbeddingOptions, RetryTemplate retryTemplate) {
 		this(qianFanApi, metadataMode, qianFanEmbeddingOptions, retryTemplate, ObservationRegistry.NOOP);
 	}
 
-	/**
-	 * Initializes a new instance of the QianFanEmbeddingModel class.
-	 * @param qianFanApi - The QianFanApi instance to use for making API requests.
-	 * @param metadataMode - The mode for generating metadata.
-	 * @param options - The options for QianFan embedding.
-	 * @param retryTemplate - The RetryTemplate for retrying failed API requests.
-	 * @param observationRegistry - The ObservationRegistry used for instrumentation.
-	 */
 	public QianFanEmbeddingModel(QianFanApi qianFanApi, MetadataMode metadataMode, QianFanEmbeddingOptions options,
 			RetryTemplate retryTemplate, ObservationRegistry observationRegistry) {
 		Assert.notNull(qianFanApi, "QianFanApi must not be null");
@@ -196,10 +137,6 @@ public class QianFanEmbeddingModel extends AbstractEmbeddingModel {
 		return new DefaultUsage(usage.promptTokens(), usage.completionTokens(), usage.totalTokens(), usage);
 	}
 
-	/**
-	 * Merge runtime and default {@link EmbeddingOptions} to compute the final options to
-	 * use in the request.
-	 */
 	private QianFanEmbeddingOptions mergeOptions(@Nullable EmbeddingOptions runtimeOptions,
 			QianFanEmbeddingOptions defaultOptions) {
 		var runtimeOptionsForProvider = ModelOptionsUtils.copyToTarget(runtimeOptions, EmbeddingOptions.class,

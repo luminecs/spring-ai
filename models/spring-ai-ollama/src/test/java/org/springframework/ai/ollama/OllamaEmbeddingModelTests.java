@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.ollama;
 
 import java.time.Duration;
@@ -39,11 +23,6 @@ import org.springframework.ai.ollama.api.OllamaOptions;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
-/**
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @since 1.0.0
- */
 @ExtendWith(MockitoExtension.class)
 public class OllamaEmbeddingModelTests {
 
@@ -62,7 +41,6 @@ public class OllamaEmbeddingModelTests {
 			.willReturn(new EmbeddingsResponse("RESPONSE_MODEL_NAME2",
 					List.of(new float[] { 7f, 8f, 9f }, new float[] { 10f, 11f, 12f }), 0L, 0L, 0));
 
-		// Tests default options
 		var defaultOptions = OllamaOptions.builder().model("DEFAULT_MODEL").build();
 
 		var embeddingModel = OllamaEmbeddingModel.builder()
@@ -88,7 +66,6 @@ public class OllamaEmbeddingModelTests {
 		assertThat(this.embeddingsRequestCaptor.getValue().options()).isEqualTo(Map.of());
 		assertThat(this.embeddingsRequestCaptor.getValue().model()).isEqualTo("DEFAULT_MODEL");
 
-		// Tests runtime options
 		var runtimeOptions = OllamaOptions.builder()
 			.model("RUNTIME_MODEL")
 			.keepAlive("10m")

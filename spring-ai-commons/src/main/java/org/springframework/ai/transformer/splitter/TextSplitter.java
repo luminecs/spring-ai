@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.transformer.splitter;
 
 import java.util.ArrayList;
@@ -32,10 +16,6 @@ public abstract class TextSplitter implements DocumentTransformer {
 
 	private static final Logger logger = LoggerFactory.getLogger(TextSplitter.class);
 
-	/**
-	 * If true the children documents inherit the content-type of the parent they were
-	 * split from.
-	 */
 	private boolean copyContentFormatter = true;
 
 	@Override
@@ -76,7 +56,6 @@ public abstract class TextSplitter implements DocumentTransformer {
 	private List<Document> createDocuments(List<String> texts, List<ContentFormatter> formatters,
 			List<Map<String, Object>> metadataList) {
 
-		// Process the data in a column oriented way and recreate the Document
 		List<Document> documents = new ArrayList<>();
 
 		for (int i = 0; i < texts.size(); i++) {
@@ -87,7 +66,7 @@ public abstract class TextSplitter implements DocumentTransformer {
 				logger.info("Splitting up document into " + chunks.size() + " chunks.");
 			}
 			for (String chunk : chunks) {
-				// only primitive values are in here -
+
 				Map<String, Object> metadataCopy = metadata.entrySet()
 					.stream()
 					.filter(e -> e.getKey() != null && e.getValue() != null)
@@ -95,12 +74,10 @@ public abstract class TextSplitter implements DocumentTransformer {
 				Document newDoc = new Document(chunk, metadataCopy);
 
 				if (this.copyContentFormatter) {
-					// Transfer the content-formatter of the parent to the chunked
-					// documents it was slit into.
+
 					newDoc.setContentFormatter(formatters.get(i));
 				}
 
-				// TODO copy over other properties.
 				documents.add(newDoc);
 			}
 		}

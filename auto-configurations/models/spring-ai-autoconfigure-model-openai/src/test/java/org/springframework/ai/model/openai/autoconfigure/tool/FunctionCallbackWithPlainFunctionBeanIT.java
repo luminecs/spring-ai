@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.openai.autoconfigure.tool;
 
 import java.util.List;
@@ -76,7 +60,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			OpenAiChatModel chatModel = context.getBean(OpenAiChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage("Turn the light on in the living room");
 
 			ChatResponse response = chatModel.call(new Prompt(List.of(userMessage),
@@ -94,7 +77,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			OpenAiChatModel chatModel = context.getBean(OpenAiChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage("Turn the light on in the living room");
 
 			ChatResponse response = chatModel.call(new Prompt(List.of(userMessage),
@@ -112,7 +94,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			OpenAiChatModel chatModel = context.getBean(OpenAiChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage("Turn the light on in the kitchen and in the living room");
 
 			ChatResponse response = chatModel
@@ -131,7 +112,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			OpenAiChatModel chatModel = context.getBean(OpenAiChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage("Turn the light on in the kitchen and in the living room");
 
 			ChatResponse response = chatModel.call(new Prompt(List.of(userMessage),
@@ -151,7 +131,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			OpenAiChatModel chatModel = context.getBean(OpenAiChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage(
 					"Please schedule a train from San Francisco to Los Angeles on 2023-12-25");
 
@@ -180,7 +159,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 				.content();
 			logger.info(content);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage(
 					"What's the weather like in San Francisco, Tokyo, and Paris? You can call the following functions 'weatherFunction'");
 
@@ -212,7 +190,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 				.content();
 			logger.info(content);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage(
 					"What's the weather like in San Francisco, Tokyo, and Paris? You can call the following functions 'weatherFunction'");
 
@@ -235,7 +212,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			OpenAiChatModel chatModel = context.getBean(OpenAiChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage(
 					"What's the weather like in San Francisco, Tokyo, and Paris? You can call the following functions 'weatherFunction'");
 
@@ -246,7 +222,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			assertThat(response.getResult().getOutput().getText()).contains("30", "10", "15");
 
-			// Test weatherFunctionTwo
 			response = chatModel.call(new Prompt(List.of(userMessage),
 					OpenAiChatOptions.builder().function("weatherFunctionTwo").build()));
 
@@ -263,7 +238,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			OpenAiChatModel chatModel = context.getBean(OpenAiChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage("What's the weather like in San Francisco, Tokyo, and Paris?");
 
 			ToolCallingChatOptions functionOptions = ToolCallingChatOptions.builder()
@@ -284,7 +258,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			OpenAiChatModel chatModel = context.getBean(OpenAiChatModel.class);
 
-			// Test weatherFunction
 			UserMessage userMessage = new UserMessage(
 					"What's the weather like in San Francisco, Tokyo, and Paris? You can call the following functions 'weatherFunction'");
 
@@ -303,7 +276,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 
 			assertThat(content).contains("30", "10", "15");
 
-			// Test weatherFunctionTwo
 			response = chatModel.stream(new Prompt(List.of(userMessage),
 					OpenAiChatOptions.builder().function("weatherFunctionTwo").build()));
 
@@ -344,8 +316,6 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 			return new MockWeatherService();
 		}
 
-		// Relies on the Request's JsonClassDescription annotation to provide the
-		// function description.
 		@Bean
 		public Function<MockWeatherService.Request, MockWeatherService.Response> weatherFunctionTwo() {
 			MockWeatherService weatherService = new MockWeatherService();

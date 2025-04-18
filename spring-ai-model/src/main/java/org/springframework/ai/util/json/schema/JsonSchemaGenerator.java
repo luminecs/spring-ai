@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.util.json.schema;
 
 import java.lang.reflect.Method;
@@ -47,47 +31,14 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * Utilities to generate JSON Schemas from Java types and method signatures. It's designed
- * to work well in the context of tool calling and structured outputs, aiming at ensuring
- * consistency and robustness across different model providers.
- * <p>
- * Metadata such as descriptions and required properties can be specified using one of the
- * following supported annotations:
- * <p>
- * <ul>
- * <li>{@code @ToolParam(required = ..., description = ...)}</li>
- * <li>{@code @JsonProperty(required = ...)}</li>
- * <li>{@code @JsonClassDescription(...)}</li>
- * <li>{@code @JsonPropertyDescription(...)}</li>
- * <li>{@code @Schema(required = ..., description = ...)}</li>
- * <li>{@code @Nullable}</li>
- * </ul>
- * <p>
- * If none of these annotations are present, the default behavior is to consider the
- * property as required and not to include a description.
- * <p>
- *
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public final class JsonSchemaGenerator {
 
-	/**
-	 * To ensure consistency and robustness across different model providers, all
-	 * properties in the JSON Schema are considered required by default. This behavior can
-	 * be overridden by setting the {@link ToolParam#required()},
-	 * {@link JsonProperty#required()}, or {@link Schema#requiredMode()}} annotation.
-	 */
 	private static final boolean PROPERTY_REQUIRED_BY_DEFAULT = true;
 
 	private static final SchemaGenerator TYPE_SCHEMA_GENERATOR;
 
 	private static final SchemaGenerator SUBTYPE_SCHEMA_GENERATOR;
 
-	/*
-	 * Initialize JSON Schema generators.
-	 */
 	static {
 		Module jacksonModule = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED);
 		Module openApiModule = new Swagger2Module();
@@ -114,9 +65,6 @@ public final class JsonSchemaGenerator {
 	private JsonSchemaGenerator() {
 	}
 
-	/**
-	 * Generate a JSON Schema for a method's input parameters.
-	 */
 	public static String generateForMethodInput(Method method, SchemaOption... schemaOptions) {
 		ObjectNode schema = JsonParser.getObjectMapper().createObjectNode();
 		schema.put("$schema", SchemaVersion.DRAFT_2020_12.getIdentifier());
@@ -130,10 +78,7 @@ public final class JsonSchemaGenerator {
 			Type parameterType = method.getGenericParameterTypes()[i];
 			if (parameterType instanceof Class<?> parameterClass
 					&& ClassUtils.isAssignable(parameterClass, ToolContext.class)) {
-				// A ToolContext method parameter is not included in the JSON Schema
-				// generation.
-				// It's a special type used by Spring AI to pass contextual data to tools
-				// outside the model interaction flow.
+
 				continue;
 			}
 			if (isMethodParameterRequired(method, i)) {
@@ -155,9 +100,6 @@ public final class JsonSchemaGenerator {
 		return schema.toPrettyString();
 	}
 
-	/**
-	 * Generate a JSON Schema for a class type.
-	 */
 	public static String generateForType(Type type, SchemaOption... schemaOptions) {
 		Assert.notNull(type, "type cannot be null");
 		ObjectNode schema = TYPE_SCHEMA_GENERATOR.generateSchema(type);
@@ -178,22 +120,6 @@ public final class JsonSchemaGenerator {
 		}
 	}
 
-	/**
-	 * Determines whether a property is required based on the presence of a series of *
-	 * annotations.
-	 *
-	 * <p>
-	 * <ul>
-	 * <li>{@code @ToolParam(required = ...)}</li>
-	 * <li>{@code @JsonProperty(required = ...)}</li>
-	 * <li>{@code @Schema(required = ...)}</li>
-	 * <li>{@code @Nullable}</li>
-	 * </ul>
-	 * <p>
-	 *
-	 * If none of these annotations are present, the default behavior is to consider the *
-	 * property as required.
-	 */
 	private static boolean isMethodParameterRequired(Method method, int index) {
 		Parameter parameter = method.getParameters()[index];
 
@@ -221,17 +147,6 @@ public final class JsonSchemaGenerator {
 		return PROPERTY_REQUIRED_BY_DEFAULT;
 	}
 
-	/**
-	 * Determines a property description based on the presence of a series of annotations.
-	 *
-	 * <p>
-	 * <ul>
-	 * <li>{@code @ToolParam(description = ...)}</li>
-	 * <li>{@code @JsonPropertyDescription(...)}</li>
-	 * <li>{@code @Schema(description = ...)}</li>
-	 * </ul>
-	 * <p>
-	 */
 	@Nullable
 	private static String getMethodParameterDescription(Method method, int index) {
 		Parameter parameter = method.getParameters()[index];
@@ -254,7 +169,6 @@ public final class JsonSchemaGenerator {
 		return null;
 	}
 
-	// Based on the method in ModelOptionsUtils.
 	public static void convertTypeValuesToUpperCase(ObjectNode node) {
 		if (node.isObject()) {
 			node.fields().forEachRemaining(entry -> {
@@ -284,19 +198,10 @@ public final class JsonSchemaGenerator {
 		}
 	}
 
-	/**
-	 * Options for generating JSON Schemas.
-	 */
 	public enum SchemaOption {
 
-		/**
-		 * Allow an object to contain additional key/values not defined in the schema.
-		 */
 		ALLOW_ADDITIONAL_PROPERTIES_BY_DEFAULT,
 
-		/**
-		 * Convert all "type" values to upper case.
-		 */
 		UPPER_CASE_TYPE_VALUES
 
 	}

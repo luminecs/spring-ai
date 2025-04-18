@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.minimax;
 
 import java.util.ArrayList;
@@ -33,112 +17,40 @@ import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.model.function.FunctionCallingOptions;
 import org.springframework.util.Assert;
 
-/**
- * MiniMaxChatOptions represents the options for performing chat completion using the
- * MiniMax API. It provides methods to set and retrieve various options like model,
- * frequency penalty, max tokens, etc.
- *
- * @see FunctionCallingOptions
- * @see ChatOptions
- * @author Geng Rong
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- * @since 1.0.0 M1
- */
 @JsonInclude(Include.NON_NULL)
 public class MiniMaxChatOptions implements FunctionCallingOptions {
 
 	// @formatter:off
-	/**
-	 * ID of the model to use.
-	 */
+
 	private @JsonProperty("model") String model;
-	/**
-	 * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing
-	 * frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-	 */
+
 	private @JsonProperty("frequency_penalty") Double frequencyPenalty;
-	/**
-	 * The maximum number of tokens to generate in the chat completion. The total length of input
-	 * tokens and generated tokens is limited by the model's context length.
-	 */
+
 	private @JsonProperty("max_tokens") Integer maxTokens;
-	/**
-	 * How many chat completion choices to generate for each input message. Note that you will be charged based
-	 * on the number of generated tokens across all of the choices. Keep n as 1 to minimize costs.
-	 */
+
 	private @JsonProperty("n") Integer n;
-	/**
-	 * Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they
-	 * appear in the text so far, increasing the model's likelihood to talk about new topics.
-	 */
+
 	private @JsonProperty("presence_penalty") Double presencePenalty;
-	/**
-	 * An object specifying the format that the model must output. Setting to { "type":
-	 * "json_object" } enables JSON mode, which guarantees the message the model generates is valid JSON.
-	 */
+
 	private @JsonProperty("response_format") MiniMaxApi.ChatCompletionRequest.ResponseFormat responseFormat;
-	/**
-	 * This feature is in Beta. If specified, our system will make a best effort to sample
-	 * deterministically, such that repeated requests with the same seed and parameters should return the same result.
-	 * Determinism is not guaranteed, and you should refer to the system_fingerprint response parameter to monitor
-	 * changes in the backend.
-	 */
+
 	private @JsonProperty("seed") Integer seed;
-	/**
-	 * Up to 4 sequences where the API will stop generating further tokens.
-	 */
+
 	private @JsonProperty("stop") List<String> stop;
-	/**
-	 * What sampling temperature to use, between 0 and 1. Higher values like 0.8 will make the output
-	 * more random, while lower values like 0.2 will make it more focused and deterministic. We generally recommend
-	 * altering this or top_p but not both.
-	 */
+
 	private @JsonProperty("temperature") Double temperature;
-	/**
-	 * An alternative to sampling with temperature, called nucleus sampling, where the model considers the
-	 * results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10%
-	 * probability mass are considered. We generally recommend altering this or temperature but not both.
-	 */
+
 	private @JsonProperty("top_p") Double topP;
-	/**
-	 * Mask the text information in the output that is easy to involve privacy issues,
-	 * including but not limited to email, domain name, link, ID number, home address, etc.
-	 * The default is true, which means enabling masking.
-	 */
+
 	private @JsonProperty("mask_sensitive_info") Boolean maskSensitiveInfo;
-	/**
-	 * A list of tools the model may call. Currently, only functions are supported as a tool. Use this to
-	 * provide a list of functions the model may generate JSON inputs for.
-	 */
+
 	private @JsonProperty("tools") List<MiniMaxApi.FunctionTool> tools;
-	/**
-	 * Controls which (if any) function is called by the model. none means the model will not call a
-	 * function and instead generates a message. auto means the model can pick between generating a message or calling a
-	 * function. Specifying a particular function via {"type: "function", "function": {"name": "my_function"}} forces
-	 * the model to call that function. none is the default when no functions are present. auto is the default if
-	 * functions are present. Use the {@link MiniMaxApi.ChatCompletionRequest.ToolChoiceBuilder} to create a tool choice object.
-	 */
+
 	private @JsonProperty("tool_choice") String toolChoice;
 
-	/**
-	 * MiniMax Tool Function Callbacks to register with the ChatModel.
-	 * For Prompt Options the functionCallbacks are automatically enabled for the duration of the prompt execution.
-	 * For Default Options the functionCallbacks are registered but disabled by default. Use the enableFunctions to set the functions
-	 * from the registry to be used by the ChatModel chat completion requests.
-	 */
 	@JsonIgnore
 	private List<FunctionCallback> functionCallbacks = new ArrayList<>();
 
-	/**
-	 * List of functions, identified by their names, to configure for function calling in
-	 * the chat completion requests.
-	 * Functions with those names must exist in the functionCallbacks registry.
-	 * The {@link #functionCallbacks} from the PromptOptions are automatically enabled for the duration of the prompt execution.
-	 *
-	 * Note that function enabled with the default options are enabled for all chat completion requests. This could impact the token count and the billing.
-	 * If the functions is set in a prompt options, then the enabled functions are only active for the duration of this prompt execution.
-	 */
 	@JsonIgnore
 	private Set<String> functions = new HashSet<>();
 

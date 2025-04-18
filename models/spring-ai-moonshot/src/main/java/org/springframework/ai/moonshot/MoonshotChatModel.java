@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.moonshot;
 
 import java.util.HashSet;
@@ -73,84 +57,35 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * MoonshotChatModel is a {@link ChatModel} implementation that uses the Moonshot
- *
- * @author Geng Rong
- * @author Alexandros Pappas
- * @author Ilayaperumal Gopinathan
- */
 public class MoonshotChatModel extends AbstractToolCallSupport implements ChatModel, StreamingChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(MoonshotChatModel.class);
 
 	private static final ChatModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultChatModelObservationConvention();
 
-	/**
-	 * The default options used for the chat completion requests.
-	 */
 	private final MoonshotChatOptions defaultOptions;
 
-	/**
-	 * Low-level access to the Moonshot API.
-	 */
 	private final MoonshotApi moonshotApi;
 
 	private final RetryTemplate retryTemplate;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
-	/**
-	 * Initializes a new instance of the MoonshotChatModel.
-	 * @param moonshotApi The Moonshot instance to be used for interacting with the
-	 * Moonshot Chat API.
-	 */
 	public MoonshotChatModel(MoonshotApi moonshotApi) {
 		this(moonshotApi, MoonshotChatOptions.builder().model(MoonshotApi.DEFAULT_CHAT_MODEL).build());
 	}
 
-	/**
-	 * Initializes a new instance of the MoonshotChatModel.
-	 * @param moonshotApi The Moonshot instance to be used for interacting with the
-	 * Moonshot Chat API.
-	 * @param options The MoonshotChatOptions to configure the chat client.
-	 */
 	public MoonshotChatModel(MoonshotApi moonshotApi, MoonshotChatOptions options) {
 		this(moonshotApi, options, null, RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
-	/**
-	 * Initializes a new instance of the MoonshotChatModel.
-	 * @param moonshotApi The Moonshot instance to be used for interacting with the
-	 * Moonshot Chat API.
-	 * @param options The MoonshotChatOptions to configure the chat client.
-	 * @param functionCallbackResolver The function callback resolver to resolve the
-	 * function by its name.
-	 * @param retryTemplate The retry template.
-	 */
 	public MoonshotChatModel(MoonshotApi moonshotApi, MoonshotChatOptions options,
 			FunctionCallbackResolver functionCallbackResolver, RetryTemplate retryTemplate) {
 		this(moonshotApi, options, functionCallbackResolver, List.of(), retryTemplate, ObservationRegistry.NOOP);
 	}
 
-	/**
-	 * Initializes a new instance of the MoonshotChatModel.
-	 * @param moonshotApi The Moonshot instance to be used for interacting with the
-	 * Moonshot Chat API.
-	 * @param options The MoonshotChatOptions to configure the chat client.
-	 * @param functionCallbackResolver resolves the function by its name.
-	 * @param toolFunctionCallbacks The tool function callbacks.
-	 * @param retryTemplate The retry template.
-	 * @param observationRegistry The ObservationRegistry used for instrumentation.
-	 */
 	public MoonshotChatModel(MoonshotApi moonshotApi, MoonshotChatOptions options,
 			FunctionCallbackResolver functionCallbackResolver, List<FunctionCallback> toolFunctionCallbacks,
 			RetryTemplate retryTemplate, ObservationRegistry observationRegistry) {
@@ -241,8 +176,7 @@ public class MoonshotChatModel extends AbstractToolCallSupport implements ChatMo
 				&& isToolCall(response, Set.of(MoonshotApi.ChatCompletionFinishReason.TOOL_CALLS.name(),
 						MoonshotApi.ChatCompletionFinishReason.STOP.name()))) {
 			var toolCallConversation = handleToolCalls(prompt, response);
-			// Recursively call the call method with the tool call message
-			// conversation that contains the call responses.
+
 			return this.internalCall(new Prompt(toolCallConversation, prompt.getOptions()), response);
 		}
 		return response;
@@ -269,8 +203,6 @@ public class MoonshotChatModel extends AbstractToolCallSupport implements ChatMo
 			Flux<ChatCompletionChunk> completionChunks = this.retryTemplate
 				.execute(ctx -> this.moonshotApi.chatCompletionStream(request));
 
-			// For chunked responses, only the first chunk contains the choice role.
-			// The rest of the chunks with same ID share the same role.
 			ConcurrentHashMap<String, String> roleMap = new ConcurrentHashMap<>();
 
 			final ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
@@ -285,8 +217,6 @@ public class MoonshotChatModel extends AbstractToolCallSupport implements ChatMo
 
 			observation.parentObservation(contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null)).start();
 
-			// Convert the ChatCompletionChunk into a ChatCompletion to be able to reuse
-			// the function call handling logic.
 			Flux<ChatResponse> chatResponse = completionChunks.map(this::chunkToChatCompletion)
 				.switchMap(chatCompletion -> Mono.just(chatCompletion).map(chatCompletion2 -> {
 					try {
@@ -322,12 +252,10 @@ public class MoonshotChatModel extends AbstractToolCallSupport implements ChatMo
 			Flux<ChatResponse> flux = chatResponse.flatMap(response -> {
 				if (!isProxyToolCalls(prompt, this.defaultOptions) && isToolCall(response,
 						Set.of(ChatCompletionFinishReason.TOOL_CALLS.name(), ChatCompletionFinishReason.STOP.name()))) {
-					// FIXME: bounded elastic needs to be used since tool calling
-					// is currently only synchronous
+
 					return Flux.defer(() -> {
 						var toolCallConversation = handleToolCalls(prompt, response);
-						// Recursively call the stream method with the tool call message
-						// conversation that contains the call responses.
+
 						return this.internalStream(new Prompt(toolCallConversation, prompt.getOptions()), response);
 					}).subscribeOn(Schedulers.boundedElastic());
 				}
@@ -361,11 +289,6 @@ public class MoonshotChatModel extends AbstractToolCallSupport implements ChatMo
 			.build();
 	}
 
-	/**
-	 * Convert the ChatCompletionChunk into a ChatCompletion. The Usage is set to null.
-	 * @param chunk the ChatCompletionChunk to convert
-	 * @return the ChatCompletion
-	 */
 	private ChatCompletion chunkToChatCompletion(ChatCompletionChunk chunk) {
 		List<ChatCompletion.Choice> choices = chunk.choices().stream().map(cc -> {
 			ChatCompletionMessage delta = cc.delta();
@@ -374,14 +297,11 @@ public class MoonshotChatModel extends AbstractToolCallSupport implements ChatMo
 			}
 			return new ChatCompletion.Choice(cc.index(), delta, cc.finishReason(), cc.usage());
 		}).toList();
-		// Get the usage from the latest choice
+
 		MoonshotApi.Usage usage = choices.get(choices.size() - 1).usage();
 		return new ChatCompletion(chunk.id(), "chat.completion", chunk.created(), chunk.model(), choices, usage);
 	}
 
-	/**
-	 * Accessible for testing.
-	 */
 	public MoonshotApi.ChatCompletionRequest createRequest(Prompt prompt, boolean stream) {
 
 		List<ChatCompletionMessage> chatCompletionMessages = prompt.getInstructions().stream().map(message -> {
@@ -445,7 +365,6 @@ public class MoonshotChatModel extends AbstractToolCallSupport implements ChatMo
 
 		request = ModelOptionsUtils.merge(request, this.defaultOptions, ChatCompletionRequest.class);
 
-		// Add the enabled functions definitions to the request's tools parameter.
 		if (!CollectionUtils.isEmpty(enabledToolsToUse)) {
 
 			request = ModelOptionsUtils.merge(

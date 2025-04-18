@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chroma.vectorstore;
 
 import java.util.ArrayList;
@@ -49,19 +33,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * {@link ChromaVectorStore} is a concrete implementation of the {@link VectorStore}
- * interface. It is responsible for adding, deleting, and searching documents based on
- * their similarity to a query, using the {@link ChromaApi} and {@link EmbeddingModel} for
- * embedding calculations. For more information about how it does this, see the official
- * <a href="https://www.trychroma.com/">Chroma website</a>.
- *
- * @author Christian Tzolov
- * @author Fu Cheng
- * @author Sebastien Deleuze
- * @author Soby Chacko
- * @author Thomas Vitale
- */
 public class ChromaVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	public static final String DEFAULT_COLLECTION_NAME = "SpringAiCollection";
@@ -83,9 +54,6 @@ public class ChromaVectorStore extends AbstractObservationVectorStore implements
 
 	private static final Logger logger = LoggerFactory.getLogger(ChromaVectorStore.class);
 
-	/**
-	 * @param builder {@link VectorStore.Builder} for chroma vector store
-	 */
 	protected ChromaVectorStore(Builder builder) {
 		super(builder);
 
@@ -260,55 +228,28 @@ public class ChromaVectorStore extends AbstractObservationVectorStore implements
 			this.chromaApi = chromaApi;
 		}
 
-		/**
-		 * Sets the collection name.
-		 * @param collectionName the name of the collection
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if collectionName is null or empty
-		 */
 		public Builder collectionName(String collectionName) {
 			Assert.hasText(collectionName, "collectionName must not be null or empty");
 			this.collectionName = collectionName;
 			return this;
 		}
 
-		/**
-		 * Sets whether to initialize the schema.
-		 * @param initializeSchema true to initialize schema, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder initializeSchema(boolean initializeSchema) {
 			this.initializeSchema = initializeSchema;
 			return this;
 		}
 
-		/**
-		 * Sets the filter expression converter.
-		 * @param converter the filter expression converter to use
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if converter is null
-		 */
 		public Builder filterExpressionConverter(FilterExpressionConverter converter) {
 			Assert.notNull(converter, "filterExpressionConverter must not be null");
 			this.filterExpressionConverter = converter;
 			return this;
 		}
 
-		/**
-		 * Sets whether to initialize immediately.
-		 * @param initialize true to initialize immediately, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder initializeImmediately(boolean initialize) {
 			this.initializeImmediately = initialize;
 			return this;
 		}
 
-		/**
-		 * Builds the {@link ChromaVectorStore} instance.
-		 * @return a new ChromaVectorStore instance
-		 * @throws IllegalStateException if the builder is in an invalid state
-		 */
 		public ChromaVectorStore build() {
 			return new ChromaVectorStore(this);
 		}

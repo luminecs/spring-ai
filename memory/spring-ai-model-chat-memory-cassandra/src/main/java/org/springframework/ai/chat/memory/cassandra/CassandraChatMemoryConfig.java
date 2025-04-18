@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.memory.cassandra;
 
 import java.net.InetSocketAddress;
@@ -43,22 +27,14 @@ import com.datastax.oss.driver.shaded.guava.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Configuration for the Cassandra Chat Memory store.
- *
- * @author Mick Semb Wever
- * @since 1.0.0
- */
 public final class CassandraChatMemoryConfig {
 
 	public static final String DEFAULT_KEYSPACE_NAME = "springframework";
 
 	public static final String DEFAULT_TABLE_NAME = "ai_chat_memory";
 
-	// todo – make configurable
 	public static final String DEFAULT_SESSION_ID_NAME = "session_id";
 
-	// todo – make configurable
 	public static final String DEFAULT_EXCHANGE_ID_NAME = "message_timestamp";
 
 	public static final String DEFAULT_ASSISTANT_COLUMN_NAME = "assistant";
@@ -161,7 +137,7 @@ public final class CassandraChatMemoryConfig {
 
 			CreateTableWithOptions createTableWithOptions = createTable.withColumn(this.userColumn, DataTypes.TEXT)
 				.withClusteringOrder(lastClusteringColumn, ClusteringOrder.DESC)
-				// TODO replace w/ SchemaBuilder.unifiedCompactionStrategy() is available
+
 				.withOption("compaction", Map.of("class", "UnifiedCompactionStrategy"));
 
 			if (null != this.timeToLiveSeconds) {
@@ -196,7 +172,6 @@ public final class CassandraChatMemoryConfig {
 		}
 	}
 
-	/** Given a string sessionId, return the value for each primary key column. */
 	public interface SessionIdToPrimaryKeysTranslator extends Function<String, List<Object>> {
 
 	}
@@ -299,7 +274,6 @@ public final class CassandraChatMemoryConfig {
 			return this;
 		}
 
-		/** How long are messages kept for */
 		public Builder withTimeToLive(Duration timeToLive) {
 			Preconditions.checkArgument(0 < timeToLive.getSeconds());
 			this.timeToLiveSeconds = (int) timeToLive.toSeconds();

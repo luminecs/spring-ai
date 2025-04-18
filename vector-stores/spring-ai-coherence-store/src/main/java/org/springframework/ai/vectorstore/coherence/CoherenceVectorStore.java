@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.coherence;
 
 import java.util.ArrayList;
@@ -49,66 +33,24 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * <p>
- * Integration of Coherence Coherence 24.09+ as a Vector Store.
- * </p>
- * <p>
- * Coherence Coherence 24.09 (or later) provides numerous features useful for artificial
- * intelligence such as Vectors, Similarity search, HNSW indexes, and binary quantization.
- * </p>
- * <p>
- * This Spring AI Vector store supports the following features:
- * <ul>
- * <li>Vectors with unspecified or fixed dimensions</li>
- * <li>Distance type for similarity search (note that similarity threshold can be used
- * only with distance type COSINE and DOT when ingested vectors are normalized, see
- * forcedNormalization)</li>
- * <li>Vector indexes (HNSW or Binary Quantization)</li>
- * <li>Exact and Approximate similarity search</li>
- * <li>Filter expression evaluation</li>
- * </ul>
- *
- * @author Aleks Seovic
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class CoherenceVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	public enum IndexType {
 
-		/**
-		 * No index, use brute force exact calculation.
-		 */
 		NONE,
 
-		/**
-		 * Use Binary Quantization-based vector index
-		 */
 		BINARY,
 
-		/**
-		 * Use HNSW-based vector index
-		 */
 		HNSW
 
 	}
 
 	public enum DistanceType {
 
-		/**
-		 * Default dist. It calculates the cosine distance between two vectors.
-		 */
 		COSINE,
 
-		/**
-		 * Inner product.
-		 */
 		IP,
 
-		/**
-		 * Euclidean distance between two vectors (squared).
-		 */
 		L2
 
 	}
@@ -125,25 +67,14 @@ public class CoherenceVectorStore extends AbstractObservationVectorStore impleme
 
 	private NamedMap<DocumentChunk.Id, DocumentChunk> documentChunks;
 
-	/**
-	 * Map name where vectors will be stored.
-	 */
 	private String mapName;
 
-	/**
-	 * Distance type to use for computing vector distances.
-	 */
 	private DistanceType distanceType;
 
 	private boolean forcedNormalization;
 
 	private IndexType indexType;
 
-	/**
-	 * Protected constructor that accepts a builder instance. This is the preferred way to
-	 * create new CoherenceVectorStore instances.
-	 * @param builder the configured builder instance
-	 */
 	protected CoherenceVectorStore(Builder builder) {
 		super(builder);
 
@@ -157,10 +88,6 @@ public class CoherenceVectorStore extends AbstractObservationVectorStore impleme
 		this.indexType = builder.indexType;
 	}
 
-	/**
-	 * Creates a new builder for configuring and creating CoherenceVectorStore instances.
-	 * @return a new builder instance
-	 */
 	public static Builder builder(Session session, EmbeddingModel embeddingModel) {
 		return new Builder(session, embeddingModel);
 	}
@@ -191,7 +118,7 @@ public class CoherenceVectorStore extends AbstractObservationVectorStore impleme
 
 	@Override
 	public List<Document> doSimilaritySearch(SearchRequest request) {
-		// From the provided query, generate a vector using the embedding model
+
 		final Float32Vector vector = toFloat32Vector(this.embeddingModel.embed(request.getQuery()));
 
 		Expression expression = request.getFilterExpression();
@@ -239,20 +166,10 @@ public class CoherenceVectorStore extends AbstractObservationVectorStore impleme
 		}
 	}
 
-	// ---- helpers ----
-
 	private DocumentChunk.Id toChunkId(String id) {
 		return new DocumentChunk.Id(id, 0);
 	}
 
-	/**
-	 * Converts a list of Double values into a Coherence
-	 * {@link com.oracle.coherence.ai.Float32Vector} object ready to be inserted.
-	 * <p/>
-	 * Optionally normalize the vector beforehand (see forcedNormalization).
-	 * @param floats an array of Doubles to convert
-	 * @return a {@code Vector} instance
-	 */
 	private Float32Vector toFloat32Vector(final float[] floats) {
 		return new Float32Vector(this.forcedNormalization ? Vectors.normalize(floats) : floats);
 	}
@@ -276,14 +193,6 @@ public class CoherenceVectorStore extends AbstractObservationVectorStore impleme
 		return Optional.of(client);
 	}
 
-	/**
-	 * Builder class for creating {@link CoherenceVectorStore} instances.
-	 * <p>
-	 * Provides a fluent API for configuring all aspects of the Coherence vector store,
-	 * including map name, distance type, and indexing options.
-	 *
-	 * @since 1.0.0
-	 */
 	public static class Builder extends AbstractVectorStoreBuilder<Builder> {
 
 		private final Session session;
@@ -302,11 +211,6 @@ public class CoherenceVectorStore extends AbstractObservationVectorStore impleme
 			this.session = session;
 		}
 
-		/**
-		 * Sets the map name for vector storage.
-		 * @param mapName the name of the map to use
-		 * @return the builder instance
-		 */
 		public Builder mapName(String mapName) {
 			if (StringUtils.hasText(mapName)) {
 				this.mapName = mapName;
@@ -314,34 +218,17 @@ public class CoherenceVectorStore extends AbstractObservationVectorStore impleme
 			return this;
 		}
 
-		/**
-		 * Sets the distance type for vector similarity calculations.
-		 * @param distanceType the distance type to use
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if distanceType is null
-		 */
 		public Builder distanceType(DistanceType distanceType) {
 			Assert.notNull(distanceType, "DistanceType must not be null");
 			this.distanceType = distanceType;
 			return this;
 		}
 
-		/**
-		 * Sets whether to force vector normalization.
-		 * @param forcedNormalization true to force normalization, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder forcedNormalization(boolean forcedNormalization) {
 			this.forcedNormalization = forcedNormalization;
 			return this;
 		}
 
-		/**
-		 * Sets the index type for vector storage.
-		 * @param indexType the index type to use
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if indexType is null
-		 */
 		public Builder indexType(IndexType indexType) {
 			Assert.notNull(indexType, "IndexType must not be null");
 			this.indexType = indexType;

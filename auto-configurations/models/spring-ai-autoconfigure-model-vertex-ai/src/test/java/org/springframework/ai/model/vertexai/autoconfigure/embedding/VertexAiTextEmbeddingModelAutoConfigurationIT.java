@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model.vertexai.autoconfigure.embedding;
 
 import java.io.File;
@@ -35,10 +19,6 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Christian Tzolov
- * @author Ilayaperumal Gopinathan
- */
 @EnabledIfEnvironmentVariable(named = "VERTEX_AI_GEMINI_PROJECT_ID", matches = ".*")
 @EnabledIfEnvironmentVariable(named = "VERTEX_AI_GEMINI_LOCATION", matches = ".*")
 public class VertexAiTextEmbeddingModelAutoConfigurationIT {
@@ -64,7 +44,7 @@ public class VertexAiTextEmbeddingModelAutoConfigurationIT {
 
 				List<float[]> embeddings = embeddingModel.embed(List.of("Spring Framework", "Spring AI"));
 
-				assertThat(embeddings.size()).isEqualTo(2); // batch size
+				assertThat(embeddings.size()).isEqualTo(2);
 				assertThat(embeddings.get(0).length).isEqualTo(embeddingModel.dimensions());
 			});
 	}

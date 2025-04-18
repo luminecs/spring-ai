@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vertexai.embedding;
 
 import java.nio.charset.StandardCharsets;
@@ -28,13 +12,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
-/**
- * Utility class for constructing parameter objects for Vertex AI embedding requests.
- *
- * @author Christian Tzolov
- * @author Ilayaperumal Gopinathan
- * @since 1.0.0
- */
 public abstract class VertexAiEmbeddingUtils {
 
 	public static Value valueOf(boolean n) {
@@ -53,7 +30,6 @@ public abstract class VertexAiEmbeddingUtils {
 		return Value.newBuilder().setStructValue(struct).build();
 	}
 
-	// Convert a Json string to a protobuf.Value
 	public static Value jsonToValue(String json) throws InvalidProtocolBufferException {
 		Value.Builder builder = Value.newBuilder();
 		JsonFormat.parser().merge(json, builder);
@@ -70,9 +46,6 @@ public abstract class VertexAiEmbeddingUtils {
 		return floats;
 	}
 
-	//////////////////////////////////////////////////////
-	// Text Only
-	//////////////////////////////////////////////////////
 	public static class TextParametersBuilder {
 
 		public Integer outputDimensionality;
@@ -150,30 +123,14 @@ public abstract class VertexAiEmbeddingUtils {
 
 	}
 
-	//////////////////////////////////////////////////////
-	// Multimodality
-	//////////////////////////////////////////////////////
 	public static class MultimodalInstanceBuilder {
 
-		/**
-		 * The text to generate embeddings for.
-		 */
 		private String text;
 
-		/**
-		 * The dimension of the embedding, included in the response. Only applies to text
-		 * and image input. Accepted values: 128, 256, 512, or 1408.
-		 */
 		private Integer dimension;
 
-		/**
-		 * The image to generate embeddings for.
-		 */
 		private Struct image;
 
-		/**
-		 * The video segment to generate embeddings for.
-		 */
 		private Struct video;
 
 		public static MultimodalInstanceBuilder of() {
@@ -232,21 +189,10 @@ public abstract class VertexAiEmbeddingUtils {
 
 	public static class ImageBuilder {
 
-		/**
-		 * Image bytes to be encoded in a base64 string.
-		 */
 		public byte[] imageBytes;
 
-		/**
-		 * The Cloud Storage location of the image to perform the embedding. One of
-		 * bytesBase64Encoded or gcsUri.
-		 */
 		public String gcsUri;
 
-		/**
-		 * The MIME type of the content of the image. Supported values: image/jpeg and
-		 * image/png.
-		 */
 		public MimeType mimeType;
 
 		public static ImageBuilder of(MimeType mimeType) {
@@ -306,43 +252,16 @@ public abstract class VertexAiEmbeddingUtils {
 
 	public static class VideoBuilder {
 
-		/**
-		 * Video bytes to be encoded in base64 string. One of videoBytes or gcsUri.
-		 */
 		public byte[] videoBytes;
 
-		/**
-		 * The Cloud Storage location of the video on which to perform the embedding. One
-		 * of videoBytes or gcsUri.
-		 */
 		public String gcsUri;
 
-		/**
-		 *
-		 */
 		public MimeType mimeType;
 
-		/**
-		 * The start offset of the video segment in seconds. If not specified, it's
-		 * calculated with max(0, endOffsetSec - 120).
-		 */
 		public Integer startOffsetSec;
 
-		/**
-		 * The end offset of the video segment in seconds. If not specified, it's
-		 * calculated with min(video length, startOffSec + 120). If both startOffSec and
-		 * endOffSec are specified, endOffsetSec is adjusted to min(startOffsetSec+120,
-		 * endOffsetSec).
-		 */
 		public Integer endOffsetSec;
 
-		/**
-		 * The interval of the video the embedding will be generated. The minimum value
-		 * for interval_sec is 4. If the interval is less than 4, an InvalidArgumentError
-		 * is returned. There are no limitations on the maximum value of the interval.
-		 * However, if the interval is larger than min(video length, 120s), it impacts the
-		 * quality of the generated embeddings. Default value: 16.
-		 */
 		public Integer intervalSec;
 
 		public static VideoBuilder of(MimeType mimeType) {

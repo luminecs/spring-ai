@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.rag.preretrieval.query.transformation;
 
 import org.slf4j.Logger;
@@ -28,26 +12,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * Uses a large language model to translate a query to a target language that is supported
- * by the embedding model used to generate the document embeddings. If the query is
- * already in the target language, it is returned unchanged. If the language of the query
- * is unknown, it is also returned unchanged.
- * <p>
- * This transformer is useful when the embedding model is trained on a specific language
- * and the user query is in a different language.
- * <p>
- * Example usage: <pre>{@code
- * QueryTransformer transformer = TranslationQueryTransformer.builder()
- *    .chatClientBuilder(chatClientBuilder)
- *    .targetLanguage("english")
- *    .build();
- * Query transformedQuery = transformer.transform(new Query("Hvad er Danmarks hovedstad?"));
- * }</pre>
- *
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public final class TranslationQueryTransformer implements QueryTransformer {
 
 	private static final Logger logger = LoggerFactory.getLogger(TranslationQueryTransformer.class);

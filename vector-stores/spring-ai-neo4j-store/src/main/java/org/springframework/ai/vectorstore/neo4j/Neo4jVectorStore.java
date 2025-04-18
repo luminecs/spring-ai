@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.neo4j;
 
 import java.util.HashMap;
@@ -44,94 +28,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * Neo4j-based vector store implementation using Neo4j's vector search capabilities.
- *
- * <p>
- * The store uses Neo4j's vector search functionality to persist and query vector
- * embeddings along with their associated document content and metadata. The
- * implementation leverages Neo4j's HNSW (Hierarchical Navigable Small World) algorithm
- * for efficient k-NN search operations.
- * </p>
- *
- * <p>
- * Features:
- * </p>
- * <ul>
- * <li>Automatic schema initialization with configurable index creation</li>
- * <li>Support for multiple distance functions: Cosine and Euclidean</li>
- * <li>Metadata filtering using Neo4j's WHERE clause expressions</li>
- * <li>Configurable similarity thresholds for search results</li>
- * <li>Batch processing support with configurable strategies</li>
- * <li>Observation and metrics support through Micrometer</li>
- * </ul>
- *
- * <p>
- * Basic usage example:
- * </p>
- * <pre>{@code
- * Neo4jVectorStore vectorStore = Neo4jVectorStore.builder(driver, embeddingModel)
- *     .initializeSchema(true)
- *     .build();
- *
- * // Add documents
- * vectorStore.add(List.of(
- *     new Document("content1", Map.of("key1", "value1")),
- *     new Document("content2", Map.of("key2", "value2"))
- * ));
- *
- * // Search with filters
- * List<Document> results = vectorStore.similaritySearch(
- *     SearchRequest.query("search text")
- *         .withTopK(5)
- *         .withSimilarityThreshold(0.7)
- *         .withFilterExpression("key1 == 'value1'")
- * );
- * }</pre>
- *
- * <p>
- * Advanced configuration example:
- * </p>
- * <pre>{@code
- * Neo4jVectorStore vectorStore = Neo4jVectorStore.builder(driver, embeddingModel)
- *     .databaseName("neo4j")
- *     .distanceType(Neo4jDistanceType.COSINE)
- *     .dimensions(1536)
- *     .label("CustomDocument")
- *     .embeddingProperty("vector")
- *     .indexName("custom-vectors")
- *     .initializeSchema(true)
- *     .batchingStrategy(new TokenCountBatchingStrategy())
- *     .build();
- * }</pre>
- *
- * <p>
- * Requirements:
- * </p>
- * <ul>
- * <li>Neo4j 5.15 or later</li>
- * <li>Node schema with id (string), text (string), metadata (object), and embedding
- * (vector) properties</li>
- * </ul>
- *
- * <p>
- * Distance Functions:
- * </p>
- * <ul>
- * <li>cosine: Default, suitable for most use cases. Measures cosine similarity between
- * vectors.</li>
- * <li>euclidean: Euclidean distance between vectors. Lower values indicate higher
- * similarity.</li>
- * </ul>
- *
- * @author Gerrit Meier
- * @author Michael Simons
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Soby Chacko
- * @author Jihoon Kim
- * @since 1.0.0
- */
 public class Neo4jVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(Neo4jVectorStore.class);
@@ -225,8 +121,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 
 		try (var session = this.driver.session(this.sessionConfig)) {
 
-			// Those queries with internal, cypher based transaction management cannot be
-			// run with executeWrite
 			session
 				.run("""
 						MATCH (n:%s) WHERE n.%s IN $ids
@@ -244,7 +138,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 		try (var session = this.driver.session(this.sessionConfig)) {
 			String whereClause = this.filterExpressionConverter.convertExpression(filterExpression);
 
-			// Create Cypher query with transaction batching
 			String cypher = """
 					MATCH (node:%s) WHERE %s
 					CALL { WITH node DETACH DELETE node } IN TRANSACTIONS OF $transactionSize ROWS
@@ -311,7 +204,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 				tx.run(statement).consume();
 			});
 
-			// Bad idea to retry this...
 			session.run("CALL db.awaitIndexes()").consume();
 		}
 	}
@@ -374,9 +266,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 		return Optional.of(client);
 	}
 
-	/**
-	 * An enum to configure the distance function used in the Neo4j vector index.
-	 */
 	public enum Neo4jDistanceType {
 
 		COSINE("cosine"), EUCLIDEAN("euclidean");
@@ -421,12 +310,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 			this.driver = driver;
 		}
 
-		/**
-		 * Sets the database name. When provided and not blank, creates a session config
-		 * for that database.
-		 * @param databaseName the database name to use
-		 * @return the builder instance
-		 */
 		public Builder databaseName(String databaseName) {
 			if (StringUtils.hasText(databaseName)) {
 				this.sessionConfig = SessionConfig.forDatabase(databaseName);
@@ -434,45 +317,23 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the session configuration directly.
-		 * @param sessionConfig the session configuration to use
-		 * @return the builder instance
-		 */
 		public Builder sessionConfig(SessionConfig sessionConfig) {
 			this.sessionConfig = sessionConfig;
 			return this;
 		}
 
-		/**
-		 * Sets the embedding dimension. Must be positive.
-		 * @param dimension the dimension of the embedding
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if dimension is less than 1
-		 */
 		public Builder embeddingDimension(int dimension) {
 			Assert.isTrue(dimension >= 1, "Dimension has to be positive");
 			this.embeddingDimension = dimension;
 			return this;
 		}
 
-		/**
-		 * Sets the distance type for index storage and queries.
-		 * @param distanceType the distance type to use
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if distanceType is null
-		 */
 		public Builder distanceType(Neo4jDistanceType distanceType) {
 			Assert.notNull(distanceType, "Distance type may not be null");
 			this.distanceType = distanceType;
 			return this;
 		}
 
-		/**
-		 * Sets the label for document nodes.
-		 * @param label the label to use
-		 * @return the builder instance
-		 */
 		public Builder label(String label) {
 			if (StringUtils.hasText(label)) {
 				this.label = label;
@@ -480,11 +341,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the property name for storing embeddings.
-		 * @param embeddingProperty the property name to use
-		 * @return the builder instance
-		 */
 		public Builder embeddingProperty(String embeddingProperty) {
 			if (StringUtils.hasText(embeddingProperty)) {
 				this.embeddingProperty = embeddingProperty;
@@ -492,11 +348,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the name of the vector index.
-		 * @param indexName the index name to use
-		 * @return the builder instance
-		 */
 		public Builder indexName(String indexName) {
 			if (StringUtils.hasText(indexName)) {
 				this.indexName = indexName;
@@ -504,11 +355,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the property name for document IDs.
-		 * @param idProperty the property name to use
-		 * @return the builder instance
-		 */
 		public Builder idProperty(String idProperty) {
 			if (StringUtils.hasText(idProperty)) {
 				this.idProperty = idProperty;
@@ -516,11 +362,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets the name of the unique constraint.
-		 * @param constraintName the constraint name to use
-		 * @return the builder instance
-		 */
 		public Builder constraintName(String constraintName) {
 			if (StringUtils.hasText(constraintName)) {
 				this.constraintName = constraintName;
@@ -528,11 +369,6 @@ public class Neo4jVectorStore extends AbstractObservationVectorStore implements 
 			return this;
 		}
 
-		/**
-		 * Sets whether to initialize the schema.
-		 * @param initializeSchema true to initialize schema, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder initializeSchema(boolean initializeSchema) {
 			this.initializeSchema = initializeSchema;
 			return this;

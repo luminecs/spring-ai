@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.mariadb;
 
 import java.io.IOException;
@@ -67,10 +51,6 @@ import org.springframework.util.CollectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Diego Dupin
- * @author Soby Chacko
- */
 @Testcontainers
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".+")
 public class MariaDBStoreIT extends BaseVectorStoreTests {
@@ -88,7 +68,6 @@ public class MariaDBStoreIT extends BaseVectorStoreTests {
 		.withUserConfiguration(TestApplication.class)
 		.withPropertyValues("test.spring.ai.vectorstore.mariadb.distanceType=COSINE",
 
-				// JdbcTemplate configuration
 				String.format("app.datasource.url=jdbc:mariadb://%s:%d/%s?maxQuerySizeToLog=50000",
 						mariadbContainer.getHost(), mariadbContainer.getMappedPort(3306), schemaName),
 				"app.datasource.username=mariadb", "app.datasource.password=mariadbpwd",
@@ -115,11 +94,8 @@ public class MariaDBStoreIT extends BaseVectorStoreTests {
 	}
 
 	static Stream<Arguments> provideFilters() {
-		return Stream.of(Arguments.of("country in ['BG','NL']", 3), // String Filters In
-				Arguments.of("year in [2020]", 1), // Numeric Filters In
-				Arguments.of("country not in ['BG']", 1), // String Filter Not In
-				Arguments.of("year not in [2020]", 1) // Numeric Filter Not In
-		);
+		return Stream.of(Arguments.of("country in ['BG','NL']", 3), Arguments.of("year in [2020]", 1),
+				Arguments.of("country not in ['BG']", 1), Arguments.of("year not in [2020]", 1));
 	}
 
 	private static boolean isSortedByDistance(List<Document> docs) {
@@ -168,7 +144,6 @@ public class MariaDBStoreIT extends BaseVectorStoreTests {
 				assertThat(resultDoc.getId()).isEqualTo(this.documents.get(2).getId());
 				assertThat(resultDoc.getMetadata()).containsKeys("meta2", "distance");
 
-				// Remove all documents from the store
 				vectorStore.delete(this.documents.stream().map(doc -> doc.getId()).toList());
 
 				List<Document> results2 = vectorStore
@@ -206,7 +181,6 @@ public class MariaDBStoreIT extends BaseVectorStoreTests {
 
 			assertThat(results).hasSize(expectedRecords);
 
-			// Remove all documents from the store
 			dropTable(context);
 		});
 	}
@@ -290,7 +264,6 @@ public class MariaDBStoreIT extends BaseVectorStoreTests {
 					assertThat(e.getMessage()).contains("Line: 1:17, Error: no viable alternative at input 'NL'");
 				}
 
-				// Remove all documents from the store
 				dropTable(context);
 			});
 	}
@@ -383,7 +356,6 @@ public class MariaDBStoreIT extends BaseVectorStoreTests {
 
 			vectorStore.add(List.of(doc1, doc2, doc3));
 
-			// Complex filter expression: (type == 'A' AND priority > 1)
 			Filter.Expression priorityFilter = new Filter.Expression(Filter.ExpressionType.GT,
 					new Filter.Key("priority"), new Filter.Value(1));
 			Filter.Expression typeFilter = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("type"),

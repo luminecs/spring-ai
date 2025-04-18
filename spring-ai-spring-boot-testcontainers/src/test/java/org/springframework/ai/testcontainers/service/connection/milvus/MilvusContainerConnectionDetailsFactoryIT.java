@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.testcontainers.service.connection.milvus;
 
 import java.util.List;
@@ -76,7 +60,6 @@ class MilvusContainerConnectionDetailsFactoryIT {
 		assertThat(resultDoc.getMetadata()).hasSize(2);
 		assertThat(resultDoc.getMetadata()).containsKeys("spring", "distance");
 
-		// Remove all documents from the store
 		this.vectorStore.delete(this.documents.stream().map(doc -> doc.getId()).toList());
 
 		results = this.vectorStore.similaritySearch(SearchRequest.builder().query("Spring").topK(1).build());

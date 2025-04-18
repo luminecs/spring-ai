@@ -1,19 +1,3 @@
-/*
- * Copyright 2024-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai.chat.proxy;
 
 import java.util.ArrayList;
@@ -57,18 +41,6 @@ import org.springframework.core.io.Resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Alexandros Pappas
- *
- * Unlike other proxy implementations (e.g., NVIDIA), Perplexity operates differently:
- *
- * - Perplexity includes integrated real-time web search results as part of its response
- * rather than through explicit function calls. Consequently, no `toolCalls` or function
- * call mechanisms are exposed in the API responses
- *
- * For more information on Perplexity's behavior, refer to its API documentation:
- * <a href="https://docs.perplexity.ai/api-reference/chat-completions">perplexity-api</a>
- */
 @SpringBootTest(classes = PerplexityWithOpenAiChatModelIT.Config.class)
 @EnabledIfEnvironmentVariable(named = "PERPLEXITY_API_KEY", matches = ".+")
 @Disabled("Requires Perplexity credits")
@@ -90,8 +62,7 @@ class PerplexityWithOpenAiChatModelIT {
 
 	@Test
 	void roleTest() {
-		// Ensure the SystemMessage comes before UserMessage to comply with Perplexity
-		// API's sequence rules
+
 		SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate(this.systemResource);
 		Message systemMessage = systemPromptTemplate.createMessage(Map.of("name", "Bob", "voice", "pirate"));
 		UserMessage userMessage = new UserMessage(
@@ -104,8 +75,7 @@ class PerplexityWithOpenAiChatModelIT {
 
 	@Test
 	void streamRoleTest() {
-		// Ensure the SystemMessage comes before UserMessage to comply with Perplexity
-		// API's sequence rules
+
 		SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate(this.systemResource);
 		Message systemMessage = systemPromptTemplate.createMessage(Map.of("name", "Bob", "voice", "pirate"));
 		UserMessage userMessage = new UserMessage(

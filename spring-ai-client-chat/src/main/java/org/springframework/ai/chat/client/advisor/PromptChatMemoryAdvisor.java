@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor;
 
 import java.util.HashMap;
@@ -35,12 +19,6 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.MessageAggregator;
 import org.springframework.ai.content.Content;
 
-/**
- * Memory is retrieved added into the prompt's system text.
- *
- * @author Christian Tzolov
- * @since 1.0.0
- */
 public class PromptChatMemoryAdvisor extends AbstractChatMemoryAdvisor<ChatMemory> {
 
 	private static final String DEFAULT_SYSTEM_TEXT_ADVISE = """
@@ -104,7 +82,6 @@ public class PromptChatMemoryAdvisor extends AbstractChatMemoryAdvisor<ChatMemor
 
 	private AdvisedRequest before(AdvisedRequest request) {
 
-		// 1. Advise system parameters.
 		List<Message> memoryMessages = this.getChatMemoryStore()
 			.get(this.doGetConversationId(request.adviseContext()),
 					this.doGetChatMemoryRetrieveSize(request.adviseContext()));
@@ -117,16 +94,13 @@ public class PromptChatMemoryAdvisor extends AbstractChatMemoryAdvisor<ChatMemor
 		Map<String, Object> advisedSystemParams = new HashMap<>(request.systemParams());
 		advisedSystemParams.put("memory", memory);
 
-		// 2. Advise the system text.
 		String advisedSystemText = request.systemText() + System.lineSeparator() + this.systemTextAdvise;
 
-		// 3. Create a new request with the advised system text and parameters.
 		AdvisedRequest advisedRequest = AdvisedRequest.from(request)
 			.systemText(advisedSystemText)
 			.systemParams(advisedSystemParams)
 			.build();
 
-		// 4. Add the new user input to the conversation memory.
 		UserMessage userMessage = new UserMessage(request.userText(), request.media());
 		this.getChatMemoryStore().add(this.doGetConversationId(request.adviseContext()), userMessage);
 

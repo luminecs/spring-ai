@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.rag.retrieval.search;
 
 import java.util.List;
@@ -29,25 +13,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * Retrieves documents from a vector store that are semantically similar to the input
- * query. It supports filtering based on metadata, similarity threshold, and top-k
- * results.
- *
- * <p>
- * Example usage: <pre>{@code
- * VectorStoreDocumentRetriever retriever = VectorStoreDocumentRetriever.builder()
- *     .vectorStore(vectorStore)
- *     .similarityThreshold(0.73)
- *     .topK(5)
- *     .filterExpression(filterExpression)
- *     .build();
- * List<Document> documents = retriever.retrieve(new Query("example query"));
- * }</pre>
- *
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public final class VectorStoreDocumentRetriever implements DocumentRetriever {
 
 	public static final String FILTER_EXPRESSION = "vector_store_filter_expression";
@@ -58,9 +23,6 @@ public final class VectorStoreDocumentRetriever implements DocumentRetriever {
 
 	private final Integer topK;
 
-	// Supplier to allow for lazy evaluation of the filter expression,
-	// which may depend on the execution content. For example, you may want to
-	// filter dynamically based on the current user's identity or tenant ID.
 	private final Supplier<Filter.Expression> filterExpression;
 
 	public VectorStoreDocumentRetriever(VectorStore vectorStore, @Nullable Double similarityThreshold,
@@ -101,9 +63,6 @@ public final class VectorStoreDocumentRetriever implements DocumentRetriever {
 		return new Builder();
 	}
 
-	/**
-	 * Builder for {@link VectorStoreDocumentRetriever}.
-	 */
 	public static final class Builder {
 
 		private VectorStore vectorStore;

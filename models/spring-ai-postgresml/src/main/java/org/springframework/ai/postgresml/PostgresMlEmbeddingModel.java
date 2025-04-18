@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.postgresml;
 
 import java.sql.Array;
@@ -40,12 +24,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * <a href="https://postgresml.org">PostgresML</a> EmbeddingModel
- *
- * @author Toshiaki Maki
- * @author Christian Tzolov
- */
 public class PostgresMlEmbeddingModel extends AbstractEmbeddingModel implements InitializingBean {
 
 	public static final String DEFAULT_TRANSFORMER_MODEL = "distilbert-base-uncased";
@@ -56,10 +34,6 @@ public class PostgresMlEmbeddingModel extends AbstractEmbeddingModel implements 
 
 	private final boolean createExtension;
 
-	/**
-	 * a constructor
-	 * @param jdbcTemplate JdbcTemplate
-	 */
 	public PostgresMlEmbeddingModel(JdbcTemplate jdbcTemplate) {
 		this(jdbcTemplate, PostgresMlEmbeddingOptions.builder().build(), false);
 	}
@@ -68,11 +42,6 @@ public class PostgresMlEmbeddingModel extends AbstractEmbeddingModel implements 
 		this(jdbcTemplate, options, false);
 	}
 
-	/**
-	 * a PostgresMlEmbeddingModel constructor
-	 * @param jdbcTemplate JdbcTemplate to use to interact with the database.
-	 * @param options PostgresMlEmbeddingOptions to configure the client.
-	 */
 	public PostgresMlEmbeddingModel(JdbcTemplate jdbcTemplate, PostgresMlEmbeddingOptions options,
 			boolean createExtension) {
 		Assert.notNull(jdbcTemplate, "jdbc template must not be null.");
@@ -141,11 +110,6 @@ public class PostgresMlEmbeddingModel extends AbstractEmbeddingModel implements 
 		return new EmbeddingResponse(data, embeddingResponseMetadata);
 	}
 
-	/**
-	 * Merge the default and request options.
-	 * @param requestOptions request options to merge.
-	 * @return the merged options.
-	 */
 	PostgresMlEmbeddingOptions mergeOptions(EmbeddingOptions requestOptions) {
 
 		PostgresMlEmbeddingOptions options = (this.defaultOptions != null) ? this.defaultOptions
@@ -180,8 +144,9 @@ public class PostgresMlEmbeddingModel extends AbstractEmbeddingModel implements 
 
 		PG_VECTOR("::vector", "vector", (rs, i) -> {
 			String embedding = rs.getString("embedding");
-			return EmbeddingUtils.toPrimitive(Arrays.stream((embedding.substring(1, embedding.length() - 1)
-				/* remove leading '[' and trailing ']' */.split(","))).map(Float::parseFloat).toList());
+			return EmbeddingUtils.toPrimitive(Arrays.stream((embedding.substring(1, embedding.length() - 1).split(",")))
+				.map(Float::parseFloat)
+				.toList());
 		});
 
 		private final String cast;

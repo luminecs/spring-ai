@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.reader.pdf;
 
 import java.awt.Rectangle;
@@ -37,14 +21,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * Groups the parsed PDF pages into {@link Document}s. You can group one or more pages
- * into a single output document. Use {@link PdfDocumentReaderConfig} for customization
- * options. The default configuration is: - pagesPerDocument = 1 - pageTopMargin = 0 -
- * pageBottomMargin = 0
- *
- * @author Christian Tzolov
- */
 public class PagePdfDocumentReader implements DocumentReader {
 
 	public static final String METADATA_START_PAGE_NUMBER = "page_number";
@@ -103,9 +79,8 @@ public class PagePdfDocumentReader implements DocumentReader {
 			List<String> pageTextGroupList = new ArrayList<>();
 
 			int totalPages = this.document.getDocumentCatalog().getPages().getCount();
-			int logFrequency = totalPages > 10 ? totalPages / 10 : 1; // if less than 10
-			// pages, print
-			// each iteration
+			int logFrequency = totalPages > 10 ? totalPages / 10 : 1;
+
 			int counter = 0;
 
 			PDPage lastPage = this.document.getDocumentCatalog().getPages().iterator().next();

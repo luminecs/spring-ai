@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vertexai.gemini;
 
 import java.io.IOException;
@@ -46,9 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.any;
 
-/**
- * @author Mark Pollack
- */
 @SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 public class VertexAiGeminiRetryTests {
@@ -84,7 +65,7 @@ public class VertexAiGeminiRetryTests {
 
 	@Test
 	public void vertexAiGeminiChatTransientError() throws IOException {
-		// Create a mocked successful response
+
 		GenerateContentResponse mockedResponse = GenerateContentResponse.newBuilder()
 			.addCandidates(Candidate.newBuilder()
 				.setContent(Content.newBuilder().addParts(Part.newBuilder().setText("Response").build()).build())
@@ -96,10 +77,8 @@ public class VertexAiGeminiRetryTests {
 			.willThrow(new TransientAiException("Transient Error 2"))
 			.willReturn(mockedResponse);
 
-		// Call the chat model
 		ChatResponse result = this.chatModel.call(new Prompt("test prompt"));
 
-		// Assertions
 		assertThat(result).isNotNull();
 		assertThat(result.getResult().getOutput().getText()).isEqualTo("Response");
 		assertThat(this.retryListener.onSuccessRetryCount).isEqualTo(2);
@@ -108,11 +87,10 @@ public class VertexAiGeminiRetryTests {
 
 	@Test
 	public void vertexAiGeminiChatNonTransientError() throws Exception {
-		// Set up the mock GenerativeModel to throw a non-transient RuntimeException
+
 		given(this.mockGenerativeModel.generateContent(any(List.class)))
 			.willThrow(new RuntimeException("Non Transient Error"));
 
-		// Assert that a RuntimeException is thrown when calling the chat model
 		assertThrows(RuntimeException.class, () -> this.chatModel.call(new Prompt("test prompt")));
 	}
 

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore;
 
 import java.io.File;
@@ -55,25 +39,6 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-/**
- * SimpleVectorStore is a simple implementation of the VectorStore interface.
- *
- * It also provides methods to save the current state of the vectors to a file, and to
- * load vectors from a file.
- *
- * For a deeper understanding of the mathematical concepts and computations involved in
- * calculating similarity scores among vectors, refer to this
- * [resource](https://docs.spring.io/spring-ai/reference/api/vectordbs.html#_understanding_vectors).
- *
- * @author Raphael Yu
- * @author Dingmeng Xue
- * @author Mark Pollack
- * @author Christian Tzolov
- * @author Sebastien Deleuze
- * @author Ilayaperumal Gopinathan
- * @author Thomas Vitale
- * @author Jemin Huh
- */
 public class SimpleVectorStore extends AbstractObservationVectorStore {
 
 	private static final Logger logger = LoggerFactory.getLogger(SimpleVectorStore.class);
@@ -93,10 +58,6 @@ public class SimpleVectorStore extends AbstractObservationVectorStore {
 		this.filterExpressionConverter = new SimpleVectorStoreFilterExpressionConverter();
 	}
 
-	/**
-	 * Creates an instance of SimpleVectorStore builder.
-	 * @return the SimpleVectorStore builder.
-	 */
 	public static SimpleVectorStoreBuilder builder(EmbeddingModel embeddingModel) {
 		return new SimpleVectorStoreBuilder(embeddingModel);
 	}
@@ -149,10 +110,6 @@ public class SimpleVectorStore extends AbstractObservationVectorStore {
 		} : document -> true;
 	}
 
-	/**
-	 * Serialize the vector store content into a file in JSON format.
-	 * @param file the file to save the vector store content
-	 */
 	public void save(File file) {
 		String json = getVectorDbAsJson();
 		try {
@@ -191,10 +148,6 @@ public class SimpleVectorStore extends AbstractObservationVectorStore {
 		}
 	}
 
-	/**
-	 * Deserialize the vector store content from a file in JSON format into memory.
-	 * @param file the file to load the vector store content
-	 */
 	public void load(File file) {
 		TypeReference<HashMap<String, SimpleVectorStoreContent>> typeRef = new TypeReference<>() {
 
@@ -207,10 +160,6 @@ public class SimpleVectorStore extends AbstractObservationVectorStore {
 		}
 	}
 
-	/**
-	 * Deserialize the vector store content from a resource in JSON format into memory.
-	 * @param resource the resource to load the vector store content
-	 */
 	public void load(Resource resource) {
 		TypeReference<HashMap<String, SimpleVectorStoreContent>> typeRef = new TypeReference<>() {
 

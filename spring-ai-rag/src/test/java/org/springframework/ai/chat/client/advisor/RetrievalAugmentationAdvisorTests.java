@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor;
 
 import java.util.List;
@@ -39,11 +23,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-/**
- * Unit tests for {@link RetrievalAugmentationAdvisor}.
- *
- * @author Thomas Vitale
- */
 class RetrievalAugmentationAdvisorTests {
 
 	@Test
@@ -64,30 +43,26 @@ class RetrievalAugmentationAdvisorTests {
 
 	@Test
 	void theOneWithTheDocumentRetriever() {
-		// Chat Model
+
 		var chatModel = mock(ChatModel.class);
 		var promptCaptor = ArgumentCaptor.forClass(Prompt.class);
 		given(chatModel.call(promptCaptor.capture())).willReturn(ChatResponse.builder()
 			.generations(List.of(new Generation(new AssistantMessage("Felix Felicis"))))
 			.build());
 
-		// Document Retriever
 		var documentContext = List.of(Document.builder().id("1").text("doc1").build(),
 				Document.builder().id("2").text("doc2").build());
 		var documentRetriever = Mockito.mock(DocumentRetriever.class);
 		var queryCaptor = ArgumentCaptor.forClass(Query.class);
 		given(documentRetriever.retrieve(queryCaptor.capture())).willReturn(documentContext);
 
-		// Advisor
 		var advisor = RetrievalAugmentationAdvisor.builder().documentRetriever(documentRetriever).build();
 
-		// Chat Client
 		var chatClient = ChatClient.builder(chatModel)
 			.defaultAdvisors(advisor)
 			.defaultSystem("You are a wizard!")
 			.build();
 
-		// Call
 		var chatResponse = chatClient.prompt()
 			.user(user -> user.text("What would I get if I added {ingredient1} to {ingredient2}?")
 				.param("ingredient1", "a pinch of Moonstone")
@@ -95,7 +70,6 @@ class RetrievalAugmentationAdvisorTests {
 			.call()
 			.chatResponse();
 
-		// Verify
 		assertThat(chatResponse.getResult().getOutput().getText()).isEqualTo("Felix Felicis");
 		assertThat(chatResponse.getMetadata().<List<Document>>get(RetrievalAugmentationAdvisor.DOCUMENT_CONTEXT))
 			.containsAll(documentContext);

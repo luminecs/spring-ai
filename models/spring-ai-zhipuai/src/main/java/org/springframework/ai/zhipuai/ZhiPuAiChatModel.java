@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.zhipuai;
 
 import java.util.ArrayList;
@@ -76,91 +60,35 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MimeType;
 
-/**
- * {@link ChatModel} and {@link StreamingChatModel} implementation for {@literal ZhiPuAI}
- * backed by {@link ZhiPuAiApi}.
- *
- * @author Geng Rong
- * @see ChatModel
- * @see StreamingChatModel
- * @see ZhiPuAiApi
- * @author Alexandros Pappas
- * @since 1.0.0 M1
- */
 public class ZhiPuAiChatModel extends AbstractToolCallSupport implements ChatModel, StreamingChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(ZhiPuAiChatModel.class);
 
 	private static final ChatModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultChatModelObservationConvention();
 
-	/**
-	 * The retry template used to retry the ZhiPuAI API calls.
-	 */
 	public final RetryTemplate retryTemplate;
 
-	/**
-	 * The default options used for the chat completion requests.
-	 */
 	private final ZhiPuAiChatOptions defaultOptions;
 
-	/**
-	 * Low-level access to the ZhiPuAI API.
-	 */
 	private final ZhiPuAiApi zhiPuAiApi;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
-	/**
-	 * Creates an instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @throws IllegalArgumentException if zhiPuAiApi is null
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi) {
 		this(zhiPuAiApi, ZhiPuAiChatOptions.builder().model(ZhiPuAiApi.DEFAULT_CHAT_MODEL).temperature(0.7).build());
 	}
 
-	/**
-	 * Initializes an instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @param options The ZhiPuAiChatOptions to configure the chat model.
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi, ZhiPuAiChatOptions options) {
 		this(zhiPuAiApi, options, null, RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
-	/**
-	 * Initializes an instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @param options The ZhiPuAiChatOptions to configure the chat model.
-	 * @param functionCallbackResolver The function callback resolver.
-	 * @param retryTemplate The retry template.
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi, ZhiPuAiChatOptions options,
 			FunctionCallbackResolver functionCallbackResolver, RetryTemplate retryTemplate) {
 		this(zhiPuAiApi, options, functionCallbackResolver, List.of(), retryTemplate, ObservationRegistry.NOOP);
 	}
 
-	/**
-	 * Initializes a new instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @param options The ZhiPuAiChatOptions to configure the chat model.
-	 * @param functionCallbackResolver The function callback resolver.
-	 * @param toolFunctionCallbacks The tool function callbacks.
-	 * @param retryTemplate The retry template.
-	 * @param observationRegistry The ObservationRegistry used for instrumentation.
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi, ZhiPuAiChatOptions options,
 			FunctionCallbackResolver functionCallbackResolver, List<FunctionCallback> toolFunctionCallbacks,
 			RetryTemplate retryTemplate, ObservationRegistry observationRegistry) {
@@ -239,8 +167,7 @@ public class ZhiPuAiChatModel extends AbstractToolCallSupport implements ChatMod
 		if (!isProxyToolCalls(prompt, this.defaultOptions) && isToolCall(response,
 				Set.of(ChatCompletionFinishReason.TOOL_CALLS.name(), ChatCompletionFinishReason.STOP.name()))) {
 			var toolCallConversation = handleToolCalls(prompt, response);
-			// Recursively call the call method with the tool call message
-			// conversation that contains the call responses.
+
 			return this.call(new Prompt(toolCallConversation, prompt.getOptions()));
 		}
 
@@ -260,8 +187,6 @@ public class ZhiPuAiChatModel extends AbstractToolCallSupport implements ChatMod
 			Flux<ChatCompletionChunk> completionChunks = this.retryTemplate
 				.execute(ctx -> this.zhiPuAiApi.chatCompletionStream(request));
 
-			// For chunked responses, only the first chunk contains the choice role.
-			// The rest of the chunks with same ID share the same role.
 			ConcurrentHashMap<String, String> roleMap = new ConcurrentHashMap<>();
 
 			final ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
@@ -307,12 +232,10 @@ public class ZhiPuAiChatModel extends AbstractToolCallSupport implements ChatMod
 			// @formatter:off
 			Flux<ChatResponse> flux = chatResponse.flatMap(response -> {
 				if (!isProxyToolCalls(prompt, this.defaultOptions) && isToolCall(response, Set.of(ChatCompletionFinishReason.TOOL_CALLS.name(), ChatCompletionFinishReason.STOP.name()))) {
-					// FIXME: bounded elastic needs to be used since tool calling
-					//  is currently only synchronous
+
 					return Flux.defer(() -> {
 						var toolCallConversation = handleToolCalls(prompt, response);
-						// Recursively call the stream method with the tool call message
-						// conversation that contains the call responses.
+
 						return this.stream(new Prompt(toolCallConversation, prompt.getOptions()));
 					}).subscribeOn(Schedulers.boundedElastic());
 				}
@@ -342,11 +265,6 @@ public class ZhiPuAiChatModel extends AbstractToolCallSupport implements ChatMod
 		return new DefaultUsage(usage.promptTokens(), usage.completionTokens(), usage.totalTokens(), usage);
 	}
 
-	/**
-	 * Convert the ChatCompletionChunk into a ChatCompletion. The Usage is set to null.
-	 * @param chunk the ChatCompletionChunk to convert
-	 * @return the ChatCompletion
-	 */
 	private ChatCompletion chunkToChatCompletion(ChatCompletionChunk chunk) {
 		List<ChatCompletion.Choice> choices = chunk.choices().stream().map(cc -> {
 			ChatCompletionMessage delta = cc.delta();
@@ -360,9 +278,6 @@ public class ZhiPuAiChatModel extends AbstractToolCallSupport implements ChatMod
 				"chat.completion", null);
 	}
 
-	/**
-	 * Accessible for testing.
-	 */
 	ChatCompletionRequest createRequest(Prompt prompt, boolean stream) {
 
 		List<ChatCompletionMessage> chatCompletionMessages = prompt.getInstructions().stream().map(message -> {
@@ -452,12 +367,11 @@ public class ZhiPuAiChatModel extends AbstractToolCallSupport implements ChatMod
 
 	private String fromMediaData(MimeType mimeType, Object mediaContentData) {
 		if (mediaContentData instanceof byte[] bytes) {
-			// Assume the bytes are an image. So, convert the bytes to a base64 encoded
-			// following the prefix pattern.
+
 			return String.format("data:%s;base64,%s", mimeType.toString(), Base64.getEncoder().encodeToString(bytes));
 		}
 		else if (mediaContentData instanceof String text) {
-			// Assume the text is a URLs or a base64 encoded image prefixed by the user.
+
 			return text;
 		}
 		else {

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.model;
 
 import java.util.ArrayList;
@@ -36,32 +20,13 @@ import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * Abstract base class for tool call support. Provides functionality for handling function
- * callbacks and executing functions.
- *
- * @author Christian Tzolov
- * @author Grogdunn
- * @author Thomas Vitale
- * @author Jihoon Kim
- * @since 1.0.0
- * @deprecated Use {@link ToolCallingManager} instead.
- */
 @Deprecated
 public abstract class AbstractToolCallSupport {
 
 	protected static final boolean IS_RUNTIME_CALL = true;
 
-	/**
-	 * The function callback register is used to resolve the function callbacks by name.
-	 */
 	protected final Map<String, FunctionCallback> functionCallbackRegister = new ConcurrentHashMap<>();
 
-	/**
-	 * The function callback resolver is used to resolve the function callbacks by name
-	 * from the Spring context. It is optional and usually used with Spring
-	 * auto-configuration.
-	 */
 	protected final FunctionCallbackResolver functionCallbackResolver;
 
 	@Deprecated
@@ -92,8 +57,7 @@ public abstract class AbstractToolCallSupport {
 
 		if (!CollectionUtils.isEmpty(functionOptions.getFunctionCallbacks())) {
 			toolFunctionCallbacksCopy.addAll(functionOptions.getFunctionCallbacks());
-			// Make sure that that function callbacks are registered directly to the
-			// functionCallbackRegister and not passed in the default options.
+
 			functionOptions.setFunctionCallbacks(List.of());
 		}
 		return toolFunctionCallbacksCopy;
@@ -104,31 +68,22 @@ public abstract class AbstractToolCallSupport {
 		return this.functionCallbackRegister;
 	}
 
-	/**
-	 * Handle the runtime function callback configurations. Register the function
-	 * callbacks
-	 * @param runtimeFunctionOptions FunctionCallingOptions to handle.
-	 * @return Set of function names to call.
-	 */
 	@Deprecated
 	protected Set<String> runtimeFunctionCallbackConfigurations(FunctionCallingOptions runtimeFunctionOptions) {
 
 		Set<String> enabledFunctionsToCall = new HashSet<>();
 
 		if (runtimeFunctionOptions != null) {
-			// Add the explicitly enabled functions.
+
 			if (!CollectionUtils.isEmpty(runtimeFunctionOptions.getFunctions())) {
 				enabledFunctionsToCall.addAll(runtimeFunctionOptions.getFunctions());
 			}
 
-			// Add the function callbacks to the register and automatically enable them.
 			if (!CollectionUtils.isEmpty(runtimeFunctionOptions.getFunctionCallbacks())) {
 				runtimeFunctionOptions.getFunctionCallbacks().stream().forEach(functionCallback -> {
 
-					// Register the tool callback.
 					this.functionCallbackRegister.put(functionCallback.getName(), functionCallback);
 
-					// Automatically enable the function, usually from prompt callback.
 					enabledFunctionsToCall.add(functionCallback.getName());
 				});
 			}
@@ -179,12 +134,6 @@ public abstract class AbstractToolCallSupport {
 		return messages;
 	}
 
-	/**
-	 * Resolve the function callbacks by name. Retrieve them from the registry or try to
-	 * resolve them from the Application Context.
-	 * @param functionNames Name of function callbacks to retrieve.
-	 * @return list of resolved FunctionCallbacks.
-	 */
 	@Deprecated
 	protected List<FunctionCallback> resolveFunctionCallbacks(Set<String> functionNames) {
 
@@ -254,13 +203,6 @@ public abstract class AbstractToolCallSupport {
 		return generations.stream().anyMatch(g -> isToolCall(g, toolCallFinishReasons));
 	}
 
-	/**
-	 * Check if the generation is a tool call. The tool call finish reasons are used to
-	 * determine if the generation is a tool call.
-	 * @param generation the generation to check.
-	 * @param toolCallFinishReasons the tool call finish reasons to check.
-	 * @return true if the generation is a tool call, false otherwise.
-	 */
 	@Deprecated
 	protected boolean isToolCall(Generation generation, Set<String> toolCallFinishReasons) {
 		var finishReason = (generation.getMetadata().getFinishReason() != null)
@@ -271,16 +213,6 @@ public abstract class AbstractToolCallSupport {
 			.contains(finishReason.toLowerCase());
 	}
 
-	/**
-	 * Check if the proxyToolCalls is enabled for the given prompt or the default tool
-	 * call options. The prompt options take precedence over the default options. When the
-	 * proxyToolCalls is enabled the ChatModel implementation will not handle the function
-	 * calling internally. The tool call and tool response messages are exposed outside
-	 * the ChatModel implementation.
-	 * @param prompt the prompt to check.
-	 * @param defaultOptions the default tool call options to check.
-	 * @return true if the proxyToolCalls is enabled, false otherwise.
-	 */
 	@Deprecated
 	protected boolean isProxyToolCalls(Prompt prompt, FunctionCallingOptions defaultOptions) {
 		if (prompt.getOptions() instanceof FunctionCallingOptions functionCallOptions

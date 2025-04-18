@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai;
 
 import java.util.ArrayList;
@@ -87,27 +71,6 @@ import org.springframework.util.MimeTypeUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
-/**
- * {@link ChatModel} and {@link StreamingChatModel} implementation for {@literal OpenAI}
- * backed by {@link OpenAiApi}.
- *
- * @author Mark Pollack
- * @author Christian Tzolov
- * @author Ueibin Kim
- * @author John Blum
- * @author Josh Long
- * @author Jemin Huh
- * @author Grogdunn
- * @author Hyunjoon Choi
- * @author Mariusz Bernacki
- * @author luocongqiu
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- * @author Alexandros Pappas
- * @see ChatModel
- * @see StreamingChatModel
- * @see OpenAiApi
- */
 public class OpenAiChatModel implements ChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(OpenAiChatModel.class);
@@ -116,37 +79,18 @@ public class OpenAiChatModel implements ChatModel {
 
 	private static final ToolCallingManager DEFAULT_TOOL_CALLING_MANAGER = ToolCallingManager.builder().build();
 
-	/**
-	 * The default options used for the chat completion requests.
-	 */
 	private final OpenAiChatOptions defaultOptions;
 
-	/**
-	 * The retry template used to retry the OpenAI API calls.
-	 */
 	private final RetryTemplate retryTemplate;
 
-	/**
-	 * Low-level access to the OpenAI API.
-	 */
 	private final OpenAiApi openAiApi;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
 	private final ToolCallingManager toolCallingManager;
 
-	/**
-	 * The tool execution eligibility predicate used to determine if a tool can be
-	 * executed.
-	 */
 	private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
 	public OpenAiChatModel(OpenAiApi openAiApi, OpenAiChatOptions defaultOptions, ToolCallingManager toolCallingManager,
@@ -174,8 +118,7 @@ public class OpenAiChatModel implements ChatModel {
 
 	@Override
 	public ChatResponse call(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return this.internalCall(requestPrompt, null);
 	}
@@ -225,7 +168,6 @@ public class OpenAiChatModel implements ChatModel {
 
 				RateLimit rateLimit = OpenAiResponseHeaderExtractor.extractAiResponseHeaders(completionEntity);
 
-				// Current usage
 				OpenAiApi.Usage usage = chatCompletion.usage();
 				Usage currentChatResponseUsage = usage != null ? getDefaultUsage(usage) : new EmptyUsage();
 				Usage accumulatedUsage = UsageUtils.getCumulativeUsage(currentChatResponseUsage, previousChatResponse);
@@ -241,14 +183,14 @@ public class OpenAiChatModel implements ChatModel {
 		if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), response)) {
 			var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
 			if (toolExecutionResult.returnDirect()) {
-				// Return tool execution result directly to the client.
+
 				return ChatResponse.builder()
 					.from(response)
 					.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 					.build();
 			}
 			else {
-				// Send the tool execution result back to the model.
+
 				return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 						response);
 			}
@@ -259,8 +201,7 @@ public class OpenAiChatModel implements ChatModel {
 
 	@Override
 	public Flux<ChatResponse> stream(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return internalStream(requestPrompt, null);
 	}
@@ -283,8 +224,6 @@ public class OpenAiChatModel implements ChatModel {
 			Flux<OpenAiApi.ChatCompletionChunk> completionChunks = this.openAiApi.chatCompletionStream(request,
 					getAdditionalHttpHeaders(prompt));
 
-			// For chunked responses, only the first chunk contains the choice role.
-			// The rest of the chunks with same ID share the same role.
 			ConcurrentHashMap<String, String> roleMap = new ConcurrentHashMap<>();
 
 			final ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
@@ -299,8 +238,6 @@ public class OpenAiChatModel implements ChatModel {
 
 			observation.parentObservation(contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null)).start();
 
-			// Convert the ChatCompletionChunk into a ChatCompletion to be able to reuse
-			// the function call handling logic.
 			Flux<ChatResponse> chatResponse = completionChunks.map(this::chunkToChatCompletion)
 				.switchMap(chatCompletion -> Mono.just(chatCompletion).map(chatCompletion2 -> {
 					try {
@@ -331,11 +268,7 @@ public class OpenAiChatModel implements ChatModel {
 						logger.error("Error processing chat completion", e);
 						return new ChatResponse(List.of());
 					}
-					// When in stream mode and enabled to include the usage, the OpenAI
-					// Chat completion response would have the usage set only in its
-					// final response. Hence, the following overlapping buffer is
-					// created to store both the current and the subsequent response
-					// to accumulate the usage from the subsequent response.
+
 				}))
 				.buffer(2, 1)
 				.map(bufferList -> {
@@ -344,12 +277,10 @@ public class OpenAiChatModel implements ChatModel {
 						if (bufferList.size() == 2) {
 							ChatResponse secondResponse = bufferList.get(1);
 							if (secondResponse != null && secondResponse.getMetadata() != null) {
-								// This is the usage from the final Chat response for a
-								// given Chat request.
+
 								Usage usage = secondResponse.getMetadata().getUsage();
 								if (!UsageUtils.isEmpty(usage)) {
-									// Store the usage from the final response to the
-									// penultimate response for accumulation.
+
 									return new ChatResponse(firstResponse.getResults(),
 											from(firstResponse.getMetadata(), usage));
 								}
@@ -363,17 +294,16 @@ public class OpenAiChatModel implements ChatModel {
 			Flux<ChatResponse> flux = chatResponse.flatMap(response -> {
 				if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), response)) {
 					return Flux.defer(() -> {
-						// FIXME: bounded elastic needs to be used since tool calling
-						//  is currently only synchronous
+
 						var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
 						if (toolExecutionResult.returnDirect()) {
-							// Return tool execution result directly to the client.
+
 							return Flux.just(ChatResponse.builder().from(response)
 									.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 									.build());
 						}
 						else {
-							// Send the tool execution result back to the model.
+
 							return this.internalStream(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 									response);
 						}
@@ -465,11 +395,6 @@ public class OpenAiChatModel implements ChatModel {
 		return builder.build();
 	}
 
-	/**
-	 * Convert the ChatCompletionChunk into a ChatCompletion. The Usage is set to null.
-	 * @param chunk the ChatCompletionChunk to convert
-	 * @return the ChatCompletion
-	 */
 	private OpenAiApi.ChatCompletion chunkToChatCompletion(OpenAiApi.ChatCompletionChunk chunk) {
 		List<Choice> choices = chunk.choices()
 			.stream()
@@ -486,7 +411,7 @@ public class OpenAiChatModel implements ChatModel {
 	}
 
 	Prompt buildRequestPrompt(Prompt prompt) {
-		// Process runtime options
+
 		OpenAiChatOptions runtimeOptions = null;
 		if (prompt.getOptions() != null) {
 			if (prompt.getOptions() instanceof ToolCallingChatOptions toolCallingChatOptions) {
@@ -503,12 +428,9 @@ public class OpenAiChatModel implements ChatModel {
 			}
 		}
 
-		// Define request options by merging runtime options and default options
 		OpenAiChatOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				OpenAiChatOptions.class);
 
-		// Merge @JsonIgnore-annotated options explicitly since they are ignored by
-		// Jackson, used by ModelOptionsUtils.
 		if (runtimeOptions != null) {
 			requestOptions.setHttpHeaders(
 					mergeHttpHeaders(runtimeOptions.getHttpHeaders(), this.defaultOptions.getHttpHeaders()));
@@ -542,9 +464,6 @@ public class OpenAiChatModel implements ChatModel {
 		return mergedHttpHeaders;
 	}
 
-	/**
-	 * Accessible for testing.
-	 */
 	ChatCompletionRequest createRequest(Prompt prompt, boolean stream) {
 
 		List<ChatCompletionMessage> chatCompletionMessages = prompt.getInstructions().stream().map(message -> {
@@ -603,7 +522,6 @@ public class OpenAiChatModel implements ChatModel {
 		OpenAiChatOptions requestOptions = (OpenAiChatOptions) prompt.getOptions();
 		request = ModelOptionsUtils.merge(requestOptions, request, ChatCompletionRequest.class);
 
-		// Add the tool definitions to the request's tools parameter.
 		List<ToolDefinition> toolDefinitions = this.toolCallingManager.resolveToolDefinitions(requestOptions);
 		if (!CollectionUtils.isEmpty(toolDefinitions)) {
 			request = ModelOptionsUtils.merge(
@@ -611,7 +529,6 @@ public class OpenAiChatModel implements ChatModel {
 					ChatCompletionRequest.class);
 		}
 
-		// Remove `streamOptions` from the request if it is not a streaming request
 		if (request.streamOptions() != null && !stream) {
 			logger.warn("Removing streamOptions from the request as it is not a streaming request!");
 			request = request.streamOptions(null);
@@ -645,12 +562,11 @@ public class OpenAiChatModel implements ChatModel {
 
 	private String fromMediaData(MimeType mimeType, Object mediaContentData) {
 		if (mediaContentData instanceof byte[] bytes) {
-			// Assume the bytes are an image. So, convert the bytes to a base64 encoded
-			// following the prefix pattern.
+
 			return String.format("data:%s;base64,%s", mimeType.toString(), Base64.getEncoder().encodeToString(bytes));
 		}
 		else if (mediaContentData instanceof String text) {
-			// Assume the text is a URLs or a base64 encoded image prefixed by the user.
+
 			return text;
 		}
 		else {
@@ -677,10 +593,6 @@ public class OpenAiChatModel implements ChatModel {
 		return "OpenAiChatModel [defaultOptions=" + this.defaultOptions + "]";
 	}
 
-	/**
-	 * Use the provided convention for reporting observation data
-	 * @param observationConvention The provided convention
-	 */
 	public void setObservationConvention(ChatModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.transformers.samples;
 
 import java.nio.FloatBuffer;
@@ -33,8 +17,6 @@ import ai.onnxruntime.OrtSession;
 
 import org.springframework.core.io.DefaultResourceLoader;
 
-// https://www.sbert.net/examples/applications/computing-embeddings/README.html#sentence-embeddings-with-transformers
-
 public final class ONNXSample {
 
 	private ONNXSample() {
@@ -47,16 +29,12 @@ public final class ONNXSample {
 			.broadcast(tokenEmbeddings.getShape())
 			.toType(DataType.FLOAT32, false);
 
-		// Multiply token embeddings with expanded attention mask
 		NDArray weightedEmbeddings = tokenEmbeddings.mul(attentionMaskExpanded);
 
-		// Sum along the appropriate axis
 		NDArray sumEmbeddings = weightedEmbeddings.sum(new int[] { 1 });
 
-		// Clamp the attention mask sum to avoid division by zero
 		NDArray sumMask = attentionMaskExpanded.sum(new int[] { 1 }).clip(1e-9f, Float.MAX_VALUE);
 
-		// Divide sum embeddings by sum mask
 		return sumEmbeddings.div(sumMask);
 	}
 
@@ -69,7 +47,6 @@ public final class ONNXSample {
 
 		String[] sentences = new String[] { "Hello world" };
 
-		// https://docs.djl.ai/extensions/tokenizers/index.html
 		HuggingFaceTokenizer tokenizer = HuggingFaceTokenizer.newInstance(tokenizerResource.getInputStream(), Map.of());
 		Encoding[] encodings = tokenizer.batchEncode(sentences);
 
@@ -83,7 +60,6 @@ public final class ONNXSample {
 			token_type_ids0[i] = encodings[i].getTypeIds();
 		}
 
-		// https://onnxruntime.ai/docs/get-started/with-java.html
 		OrtEnvironment environment = OrtEnvironment.getEnvironment();
 		OrtSession session = environment.createSession(modelResource.getContentAsByteArray());
 

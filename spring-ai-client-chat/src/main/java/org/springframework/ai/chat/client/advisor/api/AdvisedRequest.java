@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor.api;
 
 import java.util.ArrayList;
@@ -39,29 +23,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * The data of the chat client request that can be modified before the execution of the
- * ChatClient's call method
- *
- * @param chatModel the chat model used
- * @param userText the text provided by the user
- * @param systemText the text provided by the system
- * @param chatOptions the options for the chat
- * @param media the list of media items
- * @param functionNames the list of function names
- * @param functionCallbacks the list of function callbacks
- * @param messages the list of messages
- * @param userParams the map of user parameters
- * @param systemParams the map of system parameters
- * @param advisors the list of request response advisors
- * @param advisorParams the map of advisor parameters
- * @param adviseContext the map of advise context
- * @param toolContext the tool context
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- * @since 1.0.0
- */
 public record AdvisedRequest(
 // @formatter:off
 		ChatModel chatModel,
@@ -188,9 +149,6 @@ public record AdvisedRequest(
 		return new Prompt(messages, this.chatOptions());
 	}
 
-	/**
-	 * Builder for {@link AdvisedRequest}.
-	 */
 	public static final class Builder {
 
 		private ChatModel chatModel;
@@ -224,150 +182,76 @@ public record AdvisedRequest(
 		private Builder() {
 		}
 
-		/**
-		 * Set the chat model.
-		 * @param chatModel the chat model
-		 * @return this {@link Builder} instance
-		 */
 		public Builder chatModel(ChatModel chatModel) {
 			this.chatModel = chatModel;
 			return this;
 		}
 
-		/**
-		 * Set the user text.
-		 * @param userText the user text
-		 * @return this {@link Builder} instance
-		 */
 		public Builder userText(String userText) {
 			this.userText = userText;
 			return this;
 		}
 
-		/**
-		 * Set the system text.
-		 * @param systemText the system text
-		 * @return this {@link Builder} instance
-		 */
 		public Builder systemText(String systemText) {
 			this.systemText = systemText;
 			return this;
 		}
 
-		/**
-		 * Set the chat options.
-		 * @param chatOptions the chat options
-		 * @return this {@link Builder} instance
-		 */
 		public Builder chatOptions(ChatOptions chatOptions) {
 			this.chatOptions = chatOptions;
 			return this;
 		}
 
-		/**
-		 * Set the media.
-		 * @param media the media
-		 * @return this {@link Builder} instance
-		 */
 		public Builder media(List<Media> media) {
 			this.media = media;
 			return this;
 		}
 
-		/**
-		 * Set the function names.
-		 * @param functionNames the function names
-		 * @return this {@link Builder} instance
-		 */
 		public Builder functionNames(List<String> functionNames) {
 			this.functionNames = functionNames;
 			return this;
 		}
 
-		/**
-		 * Set the function callbacks.
-		 * @param functionCallbacks the function callbacks
-		 * @return this {@link Builder} instance
-		 */
 		public Builder functionCallbacks(List<FunctionCallback> functionCallbacks) {
 			this.functionCallbacks = functionCallbacks;
 			return this;
 		}
 
-		/**
-		 * Set the messages.
-		 * @param messages the messages
-		 * @return this {@link Builder} instance
-		 */
 		public Builder messages(List<Message> messages) {
 			this.messages = messages;
 			return this;
 		}
 
-		/**
-		 * Set the user params.
-		 * @param userParams the user params
-		 * @return this {@link Builder} instance
-		 */
 		public Builder userParams(Map<String, Object> userParams) {
 			this.userParams = userParams;
 			return this;
 		}
 
-		/**
-		 * Set the system params.
-		 * @param systemParams the system params
-		 * @return this {@link Builder} instance
-		 */
 		public Builder systemParams(Map<String, Object> systemParams) {
 			this.systemParams = systemParams;
 			return this;
 		}
 
-		/**
-		 * Set the advisors.
-		 * @param advisors the advisors
-		 * @return this {@link Builder} instance
-		 */
 		public Builder advisors(List<Advisor> advisors) {
 			this.advisors = advisors;
 			return this;
 		}
 
-		/**
-		 * Set the advisor params.
-		 * @param advisorParams the advisor params
-		 * @return this {@link Builder} instance
-		 */
 		public Builder advisorParams(Map<String, Object> advisorParams) {
 			this.advisorParams = advisorParams;
 			return this;
 		}
 
-		/**
-		 * Set the advise context.
-		 * @param adviseContext the advise context
-		 * @return this {@link Builder} instance
-		 */
 		public Builder adviseContext(Map<String, Object> adviseContext) {
 			this.adviseContext = adviseContext;
 			return this;
 		}
 
-		/**
-		 * Set the tool context.
-		 * @param toolContext the tool context
-		 * @return this {@link Builder} instance
-		 */
 		public Builder toolContext(Map<String, Object> toolContext) {
 			this.toolContext = toolContext;
 			return this;
 		}
 
-		/**
-		 * Build the {@link AdvisedRequest} instance.
-		 * @return a new {@link AdvisedRequest} instance
-		 */
 		public AdvisedRequest build() {
 			return new AdvisedRequest(this.chatModel, this.userText, this.systemText, this.chatOptions, this.media,
 					this.functionNames, this.functionCallbacks, this.messages, this.userParams, this.systemParams,

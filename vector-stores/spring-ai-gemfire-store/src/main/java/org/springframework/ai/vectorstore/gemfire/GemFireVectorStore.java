@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.gemfire;
 
 import java.util.HashMap;
@@ -50,16 +34,6 @@ import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * A VectorStore implementation backed by GemFire. This store supports creating, updating,
- * deleting, and similarity searching of documents in a GemFire index.
- *
- * @author Geet Rawat
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Soby Chacko
- * @author Sebastien Deleuze
- */
 public class GemFireVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(GemFireVectorStore.class);
@@ -68,12 +42,10 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 
 	private static final String EMBEDDINGS = "/embeddings";
 
-	// Query Defaults
 	private static final String QUERY = "/query";
 
 	private static final String DOCUMENT_FIELD = "document";
 
-	// Create Index DEFAULT Values
 	public static final String DEFAULT_HOST = "localhost";
 
 	public static final int DEFAULT_PORT = 8080;
@@ -114,11 +86,6 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 
 	private final String[] fields;
 
-	/**
-	 * Protected constructor that accepts a builder instance. This is the preferred way to
-	 * create new GemFireVectorStore instances.
-	 * @param builder the configured builder instance
-	 */
 	protected GemFireVectorStore(Builder builder) {
 		super(builder);
 
@@ -165,11 +132,6 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 		return this.fields;
 	}
 
-	/**
-	 * Initializes the GemFireVectorStore after properties are set. This method is called
-	 * after all bean properties have been set and allows the bean to perform any
-	 * initialization it requires.
-	 */
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		if (!this.initializeSchema) {
@@ -180,10 +142,6 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 		}
 	}
 
-	/**
-	 * Checks if the index exists in the GemFireVectorStore.
-	 * @return {@code true} if the index exists, {@code false} otherwise
-	 */
 	public boolean indexExists() {
 		String indexResponse = getIndex();
 		return !indexResponse.isEmpty();
@@ -252,8 +210,7 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 		return this.client.post()
 			.uri("/" + this.indexName + QUERY)
 			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(new QueryRequest(floatVector, request.getTopK(), request.getTopK(), // TopKPerBucket
-					true))
+			.bodyValue(new QueryRequest(floatVector, request.getTopK(), request.getTopK(), true))
 			.retrieve()
 			.bodyToFlux(QueryResponse.class)
 			.filter(r -> r.score >= request.getSimilarityThreshold())
@@ -272,11 +229,6 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 			.block();
 	}
 
-	/**
-	 * Creates a new index in the GemFireVectorStore using specified parameters. This
-	 * method is invoked during initialization.
-	 * @throws JsonProcessingException if an error occurs during JSON processing
-	 */
 	public void createIndex() throws JsonProcessingException {
 		CreateRequest createRequest = new CreateRequest(this.indexName);
 		createRequest.setBeamWidth(this.beamWidth);
@@ -307,12 +259,6 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 			.block();
 	}
 
-	/**
-	 * Handles exceptions that occur during HTTP client operations and maps them to
-	 * appropriate runtime exceptions.
-	 * @param ex the exception that occurred during HTTP client operation
-	 * @return a mapped runtime exception corresponding to the HTTP client exception
-	 */
 	private Throwable handleHttpClientException(Throwable ex) {
 		if (!(ex instanceof WebClientResponseException clientException)) {
 			throw new RuntimeException(String.format("Got an unexpected error: %s", ex));
@@ -547,13 +493,6 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 
 	}
 
-	/**
-	 * Builder class for creating {@link GemFireVectorStore} instances.
-	 * <p>
-	 * Provides a fluent API for configuring all aspects of the GemFire vector store.
-	 *
-	 * @since 1.0.0
-	 */
 	public static class Builder extends AbstractVectorStoreBuilder<Builder> {
 
 		private String host = GemFireVectorStore.DEFAULT_HOST;
@@ -580,58 +519,29 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 			super(embeddingModel);
 		}
 
-		/**
-		 * Sets the host for the GemFire connection.
-		 * @param host the host to connect to
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if host is null or empty
-		 */
 		public Builder host(String host) {
 			Assert.hasText(host, "host must have a value");
 			this.host = host;
 			return this;
 		}
 
-		/**
-		 * Sets the port for the GemFire connection.
-		 * @param port the port to connect to
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if port is not positive
-		 */
 		public Builder port(int port) {
 			Assert.isTrue(port > 0, "port must be positive");
 			this.port = port;
 			return this;
 		}
 
-		/**
-		 * Sets whether SSL is enabled for the connection.
-		 * @param sslEnabled true to enable SSL, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder sslEnabled(boolean sslEnabled) {
 			this.sslEnabled = sslEnabled;
 			return this;
 		}
 
-		/**
-		 * Sets the index name.
-		 * @param indexName the name of the index
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if indexName is null or empty
-		 */
 		public Builder indexName(String indexName) {
 			Assert.hasText(indexName, "indexName must have a value");
 			this.indexName = indexName;
 			return this;
 		}
 
-		/**
-		 * Sets the beam width.
-		 * @param beamWidth the beam width value
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if beamWidth is not within valid range
-		 */
 		public Builder beamWidth(int beamWidth) {
 			Assert.isTrue(beamWidth > 0, "beamWidth must be positive");
 			Assert.isTrue(beamWidth <= GemFireVectorStore.UPPER_BOUND_BEAM_WIDTH,
@@ -640,12 +550,6 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 			return this;
 		}
 
-		/**
-		 * Sets the maximum number of connections.
-		 * @param maxConnections the maximum connections value
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if maxConnections is not within valid range
-		 */
 		public Builder maxConnections(int maxConnections) {
 			Assert.isTrue(maxConnections > 0, "maxConnections must be positive");
 			Assert.isTrue(maxConnections <= GemFireVectorStore.UPPER_BOUND_MAX_CONNECTIONS,
@@ -654,45 +558,23 @@ public class GemFireVectorStore extends AbstractObservationVectorStore implement
 			return this;
 		}
 
-		/**
-		 * Sets the number of buckets.
-		 * @param buckets the number of buckets
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if buckets is negative
-		 */
 		public Builder buckets(int buckets) {
 			Assert.isTrue(buckets >= 0, "buckets must not be negative");
 			this.buckets = buckets;
 			return this;
 		}
 
-		/**
-		 * Sets the vector similarity function.
-		 * @param vectorSimilarityFunction the similarity function to use
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if vectorSimilarityFunction is null or empty
-		 */
 		public Builder vectorSimilarityFunction(String vectorSimilarityFunction) {
 			Assert.hasText(vectorSimilarityFunction, "vectorSimilarityFunction must have a value");
 			this.vectorSimilarityFunction = vectorSimilarityFunction;
 			return this;
 		}
 
-		/**
-		 * Sets the fields array.
-		 * @param fields the fields to use
-		 * @return the builder instance
-		 */
 		public Builder fields(String[] fields) {
 			this.fields = fields;
 			return this;
 		}
 
-		/**
-		 * Sets whether to initialize the schema.
-		 * @param initializeSchema true to initialize schema, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder initializeSchema(boolean initializeSchema) {
 			this.initializeSchema = initializeSchema;
 			return this;

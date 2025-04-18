@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.transformer.splitter;
 
 import java.util.ArrayList;
@@ -27,13 +11,6 @@ import com.knuddels.jtokkit.api.IntArrayList;
 
 import org.springframework.util.Assert;
 
-/**
- * A {@link TextSplitter} that splits text into chunks of a target size in tokens.
- *
- * @author Raphael Yu
- * @author Christian Tzolov
- * @author Ricken Bazolo
- */
 public class TokenTextSplitter extends TextSplitter {
 
 	private static final int DEFAULT_CHUNK_SIZE = 800;
@@ -50,16 +27,12 @@ public class TokenTextSplitter extends TextSplitter {
 
 	private final Encoding encoding = this.registry.getEncoding(EncodingType.CL100K_BASE);
 
-	// The target size of each text chunk in tokens
 	private final int chunkSize;
 
-	// The minimum size of each text chunk in characters
 	private final int minChunkSizeChars;
 
-	// Discard chunks shorter than this
 	private final int minChunkLengthToEmbed;
 
-	// The maximum number of chunks to generate from a text
 	private final int maxNumChunks;
 
 	private final boolean keepSeparator;
@@ -102,18 +75,16 @@ public class TokenTextSplitter extends TextSplitter {
 			List<Integer> chunk = tokens.subList(0, Math.min(chunkSize, tokens.size()));
 			String chunkText = decodeTokens(chunk);
 
-			// Skip the chunk if it is empty or whitespace
 			if (chunkText.trim().isEmpty()) {
 				tokens = tokens.subList(chunk.size(), tokens.size());
 				continue;
 			}
 
-			// Find the last period or punctuation mark in the chunk
 			int lastPunctuation = Math.max(chunkText.lastIndexOf('.'), Math.max(chunkText.lastIndexOf('?'),
 					Math.max(chunkText.lastIndexOf('!'), chunkText.lastIndexOf('\n'))));
 
 			if (lastPunctuation != -1 && lastPunctuation > this.minChunkSizeChars) {
-				// Truncate the chunk text at the punctuation mark
+
 				chunkText = chunkText.substring(0, lastPunctuation + 1);
 			}
 
@@ -123,13 +94,11 @@ public class TokenTextSplitter extends TextSplitter {
 				chunks.add(chunkTextToAppend);
 			}
 
-			// Remove the tokens corresponding to the chunk text from the remaining tokens
 			tokens = tokens.subList(getEncodedTokens(chunkText).size(), tokens.size());
 
 			num_chunks++;
 		}
 
-		// Handle the remaining tokens
 		if (!tokens.isEmpty()) {
 			String remaining_text = decodeTokens(tokens).replace(System.lineSeparator(), " ").trim();
 			if (remaining_text.length() > this.minChunkLengthToEmbed) {

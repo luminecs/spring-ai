@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.tool.function;
 
 import java.lang.reflect.Type;
@@ -39,12 +23,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * A {@link ToolCallback} implementation to invoke functions as tools.
- *
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class FunctionToolCallback<I, O> implements ToolCallback {
 
 	private static final Logger logger = LoggerFactory.getLogger(FunctionToolCallback.class);
@@ -111,33 +89,21 @@ public class FunctionToolCallback<I, O> implements ToolCallback {
 				+ '}';
 	}
 
-	/**
-	 * Build a {@link FunctionToolCallback} from a {@link BiFunction}.
-	 */
 	public static <I, O> Builder<I, O> builder(String name, BiFunction<I, ToolContext, O> function) {
 		return new Builder<>(name, function);
 	}
 
-	/**
-	 * Build a {@link FunctionToolCallback} from a {@link Function}.
-	 */
 	public static <I, O> Builder<I, O> builder(String name, Function<I, O> function) {
 		Assert.notNull(function, "function cannot be null");
 		return new Builder<>(name, (request, context) -> function.apply(request));
 	}
 
-	/**
-	 * Build a {@link FunctionToolCallback} from a {@link Supplier}.
-	 */
 	public static <O> Builder<Void, O> builder(String name, Supplier<O> supplier) {
 		Assert.notNull(supplier, "supplier cannot be null");
 		Function<Void, O> function = input -> supplier.get();
 		return builder(name, function).inputType(Void.class);
 	}
 
-	/**
-	 * Build a {@link FunctionToolCallback} from a {@link Consumer}.
-	 */
 	public static <I> Builder<I, Void> builder(String name, Consumer<I> consumer) {
 		Assert.notNull(consumer, "consumer cannot be null");
 		Function<I, Void> function = (I input) -> {

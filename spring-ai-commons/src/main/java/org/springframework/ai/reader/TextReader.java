@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.reader;
 
 import java.io.IOException;
@@ -32,28 +16,16 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
-/**
- * A {@link DocumentReader} that reads text from a {@link Resource}.
- *
- * @author Craig Walls
- * @author Christian Tzolov
- */
 public class TextReader implements DocumentReader {
 
 	public static final String CHARSET_METADATA = "charset";
 
 	public static final String SOURCE_METADATA = "source";
 
-	/**
-	 * Input resource to load the text from.
-	 */
 	private final Resource resource;
 
 	private final Map<String, Object> customMetadata = new HashMap<>();
 
-	/**
-	 * Character set to be used when loading data from the
-	 */
 	private Charset charset = StandardCharsets.UTF_8;
 
 	public TextReader(String resourceUrl) {
@@ -74,10 +46,6 @@ public class TextReader implements DocumentReader {
 		this.charset = charset;
 	}
 
-	/**
-	 * Metadata associated with all documents created by the loader.
-	 * @return Metadata to be assigned to the output Documents.
-	 */
 	public Map<String, Object> getCustomMetadata() {
 		return this.customMetadata;
 	}
@@ -88,7 +56,6 @@ public class TextReader implements DocumentReader {
 
 			String document = StreamUtils.copyToString(this.resource.getInputStream(), this.charset);
 
-			// Inject source information as a metadata.
 			this.customMetadata.put(CHARSET_METADATA, this.charset.name());
 			this.customMetadata.put(SOURCE_METADATA, this.resource.getFilename());
 			this.customMetadata.put(SOURCE_METADATA, getResourceIdentifier(this.resource));
@@ -102,13 +69,12 @@ public class TextReader implements DocumentReader {
 	}
 
 	protected String getResourceIdentifier(Resource resource) {
-		// Try to get the filename first
+
 		String filename = resource.getFilename();
 		if (filename != null && !filename.isEmpty()) {
 			return filename;
 		}
 
-		// Try to get the URI
 		try {
 			URI uri = resource.getURI();
 			if (uri != null) {
@@ -116,10 +82,9 @@ public class TextReader implements DocumentReader {
 			}
 		}
 		catch (IOException ignored) {
-			// If getURI() throws an exception, we'll try the next method
+
 		}
 
-		// Try to get the URL
 		try {
 			URL url = resource.getURL();
 			if (url != null) {
@@ -127,10 +92,9 @@ public class TextReader implements DocumentReader {
 			}
 		}
 		catch (IOException ignored) {
-			// If getURL() throws an exception, we'll fall back to getDescription()
+
 		}
 
-		// If all else fails, use the description
 		return resource.getDescription();
 	}
 

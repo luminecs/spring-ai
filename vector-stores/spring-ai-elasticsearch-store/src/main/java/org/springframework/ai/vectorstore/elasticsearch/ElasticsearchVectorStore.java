@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore.elasticsearch;
 
 import java.io.IOException;
@@ -54,97 +38,6 @@ import org.springframework.ai.vectorstore.observation.VectorStoreObservationCont
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
-/**
- * Elasticsearch-based vector store implementation using the dense_vector field type.
- *
- * <p>
- * The store uses an Elasticsearch index to persist vector embeddings along with their
- * associated document content and metadata. The implementation leverages Elasticsearch's
- * k-NN search capabilities for efficient similarity search operations.
- * </p>
- *
- * <p>
- * Features:
- * </p>
- * <ul>
- * <li>Automatic schema initialization with configurable index creation</li>
- * <li>Support for multiple similarity functions: Cosine, L2 Norm, and Dot Product</li>
- * <li>Metadata filtering using Elasticsearch query strings</li>
- * <li>Configurable similarity thresholds for search results</li>
- * <li>Batch processing support with configurable strategies</li>
- * <li>Observation and metrics support through Micrometer</li>
- * </ul>
- *
- * <p>
- * Basic usage example:
- * </p>
- * <pre>{@code
- * ElasticsearchVectorStore vectorStore = ElasticsearchVectorStore.builder(restClient, embeddingModel)
- *     .initializeSchema(true)
- *     .build();
- *
- * // Add documents
- * vectorStore.add(List.of(
- *     new Document("content1", Map.of("key1", "value1")),
- *     new Document("content2", Map.of("key2", "value2"))
- * ));
- *
- * // Search with filters
- * List<Document> results = vectorStore.similaritySearch(
- *     SearchRequest.query("search text")
- *         .withTopK(5)
- *         .withSimilarityThreshold(0.7)
- *         .withFilterExpression("key1 == 'value1'")
- * );
- * }</pre>
- *
- * <p>
- * Advanced configuration example:
- * </p>
- * <pre>{@code
- * ElasticsearchVectorStoreOptions options = new ElasticsearchVectorStoreOptions();
- * options.setIndexName("custom_vectors");
- * options.setSimilarity(SimilarityFunction.dot_product);
- * options.setDimensions(1536);
- *
- * ElasticsearchVectorStore vectorStore = ElasticsearchVectorStore.builder(restClient, embeddingModel)
- *     .options(options)
- *     .initializeSchema(true)
- *     .batchingStrategy(new TokenCountBatchingStrategy())
- *     .build();
- * }</pre>
- *
- * <p>
- * Requirements:
- * </p>
- * <ul>
- * <li>Elasticsearch 8.0 or later</li>
- * <li>Index mapping with id (string), content (text), metadata (object), and embedding
- * (dense_vector) fields</li>
- * </ul>
- *
- * <p>
- * Similarity Functions:
- * </p>
- * <ul>
- * <li>cosine: Default, suitable for most use cases. Measures cosine similarity between
- * vectors.</li>
- * <li>l2_norm: Euclidean distance between vectors. Lower values indicate higher
- * similarity.</li>
- * <li>dot_product: Best performance for normalized vectors (e.g., OpenAI
- * embeddings).</li>
- * </ul>
- *
- * @author Jemin Huh
- * @author Wei Jiang
- * @author Laura Trotta
- * @author Soby Chacko
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- * @author Jonghoon Park
- * @since 1.0.0
- */
 public class ElasticsearchVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchVectorStore.class);
@@ -179,8 +72,7 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 
 	@Override
 	public void doAdd(List<Document> documents) {
-		// For the index to be present, either it must be pre-created or set the
-		// initializeSchema to true.
+
 		if (!indexExists()) {
 			throw new IllegalArgumentException("Index not found");
 		}
@@ -217,8 +109,7 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 	@Override
 	public void doDelete(List<String> idList) {
 		BulkRequest.Builder bulkRequestBuilder = new BulkRequest.Builder();
-		// For the index to be present, either it must be pre-created or set the
-		// initializeSchema to true.
+
 		if (!indexExists()) {
 			throw new IllegalArgumentException("Index not found");
 		}
@@ -232,8 +123,7 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 
 	@Override
 	public void doDelete(Filter.Expression filterExpression) {
-		// For the index to be present, either it must be pre-created or set the
-		// initializeSchema to true.
+
 		if (!indexExists()) {
 			throw new IllegalArgumentException("Index not found");
 		}
@@ -261,7 +151,7 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 		Assert.notNull(searchRequest, "The search request must not be null.");
 		try {
 			float threshold = (float) searchRequest.getSimilarityThreshold();
-			// reverting l2_norm distance to its original value
+
 			if (this.options.getSimilarity().equals(SimilarityFunction.l2_norm)) {
 				threshold = 1 - threshold;
 			}
@@ -301,17 +191,12 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 		return documentBuilder.build();
 	}
 
-	// more info on score/distance calculation
-	// https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html#knn-similarity-search
 	private double normalizeSimilarityScore(double score) {
 		switch (this.options.getSimilarity()) {
 			case l2_norm:
-				// the returned value of l2_norm is the opposite of the other functions
-				// (closest to zero means more accurate), so to make it consistent
-				// with the other functions the reverse is returned applying a "1-"
-				// to the standard transformation
+
 				return (1 - (java.lang.Math.sqrt((1 / score) - 1)));
-			// cosine and dot_product
+
 			default:
 				return (2 * score) - 1;
 		}
@@ -371,10 +256,6 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 		return Optional.of(client);
 	}
 
-	/**
-	 * Creates a new builder instance for ElasticsearchVectorStore.
-	 * @return a new ElasticsearchBuilder instance
-	 */
 	public static Builder builder(RestClient restClient, EmbeddingModel embeddingModel) {
 		return new Builder(restClient, embeddingModel);
 	}
@@ -389,56 +270,29 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 
 		private FilterExpressionConverter filterExpressionConverter = new ElasticsearchAiSearchFilterExpressionConverter();
 
-		/**
-		 * Sets the Elasticsearch REST client.
-		 * @param restClient the Elasticsearch REST client
-		 * @param embeddingModel the Embedding Model to be used
-		 */
 		public Builder(RestClient restClient, EmbeddingModel embeddingModel) {
 			super(embeddingModel);
 			Assert.notNull(restClient, "RestClient must not be null");
 			this.restClient = restClient;
 		}
 
-		/**
-		 * Sets the Elasticsearch vector store options.
-		 * @param options the vector store options to use
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if options is null
-		 */
 		public Builder options(ElasticsearchVectorStoreOptions options) {
 			Assert.notNull(options, "options must not be null");
 			this.options = options;
 			return this;
 		}
 
-		/**
-		 * Sets whether to initialize the schema.
-		 * @param initializeSchema true to initialize schema, false otherwise
-		 * @return the builder instance
-		 */
 		public Builder initializeSchema(boolean initializeSchema) {
 			this.initializeSchema = initializeSchema;
 			return this;
 		}
 
-		/**
-		 * Sets the filter expression converter.
-		 * @param converter the filter expression converter to use
-		 * @return the builder instance
-		 * @throws IllegalArgumentException if converter is null
-		 */
 		public Builder filterExpressionConverter(FilterExpressionConverter converter) {
 			Assert.notNull(converter, "filterExpressionConverter must not be null");
 			this.filterExpressionConverter = converter;
 			return this;
 		}
 
-		/**
-		 * Builds the ElasticsearchVectorStore instance.
-		 * @return a new ElasticsearchVectorStore instance
-		 * @throws IllegalStateException if the builder is in an invalid state
-		 */
 		@Override
 		public ElasticsearchVectorStore build() {
 			return new ElasticsearchVectorStore(this);

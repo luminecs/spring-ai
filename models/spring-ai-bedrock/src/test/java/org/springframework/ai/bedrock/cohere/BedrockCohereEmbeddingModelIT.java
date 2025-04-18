@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.bedrock.cohere;
 
 import java.time.Duration;
@@ -112,7 +96,7 @@ class BedrockCohereEmbeddingModelIT {
 	void truncatesLongTextFromStart() {
 		String startMarker = "START_MARKER_";
 		String endMarker = "_END_MARKER";
-		String middlePadding = "x".repeat(2500); // Long enough to force truncation
+		String middlePadding = "x".repeat(2500);
 		String longText = startMarker + middlePadding + endMarker;
 
 		assertThat(longText.length()).isGreaterThan(2048);
@@ -122,14 +106,12 @@ class BedrockCohereEmbeddingModelIT {
 
 		EmbeddingResponse embeddingResponse = this.embeddingModelStartTruncate.embedForResponse(List.of(longText));
 
-		// Verify truncation behavior
 		verify(this.embeddingApi).embedding(requestCaptor.capture());
 		String truncatedText = requestCaptor.getValue().texts().get(0);
 		assertThat(truncatedText.length()).isLessThanOrEqualTo(2048);
 		assertThat(truncatedText).doesNotContain(startMarker);
 		assertThat(truncatedText).endsWith(endMarker);
 
-		// Verify embedding response
 		assertThat(embeddingResponse.getResults()).hasSize(1);
 		assertThat(embeddingResponse.getResults().get(0).getOutput()).isNotEmpty();
 		assertThat(this.embeddingModelStartTruncate.dimensions()).isEqualTo(1024);
@@ -176,8 +158,7 @@ class BedrockCohereEmbeddingModelIT {
 
 		@Bean("embeddingModel")
 		public BedrockCohereEmbeddingModel cohereAiEmbedding(CohereEmbeddingBedrockApi cohereEmbeddingApi) {
-			// custom model that uses the END truncation strategy, instead of the default
-			// NONE.
+
 			return new BedrockCohereEmbeddingModel(cohereEmbeddingApi,
 					BedrockCohereEmbeddingOptions.builder()
 						.inputType(CohereEmbeddingBedrockApi.CohereEmbeddingRequest.InputType.SEARCH_DOCUMENT)
@@ -188,8 +169,7 @@ class BedrockCohereEmbeddingModelIT {
 		@Bean("embeddingModelStartTruncate")
 		public BedrockCohereEmbeddingModel cohereAiEmbeddingStartTruncate(
 				CohereEmbeddingBedrockApi cohereEmbeddingApi) {
-			// custom model that uses the START truncation strategy, instead of the
-			// default NONE.
+
 			return new BedrockCohereEmbeddingModel(cohereEmbeddingApi,
 					BedrockCohereEmbeddingOptions.builder()
 						.inputType(CohereEmbeddingBedrockApi.CohereEmbeddingRequest.InputType.SEARCH_DOCUMENT)

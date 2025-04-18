@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.moonshot.api;
 
 import java.util.ArrayList;
@@ -39,9 +23,6 @@ import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Geng Rong
- */
 @EnabledIfEnvironmentVariable(named = "MOONSHOT_API_KEY", matches = ".+")
 public class MoonshotApiToolFunctionCallIT {
 
@@ -99,7 +80,7 @@ public class MoonshotApiToolFunctionCallIT {
 	}
 
 	private void toolFunctionCall(String userMessage, String cityName) {
-		// Step 1: send the conversation and available functions to the model
+
 		var message = new ChatCompletionMessage(userMessage, Role.USER);
 
 		List<ChatCompletionMessage> messages = new ArrayList<>(List.of(message));
@@ -119,7 +100,6 @@ public class MoonshotApiToolFunctionCallIT {
 
 		messages.add(responseMessage);
 
-		// Send the info for each function call and function response to the model.
 		for (ToolCall toolCall : responseMessage.toolCalls()) {
 			var functionName = toolCall.function().name();
 			if ("getCurrentWeather".equals(functionName)) {
@@ -128,7 +108,6 @@ public class MoonshotApiToolFunctionCallIT {
 
 				MockWeatherService.Response weatherResponse = this.weatherService.apply(weatherRequest);
 
-				// extend conversation with function response.
 				messages.add(new ChatCompletionMessage("" + weatherResponse.temp() + weatherRequest.unit(), Role.TOOL,
 						functionName, toolCall.id(), null));
 			}

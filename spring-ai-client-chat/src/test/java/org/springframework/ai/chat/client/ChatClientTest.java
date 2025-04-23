@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client;
 
 import java.net.MalformedURLException;
@@ -50,10 +34,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
-/**
- * @author Christian Tzolov
- * @author Thomas Vitale
- */
 @ExtendWith(MockitoExtension.class)
 public class ChatClientTest {
 
@@ -69,7 +49,6 @@ public class ChatClientTest {
 		return fluxContent.collectList().block().stream().collect(Collectors.joining());
 	}
 
-	// ChatClient Builder Tests
 	@Test
 	void defaultSystemText() {
 
@@ -101,7 +80,6 @@ public class ChatClientTest {
 		assertThat(systemMessage.getText()).isEqualTo("Default system text");
 		assertThat(systemMessage.getMessageType()).isEqualTo(MessageType.SYSTEM);
 
-		// Override the default system text with prompt system
 		content = chatClient.prompt("What's Spring AI?").system("Override default system text").call().content();
 
 		assertThat(content).isEqualTo("response");
@@ -109,7 +87,6 @@ public class ChatClientTest {
 		assertThat(systemMessage.getText()).isEqualTo("Override default system text");
 		assertThat(systemMessage.getMessageType()).isEqualTo(MessageType.SYSTEM);
 
-		// Streaming
 		content = join(
 				chatClient.prompt("What's Spring AI?").system("Override default system text").stream().content());
 
@@ -146,7 +123,6 @@ public class ChatClientTest {
 		assertThat(systemMessage.getText()).isEqualTo("Default system text value1, value2");
 		assertThat(systemMessage.getMessageType()).isEqualTo(MessageType.SYSTEM);
 
-		// Streaming
 		content = join(chatClient.prompt("What's Spring AI?").stream().content());
 
 		assertThat(content).isEqualTo("response");
@@ -155,7 +131,6 @@ public class ChatClientTest {
 		assertThat(systemMessage.getText()).isEqualTo("Default system text value1, value2");
 		assertThat(systemMessage.getMessageType()).isEqualTo(MessageType.SYSTEM);
 
-		// Override single default system parameter
 		content = chatClient.prompt("What's Spring AI?").system(s -> s.param("param1", "value1New")).call().content();
 
 		assertThat(content).isEqualTo("response");
@@ -163,7 +138,6 @@ public class ChatClientTest {
 		assertThat(systemMessage.getText()).isEqualTo("Default system text value1New, value2");
 		assertThat(systemMessage.getMessageType()).isEqualTo(MessageType.SYSTEM);
 
-		// streaming
 		content = join(
 				chatClient.prompt("What's Spring AI?").system(s -> s.param("param1", "value1New")).stream().content());
 
@@ -172,7 +146,6 @@ public class ChatClientTest {
 		assertThat(systemMessage.getText()).isEqualTo("Default system text value1New, value2");
 		assertThat(systemMessage.getMessageType()).isEqualTo(MessageType.SYSTEM);
 
-		// Override default system text
 		content = chatClient.prompt("What's Spring AI?")
 			.system(s -> s.text("Override default system text {param3}").param("param3", "value3"))
 			.call()
@@ -183,7 +156,6 @@ public class ChatClientTest {
 		assertThat(systemMessage.getText()).isEqualTo("Override default system text value3");
 		assertThat(systemMessage.getMessageType()).isEqualTo(MessageType.SYSTEM);
 
-		// Streaming
 		content = join(chatClient.prompt("What's Spring AI?")
 			.system(s -> s.text("Override default system text {param3}").param("param3", "value3"))
 			.stream()
@@ -250,7 +222,6 @@ public class ChatClientTest {
 		assertThat(fco.getToolNames()).containsExactlyInAnyOrder("fun1", "fun2");
 		assertThat(fco.getToolCallbacks().iterator().next().getName()).isEqualTo("fun3");
 
-		// Streaming
 		content = join(chatClient.prompt().stream().content());
 
 		assertThat(content).isEqualTo("response");
@@ -272,7 +243,6 @@ public class ChatClientTest {
 		assertThat(fco.getToolNames()).containsExactlyInAnyOrder("fun1", "fun2");
 		assertThat(fco.getToolCallbacks().iterator().next().getName()).isEqualTo("fun3");
 
-		// mutate builder
 		// @formatter:off
 		chatClient = chatClient.mutate()
 				.defaultSystem("Mutated default system text {param1}, {param2}")
@@ -302,7 +272,6 @@ public class ChatClientTest {
 		assertThat(fco.getToolNames()).containsExactlyInAnyOrder("fun1", "fun2", "fun4");
 		assertThat(fco.getToolCallbacks().iterator().next().getName()).isEqualTo("fun3");
 
-		// Streaming
 		content = join(chatClient.prompt().stream().content());
 
 		assertThat(content).isEqualTo("response");
@@ -364,7 +333,7 @@ public class ChatClientTest {
 					.user(u -> u.param("uparam1", "userValue1")
 						.param("uparam2", "userValue2"))
 					.tools("fun5")
-				.mutate().build() // mutate and build new prompt
+				.mutate().build()
 				.prompt().call().content();
 		// @formatter:on
 
@@ -387,7 +356,6 @@ public class ChatClientTest {
 		assertThat(tco.getToolNames()).containsExactlyInAnyOrder("fun1", "fun2", "fun5");
 		assertThat(tco.getToolCallbacks().iterator().next().getName()).isEqualTo("fun3");
 
-		// Streaming
 		// @formatter:off
 		content = join(chatClient
 					.prompt()
@@ -395,7 +363,7 @@ public class ChatClientTest {
 						.user(u -> u.param("uparam1", "userValue1")
 							.param("uparam2", "userValue2"))
 						.tools("fun5")
-					.mutate().build() // mutate and build new prompt
+					.mutate().build()
 					.prompt().stream().content());
 		// @formatter:on
 
@@ -435,7 +403,6 @@ public class ChatClientTest {
 		assertThat(userMessage.getText()).isEqualTo("Default user text");
 		assertThat(userMessage.getMessageType()).isEqualTo(MessageType.USER);
 
-		// Override the default system text with prompt system
 		content = chatClient.prompt().user("Override default user text").call().content();
 
 		assertThat(content).isEqualTo("response");
@@ -553,8 +520,6 @@ public class ChatClientTest {
 		assertThat(options.getToolNames()).isEmpty();
 	}
 
-	// Constructors
-
 	@Test
 	void whenCreateAndChatModelIsNullThenThrow() {
 		assertThatThrownBy(() -> ChatClient.create(null)).isInstanceOf(IllegalArgumentException.class)
@@ -580,8 +545,6 @@ public class ChatClientTest {
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("observationRegistry cannot be null");
 	}
-
-	// Prompt Tests - User
 
 	@Test
 	void whenPromptWithStringContent() {
@@ -698,8 +661,6 @@ public class ChatClientTest {
 		assertThat(userMessage.getText()).isEqualTo("another question");
 		assertThat(userMessage.getMessageType()).isEqualTo(MessageType.USER);
 	}
-
-	// Prompt Tests - System
 
 	@Test
 	void whenPromptWithMessagesAndSystemText() {

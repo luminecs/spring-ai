@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vertexai.gemini;
 
 import com.google.cloud.vertexai.api.Tool.GoogleSearch;
@@ -93,53 +77,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-/**
- * Vertex AI Gemini Chat Model implementation that provides access to Google's Gemini
- * language models.
- *
- * <p>
- * Key features include:
- * <ul>
- * <li>Support for multiple Gemini model versions including Gemini Pro, Gemini 1.5 Pro,
- * Gemini 1.5/2.0 Flash variants</li>
- * <li>Tool/Function calling capabilities through {@link ToolCallingManager}</li>
- * <li>Streaming support via {@link #stream(Prompt)} method</li>
- * <li>Configurable safety settings through {@link VertexAiGeminiSafetySetting}</li>
- * <li>Support for system messages and multi-modal content (text and images)</li>
- * <li>Built-in retry mechanism and observability through Micrometer</li>
- * <li>Google Search Retrieval integration</li>
- * </ul>
- *
- * <p>
- * The model can be configured with various options including temperature, top-k, top-p
- * sampling, maximum output tokens, and candidate count through
- * {@link VertexAiGeminiChatOptions}.
- *
- * <p>
- * Use the {@link Builder} to create instances with custom configurations:
- *
- * <pre>{@code
- * VertexAiGeminiChatModel model = VertexAiGeminiChatModel.builder()
- * 		.vertexAI(vertexAI)
- * 		.defaultOptions(options)
- * 		.toolCallingManager(toolManager)
- * 		.build();
- * }</pre>
- *
- * @author Christian Tzolov
- * @author Grogdunn
- * @author luocongqiu
- * @author Chris Turchin
- * @author Mark Pollack
- * @author Soby Chacko
- * @author Jihoon Kim
- * @author Alexandros Pappas
- * @author Ilayaperumal Gopinathan
- * @since 0.8.1
- * @see VertexAiGeminiChatOptions
- * @see ToolCallingManager
- * @see ChatModel
- */
 public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 
 	private static final ChatModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultChatModelObservationConvention();
@@ -152,44 +89,18 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 
 	private final VertexAiGeminiChatOptions defaultOptions;
 
-	/**
-	 * The retry template used to retry the API calls.
-	 */
 	private final RetryTemplate retryTemplate;
 
 	private final GenerationConfig generationConfig;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * Tool calling manager used to call tools.
-	 */
 	private final ToolCallingManager toolCallingManager;
 
-	/**
-	 * The tool execution eligibility predicate used to determine if a tool can be
-	 * executed.
-	 */
 	private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
-	/**
-	 * Creates a new instance of VertexAiGeminiChatModel.
-	 * @param vertexAI the Vertex AI instance to use
-	 * @param defaultOptions the default options to use
-	 * @param toolCallingManager the tool calling manager to use. It is wrapped in a
-	 * {@link VertexToolCallingManager} to ensure compatibility with Vertex AI's OpenAPI
-	 * schema format.
-	 * @param retryTemplate the retry template to use
-	 * @param observationRegistry the observation registry to use
-	 */
 	public VertexAiGeminiChatModel(VertexAI vertexAI, VertexAiGeminiChatOptions defaultOptions,
 			ToolCallingManager toolCallingManager, RetryTemplate retryTemplate,
 			ObservationRegistry observationRegistry) {
@@ -197,17 +108,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 				new DefaultToolExecutionEligibilityPredicate());
 	}
 
-	/**
-	 * Creates a new instance of VertexAiGeminiChatModel.
-	 * @param vertexAI the Vertex AI instance to use
-	 * @param defaultOptions the default options to use
-	 * @param toolCallingManager the tool calling manager to use. It is wrapped in a
-	 * {@link VertexToolCallingManager} to ensure compatibility with Vertex AI's OpenAPI
-	 * schema format.
-	 * @param retryTemplate the retry template to use
-	 * @param observationRegistry the observation registry to use
-	 * @param toolExecutionEligibilityPredicate the tool execution eligibility predicate
-	 */
 	public VertexAiGeminiChatModel(VertexAI vertexAI, VertexAiGeminiChatOptions defaultOptions,
 			ToolCallingManager toolCallingManager, RetryTemplate retryTemplate, ObservationRegistry observationRegistry,
 			ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate) {
@@ -226,8 +126,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 		this.observationRegistry = observationRegistry;
 		this.toolExecutionEligibilityPredicate = toolExecutionEligibilityPredicate;
 
-		// Wrap the provided tool calling manager in a VertexToolCallingManager to ensure
-		// compatibility with Vertex AI's OpenAPI schema format.
 		if (toolCallingManager instanceof VertexToolCallingManager) {
 			this.toolCallingManager = toolCallingManager;
 		}
@@ -354,7 +252,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 		}
 	}
 
-	// https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/gemini
 	@Override
 	public ChatResponse call(Prompt prompt) {
 		var requestPrompt = this.buildRequestPrompt(prompt);
@@ -398,14 +295,14 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 		if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), response)) {
 			var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
 			if (toolExecutionResult.returnDirect()) {
-				// Return tool execution result directly to the client.
+
 				return ChatResponse.builder()
 					.from(response)
 					.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 					.build();
 			}
 			else {
-				// Send the tool execution result back to the model.
+
 				return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 						response);
 			}
@@ -416,7 +313,7 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 	}
 
 	Prompt buildRequestPrompt(Prompt prompt) {
-		// Process runtime options
+
 		VertexAiGeminiChatOptions runtimeOptions = null;
 		if (prompt.getOptions() != null) {
 			if (prompt.getOptions() instanceof ToolCallingChatOptions toolCallingChatOptions) {
@@ -429,12 +326,9 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 			}
 		}
 
-		// Define request options by merging runtime options and default options
 		VertexAiGeminiChatOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				VertexAiGeminiChatOptions.class);
 
-		// Merge @JsonIgnore-annotated options explicitly since they are ignored by
-		// Jackson, used by ModelOptionsUtils.
 		if (runtimeOptions != null) {
 			requestOptions.setInternalToolExecutionEnabled(
 					ModelOptionsUtils.mergeOption(runtimeOptions.getInternalToolExecutionEnabled(),
@@ -510,18 +404,17 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 				// @formatter:off
 				Flux<ChatResponse> flux = chatResponseFlux.flatMap(response -> {
 					if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), response)) {
-						// FIXME: bounded elastic needs to be used since tool calling
-						// is currently only synchronous
+
 						return Flux.defer(() -> {
 							var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
 							if (toolExecutionResult.returnDirect()) {
-								// Return tool execution result directly to the client.
+
 								return Flux.just(ChatResponse.builder().from(response)
 										.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 										.build());
 							}
 							else {
-								// Send the tool execution result back to the model.
+
 								return this.internalStream(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()), response);
 							}
 						}).subscribeOn(Schedulers.boundedElastic());
@@ -533,7 +426,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 				.doOnError(observation::error)
 				.doFinally(s -> observation.stop())
 				.contextWrite(ctx -> ctx.put(ObservationThreadLocalAccessor.KEY, observation));
-				// @formatter:on;
 
 				return new MessageAggregator().aggregate(flux, observationContext::setResponse);
 
@@ -547,7 +439,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 
 	protected List<Generation> responseCandidateToGeneration(Candidate candidate) {
 
-		// TODO - The candidateIndex (e.g. choice must be asigned to the generation).
 		int candidateIndex = candidate.getIndex();
 		FinishReason candidateFinishReason = candidate.getFinishReason();
 
@@ -632,7 +523,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 			generationConfig = toGenerationConfig(requestOptions);
 		}
 
-		// Add the enabled functions definitions to the request's tools parameter.
 		List<Tool> tools = new ArrayList<>();
 		List<ToolDefinition> toolDefinitions = this.toolCallingManager.resolveToolDefinitions(requestOptions);
 		if (!CollectionUtils.isEmpty(toolDefinitions)) {
@@ -728,13 +618,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 			.toList();
 	}
 
-	/**
-	 * Generates the content response based on the provided Gemini request. Package
-	 * protected for testing purposes.
-	 * @param request the GeminiRequest containing the content and model information
-	 * @return a GenerateContentResponse containing the generated content
-	 * @throws RuntimeException if content generation fails
-	 */
 	GenerateContentResponse getContentResponse(GeminiRequest request) {
 		try {
 			return request.model.generateContent(request.contents);
@@ -756,10 +639,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 		}
 	}
 
-	/**
-	 * Use the provided convention for reporting observation data
-	 * @param observationConvention The provided convention
-	 */
 	public void setObservationConvention(ChatModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;
@@ -852,9 +731,6 @@ public class VertexAiGeminiChatModel implements ChatModel, DisposableBean {
 
 	public enum ChatModel implements ChatModelDescription {
 
-		/**
-		 * Deprecated by Goolgle in favor of 1.5 pro and flash models.
-		 */
 		GEMINI_PRO_VISION("gemini-pro-vision"),
 
 		GEMINI_PRO("gemini-pro"),

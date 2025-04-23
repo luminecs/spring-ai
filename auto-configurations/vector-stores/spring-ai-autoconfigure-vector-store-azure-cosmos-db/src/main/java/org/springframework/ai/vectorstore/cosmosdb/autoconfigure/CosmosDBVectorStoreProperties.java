@@ -1,8 +1,33 @@
+/*
+ * Copyright 2023-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.vectorstore.cosmosdb.autoconfigure;
 
 import org.springframework.ai.vectorstore.properties.CommonVectorStoreProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * Configuration properties for CosmosDB Vector Store.
+ *
+ * @author Theo van Kraay
+ * @since 1.0.0
+ */
 @ConfigurationProperties(CosmosDBVectorStoreProperties.CONFIG_PREFIX)
 public class CosmosDBVectorStoreProperties extends CommonVectorStoreProperties {
 
@@ -24,6 +49,8 @@ public class CosmosDBVectorStoreProperties extends CommonVectorStoreProperties {
 
 	private String key;
 
+	private String connectionMode;
+
 	public int getVectorStoreThroughput() {
 		return this.vectorStoreThroughput;
 	}
@@ -40,6 +67,12 @@ public class CosmosDBVectorStoreProperties extends CommonVectorStoreProperties {
 		this.metadataFields = metadataFields;
 	}
 
+	public List<String> getMetadataFieldList() {
+		return this.metadataFields != null
+				? Arrays.stream(this.metadataFields.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList()
+				: List.of();
+	}
+
 	public String getEndpoint() {
 		return this.endpoint;
 	}
@@ -54,6 +87,14 @@ public class CosmosDBVectorStoreProperties extends CommonVectorStoreProperties {
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public void setConnectionMode(String connectionMode) {
+		this.connectionMode = connectionMode;
+	}
+
+	public String getConnectionMode() {
+		return this.connectionMode;
 	}
 
 	public String getDatabaseName() {

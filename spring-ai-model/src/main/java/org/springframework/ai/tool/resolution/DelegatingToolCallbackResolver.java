@@ -2,7 +2,7 @@ package org.springframework.ai.tool.resolution;
 
 import java.util.List;
 
-import org.springframework.ai.model.function.FunctionCallback;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -18,11 +18,11 @@ public class DelegatingToolCallbackResolver implements ToolCallbackResolver {
 
 	@Override
 	@Nullable
-	public FunctionCallback resolve(String toolName) {
+	public ToolCallback resolve(String toolName) {
 		Assert.hasText(toolName, "toolName cannot be null or empty");
 
 		for (ToolCallbackResolver toolCallbackResolver : this.toolCallbackResolvers) {
-			FunctionCallback toolCallback = toolCallbackResolver.resolve(toolName);
+			ToolCallback toolCallback = toolCallbackResolver.resolve(toolName);
 			if (toolCallback != null) {
 				return toolCallback;
 			}

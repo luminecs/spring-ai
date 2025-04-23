@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.chat.client;
 
 import java.net.URL;
@@ -18,7 +34,6 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.converter.StructuredOutputConverter;
-import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.core.ParameterizedTypeReference;
@@ -27,6 +42,18 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 
+/**
+ * Client to perform stateless requests to an AI Model, using a fluent API.
+ *
+ * Use {@link ChatClient#builder(ChatModel)} to prepare an instance.
+ *
+ * @author Mark Pollack
+ * @author Christian Tzolov
+ * @author Josh Long
+ * @author Arjen Poutsma
+ * @author Thomas Vitale
+ * @since 1.0.0
+ */
 public interface ChatClient {
 
 	static ChatClient create(ChatModel chatModel) {
@@ -61,6 +88,11 @@ public interface ChatClient {
 
 	ChatClientRequestSpec prompt(Prompt prompt);
 
+	/**
+	 * Return a {@link ChatClient.Builder} to create a new {@link ChatClient} whose
+	 * settings are replicated from the default {@link ChatClientRequestSpec} of this
+	 * client.
+	 */
 	Builder mutate();
 
 	interface PromptUserSpec {
@@ -83,6 +115,9 @@ public interface ChatClient {
 
 	}
 
+	/**
+	 * Specification for a prompt system.
+	 */
 	interface PromptSystemSpec {
 
 		PromptSystemSpec text(String text);
@@ -166,6 +201,10 @@ public interface ChatClient {
 
 	interface ChatClientRequestSpec {
 
+		/**
+		 * Return a {@code ChatClient.Builder} to create a new {@code ChatClient} whose
+		 * settings are replicated from this {@code ChatClientRequest}.
+		 */
 		Builder mutate();
 
 		ChatClientRequestSpec advisors(Consumer<AdvisorSpec> consumer);
@@ -182,19 +221,13 @@ public interface ChatClient {
 
 		ChatClientRequestSpec tools(String... toolNames);
 
-		ChatClientRequestSpec tools(FunctionCallback... toolCallbacks);
+		ChatClientRequestSpec tools(ToolCallback... toolCallbacks);
 
 		ChatClientRequestSpec tools(List<ToolCallback> toolCallbacks);
 
 		ChatClientRequestSpec tools(Object... toolObjects);
 
 		ChatClientRequestSpec tools(ToolCallbackProvider... toolCallbackProviders);
-
-		@Deprecated
-		<I, O> ChatClientRequestSpec functions(FunctionCallback... functionCallbacks);
-
-		@Deprecated
-		ChatClientRequestSpec functions(String... functionBeanNames);
 
 		ChatClientRequestSpec toolContext(Map<String, Object> toolContext);
 
@@ -220,6 +253,9 @@ public interface ChatClient {
 
 	}
 
+	/**
+	 * A mutable builder for creating a {@link ChatClient}.
+	 */
 	interface Builder {
 
 		Builder defaultAdvisors(Advisor... advisor);
@@ -248,19 +284,13 @@ public interface ChatClient {
 
 		Builder defaultTools(String... toolNames);
 
-		Builder defaultTools(FunctionCallback... toolCallbacks);
+		Builder defaultTools(ToolCallback... toolCallbacks);
 
 		Builder defaultTools(List<ToolCallback> toolCallbacks);
 
 		Builder defaultTools(Object... toolObjects);
 
 		Builder defaultTools(ToolCallbackProvider... toolCallbackProviders);
-
-		@Deprecated
-		Builder defaultFunctions(String... functionNames);
-
-		@Deprecated
-		Builder defaultFunctions(FunctionCallback... functionCallbacks);
 
 		Builder defaultToolContext(Map<String, Object> toolContext);
 

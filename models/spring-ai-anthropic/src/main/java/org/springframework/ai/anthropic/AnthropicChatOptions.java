@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.anthropic;
 
 import java.util.ArrayList;
@@ -16,12 +32,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.springframework.ai.anthropic.api.AnthropicApi;
 import org.springframework.ai.anthropic.api.AnthropicApi.ChatCompletionRequest;
-import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+/**
+ * The options to be used when sending a chat request to the Anthropic API.
+ *
+ * @author Christian Tzolov
+ * @author Thomas Vitale
+ * @author Alexandros Pappas
+ * @author Ilayaperumal Gopinathan
+ * @since 1.0.0
+ */
 @JsonInclude(Include.NON_NULL)
 public class AnthropicChatOptions implements ToolCallingChatOptions {
 
@@ -35,18 +59,33 @@ public class AnthropicChatOptions implements ToolCallingChatOptions {
 	private @JsonProperty("top_k") Integer topK;
 	private @JsonProperty("thinking") ChatCompletionRequest.ThinkingConfig thinking;
 
+	/**
+	 * Collection of {@link ToolCallback}s to be used for tool calling in the chat
+	 * completion requests.
+	 */
 	@JsonIgnore
-	private List<FunctionCallback> toolCallbacks = new ArrayList<>();
+	private List<ToolCallback> toolCallbacks = new ArrayList<>();
 
+	/**
+	 * Collection of tool names to be resolved at runtime and used for tool calling in the
+	 * chat completion requests.
+	 */
 	@JsonIgnore
 	private Set<String> toolNames = new HashSet<>();
 
+	/**
+	 * Whether to enable the tool execution lifecycle internally in ChatModel.
+	 */
 	@JsonIgnore
 	private Boolean internalToolExecutionEnabled;
 
 	@JsonIgnore
 	private Map<String, Object> toolContext = new HashMap<>();
 
+
+	/**
+	 * Optional HTTP headers to be added to the chat completion request.
+	 */
 	@JsonIgnore
 	private Map<String, String> httpHeaders = new HashMap<>();
 
@@ -147,13 +186,13 @@ public class AnthropicChatOptions implements ToolCallingChatOptions {
 
 	@Override
 	@JsonIgnore
-	public List<FunctionCallback> getToolCallbacks() {
+	public List<ToolCallback> getToolCallbacks() {
 		return this.toolCallbacks;
 	}
 
 	@Override
 	@JsonIgnore
-	public void setToolCallbacks(List<FunctionCallback> toolCallbacks) {
+	public void setToolCallbacks(List<ToolCallback> toolCallbacks) {
 		Assert.notNull(toolCallbacks, "toolCallbacks cannot be null");
 		Assert.noNullElements(toolCallbacks, "toolCallbacks cannot contain null elements");
 		this.toolCallbacks = toolCallbacks;
@@ -188,34 +227,6 @@ public class AnthropicChatOptions implements ToolCallingChatOptions {
 	}
 
 	@Override
-	@Deprecated
-	@JsonIgnore
-	public List<FunctionCallback> getFunctionCallbacks() {
-		return this.getToolCallbacks();
-	}
-
-	@Override
-	@Deprecated
-	@JsonIgnore
-	public void setFunctionCallbacks(List<FunctionCallback> functionCallbacks) {
-		this.setToolCallbacks(functionCallbacks);
-	}
-
-	@Override
-	@Deprecated
-	@JsonIgnore
-	public Set<String> getFunctions() {
-		return this.getToolNames();
-	}
-
-	@Override
-	@Deprecated
-	@JsonIgnore
-	public void setFunctions(Set<String> functionNames) {
-		this.setToolNames(functionNames);
-	}
-
-	@Override
 	@JsonIgnore
 	public Double getFrequencyPenalty() {
 		return null;
@@ -225,19 +236,6 @@ public class AnthropicChatOptions implements ToolCallingChatOptions {
 	@JsonIgnore
 	public Double getPresencePenalty() {
 		return null;
-	}
-
-	@Override
-	@Deprecated
-	@JsonIgnore
-	public Boolean getProxyToolCalls() {
-		return this.internalToolExecutionEnabled != null ? !this.internalToolExecutionEnabled : null;
-	}
-
-	@Deprecated
-	@JsonIgnore
-	public void setProxyToolCalls(Boolean proxyToolCalls) {
-		this.internalToolExecutionEnabled = proxyToolCalls != null ? !proxyToolCalls : null;
 	}
 
 	@Override
@@ -348,12 +346,12 @@ public class AnthropicChatOptions implements ToolCallingChatOptions {
 			return this;
 		}
 
-		public Builder toolCallbacks(List<FunctionCallback> toolCallbacks) {
+		public Builder toolCallbacks(List<ToolCallback> toolCallbacks) {
 			this.options.setToolCallbacks(toolCallbacks);
 			return this;
 		}
 
-		public Builder toolCallbacks(FunctionCallback... toolCallbacks) {
+		public Builder toolCallbacks(ToolCallback... toolCallbacks) {
 			Assert.notNull(toolCallbacks, "toolCallbacks cannot be null");
 			this.options.toolCallbacks.addAll(Arrays.asList(toolCallbacks));
 			return this;
@@ -373,29 +371,6 @@ public class AnthropicChatOptions implements ToolCallingChatOptions {
 
 		public Builder internalToolExecutionEnabled(@Nullable Boolean internalToolExecutionEnabled) {
 			this.options.setInternalToolExecutionEnabled(internalToolExecutionEnabled);
-			return this;
-		}
-
-		@Deprecated
-		public Builder functionCallbacks(List<FunctionCallback> functionCallbacks) {
-			return toolCallbacks(functionCallbacks);
-		}
-
-		@Deprecated
-		public Builder functions(Set<String> functionNames) {
-			return toolNames(functionNames);
-		}
-
-		@Deprecated
-		public Builder function(String functionName) {
-			return toolNames(functionName);
-		}
-
-		@Deprecated
-		public Builder proxyToolCalls(Boolean proxyToolCalls) {
-			if (proxyToolCalls != null) {
-				this.options.setInternalToolExecutionEnabled(!proxyToolCalls);
-			}
 			return this;
 		}
 

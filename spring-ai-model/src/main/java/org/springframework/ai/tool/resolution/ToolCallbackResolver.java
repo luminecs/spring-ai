@@ -7,6 +7,6 @@ import org.springframework.lang.Nullable;
 public interface ToolCallbackResolver {
 
 	@Nullable
-	FunctionCallback resolve(String toolName);
+	ToolCallback resolve(String toolName);
 
 }

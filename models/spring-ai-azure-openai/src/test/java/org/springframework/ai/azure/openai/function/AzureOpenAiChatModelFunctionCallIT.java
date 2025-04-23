@@ -54,7 +54,7 @@ class AzureOpenAiChatModelFunctionCallIT {
 
 		var promptOptions = AzureOpenAiChatOptions.builder()
 			.deploymentName(this.selectedModel)
-			.functionCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
+			.toolCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
 				.description("Get the current weather in a given location")
 				.inputType(MockWeatherService.Request.class)
 				.build()))
@@ -82,7 +82,7 @@ class AzureOpenAiChatModelFunctionCallIT {
 
 		var promptOptions = AzureOpenAiChatOptions.builder()
 			.deploymentName(this.selectedModel)
-			.functionCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
+			.toolCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
 				.description("Get the current weather in a given location")
 				.inputType(MockWeatherService.Request.class)
 				.build()))
@@ -103,7 +103,7 @@ class AzureOpenAiChatModelFunctionCallIT {
 
 		var promptOptions = AzureOpenAiChatOptions.builder()
 			.deploymentName(this.selectedModel)
-			.functionCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
+			.toolCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
 				.description("Get the current weather in a given location")
 				.inputType(MockWeatherService.Request.class)
 				.build()))
@@ -140,7 +140,7 @@ class AzureOpenAiChatModelFunctionCallIT {
 
 		var promptOptions = AzureOpenAiChatOptions.builder()
 			.deploymentName(this.selectedModel)
-			.functionCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
+			.toolCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
 				.description("Get the current weather in a given location")
 				.inputType(MockWeatherService.Request.class)
 				.build()))
@@ -166,7 +166,7 @@ class AzureOpenAiChatModelFunctionCallIT {
 
 		var promptOptions = AzureOpenAiChatOptions.builder()
 			.deploymentName(this.selectedModel)
-			.functionCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
+			.toolCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
 				.description("Get the current weather in a given location")
 				.inputType(MockWeatherService.Request.class)
 				.build()))

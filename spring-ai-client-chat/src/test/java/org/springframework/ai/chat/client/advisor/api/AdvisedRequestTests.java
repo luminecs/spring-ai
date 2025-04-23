@@ -68,7 +68,7 @@ class AdvisedRequestTests {
 		assertThatThrownBy(() -> new AdvisedRequest(mock(ChatModel.class), "user", null, null, List.of(), null,
 				List.of(), List.of(), Map.of(), Map.of(), List.of(), Map.of(), Map.of(), Map.of()))
 			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessage("functionNames cannot be null");
+			.hasMessage("toolNames cannot be null");
 	}
 
 	@Test
@@ -76,7 +76,7 @@ class AdvisedRequestTests {
 		assertThatThrownBy(() -> new AdvisedRequest(mock(ChatModel.class), "user", null, null, List.of(), List.of(),
 				null, List.of(), Map.of(), Map.of(), List.of(), Map.of(), Map.of(), Map.of()))
 			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessage("functionCallbacks cannot be null");
+			.hasMessage("toolCallbacks cannot be null");
 	}
 
 	@Test
@@ -159,7 +159,7 @@ class AdvisedRequestTests {
 			.userText(userMessage.getText())
 			.userParams(userParams)
 			.media(userMessage.getMedia())
-			.functionNames(toolNames)
+			.toolNames(toolNames)
 			.functionCallbacks(List.of(toolCallback))
 			.toolContext(toolContext)
 			.advisors(advisors)

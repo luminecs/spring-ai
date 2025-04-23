@@ -16,7 +16,6 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
-import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.tool.definition.ToolDefinition;
@@ -146,8 +145,7 @@ public class CreateGeminiRequestTests {
 			.toolCallingManager(toolCallingManager)
 			.defaultOptions(VertexAiGeminiChatOptions.builder()
 				.model("DEFAULT_MODEL")
-				.functionCallbacks(List.of(FunctionCallback.builder()
-					.function(TOOL_FUNCTION_NAME, new MockWeatherService())
+				.toolCallbacks(List.of(FunctionToolCallback.builder(TOOL_FUNCTION_NAME, new MockWeatherService())
 					.description("Get the weather in location")
 					.inputType(MockWeatherService.Request.class)
 					.build()))
@@ -183,8 +181,7 @@ public class CreateGeminiRequestTests {
 
 		requestPrompt = client.buildRequestPrompt(new Prompt("Test message content",
 				VertexAiGeminiChatOptions.builder()
-					.functionCallbacks(List.of(FunctionCallback.builder()
-						.function(TOOL_FUNCTION_NAME, new MockWeatherService())
+					.toolCallbacks(List.of(FunctionToolCallback.builder(TOOL_FUNCTION_NAME, new MockWeatherService())
 						.description("Overridden function description")
 						.inputType(MockWeatherService.Request.class)
 						.build()))

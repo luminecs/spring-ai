@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.ai.model.function.FunctionCallback;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.execution.DefaultToolCallResultConverter;
 import org.springframework.ai.tool.execution.ToolCallResultConverter;
@@ -63,10 +63,11 @@ public final class ToolUtils {
 		}
 	}
 
-	public static List<String> getDuplicateToolNames(List<FunctionCallback> toolCallbacks) {
+	public static List<String> getDuplicateToolNames(List<ToolCallback> toolCallbacks) {
 		Assert.notNull(toolCallbacks, "toolCallbacks cannot be null");
 		return toolCallbacks.stream()
-			.collect(Collectors.groupingBy(FunctionCallback::getName, Collectors.counting()))
+			.collect(Collectors.groupingBy(toolCallback -> toolCallback.getToolDefinition().name(),
+					Collectors.counting()))
 			.entrySet()
 			.stream()
 			.filter(entry -> entry.getValue() > 1)
@@ -74,7 +75,7 @@ public final class ToolUtils {
 			.collect(Collectors.toList());
 	}
 
-	public static List<String> getDuplicateToolNames(FunctionCallback... toolCallbacks) {
+	public static List<String> getDuplicateToolNames(ToolCallback... toolCallbacks) {
 		Assert.notNull(toolCallbacks, "toolCallbacks cannot be null");
 		return getDuplicateToolNames(Arrays.asList(toolCallbacks));
 	}

@@ -54,8 +54,7 @@ public class FunctionCallbackInPromptIT extends BaseOllamaIT {
 					"What are the weather conditions in San Francisco, Tokyo, and Paris? Find the temperature in Celsius for each of the three locations.");
 
 			var promptOptions = OllamaOptions.builder()
-				.functionCallbacks(List.of(FunctionToolCallback
-					.builder("CurrentWeatherService", new MockWeatherService())
+				.toolCallbacks(List.of(FunctionToolCallback.builder("CurrentWeatherService", new MockWeatherService())
 					.description(
 							"Find the weather conditions, forecasts, and temperatures for a location, like a city or state.")
 					.inputType(MockWeatherService.Request.class)
@@ -80,8 +79,7 @@ public class FunctionCallbackInPromptIT extends BaseOllamaIT {
 					"What are the weather conditions in San Francisco, Tokyo, and Paris? Find the temperature in Celsius for each of the three locations.");
 
 			var promptOptions = OllamaOptions.builder()
-				.functionCallbacks(List.of(FunctionToolCallback
-					.builder("CurrentWeatherService", new MockWeatherService())
+				.toolCallbacks(List.of(FunctionToolCallback.builder("CurrentWeatherService", new MockWeatherService())
 					.description(
 							"Find the weather conditions, forecasts, and temperatures for a location, like a city or state.")
 					.inputType(MockWeatherService.Request.class)

@@ -46,7 +46,7 @@ public class FunctionCallbackInPromptIT {
 						"What's the weather like in San Francisco, Tokyo, and Paris?");
 
 				var promptOptions = OpenAiChatOptions.builder()
-					.functionCallbacks(
+					.toolCallbacks(
 							List.of(FunctionToolCallback.builder("CurrentWeatherService", new MockWeatherService())
 								.description("Get the weather in location")
 								.inputType(MockWeatherService.Request.class)
@@ -75,7 +75,7 @@ public class FunctionCallbackInPromptIT {
 						"What's the weather like in San Francisco, Tokyo, and Paris?");
 
 				var promptOptions = OpenAiChatOptions.builder()
-					.functionCallbacks(
+					.toolCallbacks(
 							List.of(FunctionToolCallback.builder("CurrentWeatherService", new MockWeatherService())
 								.description("Get the weather in location")
 								.inputType(MockWeatherService.Request.class)

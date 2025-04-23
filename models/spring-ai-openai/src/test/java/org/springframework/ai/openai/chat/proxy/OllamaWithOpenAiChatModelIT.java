@@ -34,8 +34,7 @@ import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.converter.ListOutputConverter;
 import org.springframework.ai.converter.MapOutputConverter;
 import org.springframework.ai.model.NoopApiKey;
-import org.springframework.ai.model.function.FunctionCallback;
-import org.springframework.ai.model.tool.LegacyToolCallingManager;
+import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -283,8 +282,7 @@ class OllamaWithOpenAiChatModelIT {
 			.model(modelName)
 
 			.toolChoice("auto")
-			.functionCallbacks(List.of(FunctionCallback.builder()
-				.function("getCurrentWeather", new MockWeatherService())
+			.toolCallbacks(List.of(FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
 				.description("Get the weather in location")
 				.inputType(MockWeatherService.Request.class)
 				.build()))
@@ -402,7 +400,7 @@ class OllamaWithOpenAiChatModelIT {
 		public OpenAiChatModel openAiClient(OpenAiApi openAiApi) {
 			return OpenAiChatModel.builder()
 				.openAiApi(openAiApi)
-				.toolCallingManager(LegacyToolCallingManager.builder().build())
+				.toolCallingManager(ToolCallingManager.builder().build())
 				.defaultOptions(OpenAiChatOptions.builder().model(DEFAULT_OLLAMA_MODEL).build())
 				.build();
 		}

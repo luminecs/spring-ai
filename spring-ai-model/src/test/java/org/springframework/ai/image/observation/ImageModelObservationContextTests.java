@@ -2,6 +2,7 @@ package org.springframework.ai.image.observation;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.ai.image.ImageOptions;
 import org.springframework.ai.image.ImageOptionsBuilder;
 import org.springframework.ai.image.ImagePrompt;
 
@@ -13,25 +14,14 @@ class ImageModelObservationContextTests {
 	@Test
 	void whenMandatoryRequestOptionsThenReturn() {
 		var observationContext = ImageModelObservationContext.builder()
-			.imagePrompt(generateImagePrompt())
+			.imagePrompt(generateImagePrompt(ImageOptionsBuilder.builder().model("supersun").build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().model("supersun").build())
 			.build();
 
 		assertThat(observationContext).isNotNull();
 	}
 
-	@Test
-	void whenRequestOptionsIsNullThenThrow() {
-		assertThatThrownBy(() -> ImageModelObservationContext.builder()
-			.imagePrompt(generateImagePrompt())
-			.provider("superprovider")
-			.requestOptions(null)
-			.build()).isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("requestOptions cannot be null");
-	}
-
-	private ImagePrompt generateImagePrompt() {
+	private ImagePrompt generateImagePrompt(ImageOptions imageOptions) {
 		return new ImagePrompt("here comes the sun");
 	}
 

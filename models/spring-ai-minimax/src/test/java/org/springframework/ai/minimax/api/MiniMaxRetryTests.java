@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.minimax.api;
 
 import java.util.List;
@@ -10,8 +26,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.embedding.EmbeddingOptions;
 import org.springframework.ai.minimax.MiniMaxChatModel;
 import org.springframework.ai.minimax.MiniMaxChatOptions;
 import org.springframework.ai.minimax.MiniMaxEmbeddingModel;
@@ -24,6 +42,7 @@ import org.springframework.ai.minimax.api.MiniMaxApi.ChatCompletionMessage.Role;
 import org.springframework.ai.minimax.api.MiniMaxApi.ChatCompletionRequest;
 import org.springframework.ai.minimax.api.MiniMaxApi.EmbeddingList;
 import org.springframework.ai.minimax.api.MiniMaxApi.EmbeddingRequest;
+import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.ai.retry.TransientAiException;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +56,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.BDDMockito.given;
 
+/**
+ * @author Geng Rong
+ * @author Soby Chacko
+ */
 @SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 public class MiniMaxRetryTests {
@@ -57,8 +80,8 @@ public class MiniMaxRetryTests {
 		this.retryListener = new TestRetryListener();
 		this.retryTemplate.registerListener(this.retryListener);
 
-		this.chatModel = new MiniMaxChatModel(this.miniMaxApi, MiniMaxChatOptions.builder().build(), null,
-				this.retryTemplate);
+		this.chatModel = new MiniMaxChatModel(this.miniMaxApi, MiniMaxChatOptions.builder().build(),
+				ToolCallingManager.builder().build(), this.retryTemplate);
 		this.embeddingModel = new MiniMaxEmbeddingModel(this.miniMaxApi, MetadataMode.EMBED,
 				MiniMaxEmbeddingOptions.builder().build(), this.retryTemplate);
 	}
@@ -76,7 +99,7 @@ public class MiniMaxRetryTests {
 			.willThrow(new TransientAiException("Transient Error 2"))
 			.willReturn(ResponseEntity.of(Optional.of(expectedChatCompletion)));
 
-		var result = this.chatModel.call(new Prompt("text"));
+		var result = this.chatModel.call(new Prompt("text", ChatOptions.builder().build()));
 
 		assertThat(result).isNotNull();
 		assertThat(result.getResult().getOutput().getText()).isSameAs("Response");
@@ -104,7 +127,7 @@ public class MiniMaxRetryTests {
 			.willThrow(new TransientAiException("Transient Error 2"))
 			.willReturn(Flux.just(expectedChatCompletion));
 
-		var result = this.chatModel.stream(new Prompt("text"));
+		var result = this.chatModel.stream(new Prompt("text", ChatOptions.builder().build()));
 
 		assertThat(result).isNotNull();
 		assertThat(result.collectList().block().get(0).getResult().getOutput().getText()).isSameAs("Response");
@@ -129,8 +152,9 @@ public class MiniMaxRetryTests {
 			.willThrow(new TransientAiException("Transient Error 2"))
 			.willReturn(ResponseEntity.of(Optional.of(expectedEmbeddings)));
 
+		EmbeddingOptions options = MiniMaxEmbeddingOptions.builder().model("model").build();
 		var result = this.embeddingModel
-			.call(new org.springframework.ai.embedding.EmbeddingRequest(List.of("text1", "text2"), null));
+			.call(new org.springframework.ai.embedding.EmbeddingRequest(List.of("text1", "text2"), options));
 
 		assertThat(result).isNotNull();
 		assertThat(result.getResult().getOutput()).isEqualTo(new float[] { 9.9f, 8.8f });
@@ -142,8 +166,9 @@ public class MiniMaxRetryTests {
 	public void miniMaxEmbeddingNonTransientError() {
 		given(this.miniMaxApi.embeddings(isA(EmbeddingRequest.class)))
 			.willThrow(new RuntimeException("Non Transient Error"));
+		EmbeddingOptions options = MiniMaxEmbeddingOptions.builder().model("model").build();
 		assertThrows(RuntimeException.class, () -> this.embeddingModel
-			.call(new org.springframework.ai.embedding.EmbeddingRequest(List.of("text1", "text2"), null)));
+			.call(new org.springframework.ai.embedding.EmbeddingRequest(List.of("text1", "text2"), options)));
 	}
 
 	private class TestRetryListener implements RetryListener {

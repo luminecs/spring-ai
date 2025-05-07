@@ -1,7 +1,6 @@
 package org.springframework.ai.document;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,14 +19,7 @@ public class DocumentBuilderTests {
 	private Document.Builder builder;
 
 	private static Media getMedia() {
-		try {
-			URL mediaUrl1 = new URL("http://type1");
-			Media media1 = new Media(MimeTypeUtils.IMAGE_JPEG, mediaUrl1);
-			return media1;
-		}
-		catch (MalformedURLException e) {
-			throw new RuntimeException(e);
-		}
+		return Media.builder().data(URI.create("http://type1")).mimeType(MimeTypeUtils.IMAGE_JPEG).build();
 	}
 
 	@BeforeEach
@@ -81,9 +73,8 @@ public class DocumentBuilderTests {
 	}
 
 	@Test
-	void testWithMediaSingle() throws MalformedURLException {
-		URL mediaUrl = new URL("http://test");
-		Media media = Media.builder().mimeType(MimeTypeUtils.IMAGE_JPEG).data(mediaUrl).build();
+	void testWithMediaSingle() {
+		Media media = Media.builder().mimeType(MimeTypeUtils.IMAGE_JPEG).data(URI.create("http://test")).build();
 
 		Document.Builder result = this.builder.media(media);
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.mistralai;
 
 import java.util.ArrayList;
@@ -22,35 +38,121 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+/**
+ * Options for the Mistral AI Chat API.
+ *
+ * @author Ricken Bazolo
+ * @author Christian Tzolov
+ * @author Thomas Vitale
+ * @author Alexandros Pappas
+ * @since 0.8.1
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MistralAiChatOptions implements ToolCallingChatOptions {
 
+	/**
+	 * ID of the model to use
+	 */
 	private @JsonProperty("model") String model;
 
+	/**
+	 * What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will
+	 * make the output more random, while lower values like 0.2 will make it more focused
+	 * and deterministic. We generally recommend altering this or top_p but not both.
+	 */
 	private @JsonProperty("temperature") Double temperature;
 
+	/**
+	 * Nucleus sampling, where the model considers the results of the tokens with top_p
+	 * probability mass. So 0.1 means only the tokens comprising the top 10% probability
+	 * mass are considered. We generally recommend altering this or temperature but not
+	 * both.
+	 */
 	private @JsonProperty("top_p") Double topP;
 
+	/**
+	 * The maximum number of tokens to generate in the completion. The token count of your
+	 * prompt plus max_tokens cannot exceed the model's context length.
+	 */
 	private @JsonProperty("max_tokens") Integer maxTokens;
 
+	/**
+	 * Whether to inject a safety prompt before all conversations.
+	 */
 	private @JsonProperty("safe_prompt") Boolean safePrompt;
 
+	/**
+	 * The seed to use for random sampling. If set, different calls will generate
+	 * deterministic results.
+	 */
 	private @JsonProperty("random_seed") Integer randomSeed;
 
+	/**
+	 * An object specifying the format that the model must output. Setting to { "type":
+	 * "json_object" } enables JSON mode, which guarantees the message the model generates
+	 * is valid JSON.
+	 */
 	private @JsonProperty("response_format") ResponseFormat responseFormat;
 
+	/**
+	 * Stop generation if this token is detected. Or if one of these tokens is detected
+	 * when providing an array.
+	 */
 	private @JsonProperty("stop") List<String> stop;
 
+	/**
+	 * Number between -2.0 and 2.0. frequency_penalty penalizes the repetition of words
+	 * based on their frequency in the generated text. A higher frequency penalty
+	 * discourages the model from repeating words that have already appeared frequently in
+	 * the output, promoting diversity and reducing repetition.
+	 */
+	private @JsonProperty("frequency_penalty") Double frequencyPenalty;
+
+	/**
+	 * Number between -2.0 and 2.0. presence_penalty determines how much the model
+	 * penalizes the repetition of words or phrases. A higher presence penalty encourages
+	 * the model to use a wider variety of words and phrases, making the output more
+	 * diverse and creative.
+	 */
+	private @JsonProperty("presence_penalty") Double presencePenalty;
+
+	/**
+	 * Number of completions to return for each request, input tokens are only billed
+	 * once.
+	 */
+	private @JsonProperty("n") Integer n;
+
+	/**
+	 * A list of tools the model may call. Currently, only functions are supported as a
+	 * tool. Use this to provide a list of functions the model may generate JSON inputs
+	 * for.
+	 */
 	private @JsonProperty("tools") List<FunctionTool> tools;
 
+	/**
+	 * Controls which (if any) function is called by the model. none means the model will
+	 * not call a function and instead generates a message. auto means the model can pick
+	 * between generating a message or calling a function.
+	 */
 	private @JsonProperty("tool_choice") ToolChoice toolChoice;
 
+	/**
+	 * Collection of {@link ToolCallback}s to be used for tool calling in the chat
+	 * completion requests.
+	 */
 	@JsonIgnore
 	private List<ToolCallback> toolCallbacks = new ArrayList<>();
 
+	/**
+	 * Collection of tool names to be resolved at runtime and used for tool calling in the
+	 * chat completion requests.
+	 */
 	@JsonIgnore
 	private Set<String> toolNames = new HashSet<>();
 
+	/**
+	 * Whether to enable the tool execution lifecycle internally in ChatModel.
+	 */
 	@JsonIgnore
 	private Boolean internalToolExecutionEnabled;
 
@@ -70,6 +172,9 @@ public class MistralAiChatOptions implements ToolCallingChatOptions {
 			.topP(fromOptions.getTopP())
 			.responseFormat(fromOptions.getResponseFormat())
 			.stop(fromOptions.getStop())
+			.frequencyPenalty(fromOptions.getFrequencyPenalty())
+			.presencePenalty(fromOptions.getPresencePenalty())
+			.n(fromOptions.getN())
 			.tools(fromOptions.getTools())
 			.toolChoice(fromOptions.getToolChoice())
 			.toolCallbacks(fromOptions.getToolCallbacks())
@@ -175,6 +280,32 @@ public class MistralAiChatOptions implements ToolCallingChatOptions {
 	}
 
 	@Override
+	public Double getFrequencyPenalty() {
+		return this.frequencyPenalty;
+	}
+
+	public void setFrequencyPenalty(Double frequencyPenalty) {
+		this.frequencyPenalty = frequencyPenalty;
+	}
+
+	@Override
+	public Double getPresencePenalty() {
+		return this.presencePenalty;
+	}
+
+	public void setPresencePenalty(Double presencePenalty) {
+		this.presencePenalty = presencePenalty;
+	}
+
+	public Integer getN() {
+		return this.n;
+	}
+
+	public void setN(Integer n) {
+		this.n = n;
+	}
+
+	@Override
 	@JsonIgnore
 	public List<ToolCallback> getToolCallbacks() {
 		return this.toolCallbacks;
@@ -218,18 +349,6 @@ public class MistralAiChatOptions implements ToolCallingChatOptions {
 
 	@Override
 	@JsonIgnore
-	public Double getFrequencyPenalty() {
-		return null;
-	}
-
-	@Override
-	@JsonIgnore
-	public Double getPresencePenalty() {
-		return null;
-	}
-
-	@Override
-	@JsonIgnore
 	public Integer getTopK() {
 		return null;
 	}
@@ -254,8 +373,8 @@ public class MistralAiChatOptions implements ToolCallingChatOptions {
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.model, this.temperature, this.topP, this.maxTokens, this.safePrompt, this.randomSeed,
-				this.responseFormat, this.stop, this.tools, this.toolChoice, this.toolCallbacks, this.tools,
-				this.internalToolExecutionEnabled, this.toolContext);
+				this.responseFormat, this.stop, this.frequencyPenalty, this.presencePenalty, this.n, this.tools,
+				this.toolChoice, this.toolCallbacks, this.tools, this.internalToolExecutionEnabled, this.toolContext);
 	}
 
 	@Override
@@ -275,6 +394,8 @@ public class MistralAiChatOptions implements ToolCallingChatOptions {
 				&& Objects.equals(this.safePrompt, other.safePrompt)
 				&& Objects.equals(this.randomSeed, other.randomSeed)
 				&& Objects.equals(this.responseFormat, other.responseFormat) && Objects.equals(this.stop, other.stop)
+				&& Objects.equals(this.frequencyPenalty, other.frequencyPenalty)
+				&& Objects.equals(this.presencePenalty, other.presencePenalty) && Objects.equals(this.n, other.n)
 				&& Objects.equals(this.tools, other.tools) && Objects.equals(this.toolChoice, other.toolChoice)
 				&& Objects.equals(this.toolCallbacks, other.toolCallbacks)
 				&& Objects.equals(this.toolNames, other.toolNames)
@@ -313,6 +434,21 @@ public class MistralAiChatOptions implements ToolCallingChatOptions {
 
 		public Builder stop(List<String> stop) {
 			this.options.setStop(stop);
+			return this;
+		}
+
+		public Builder frequencyPenalty(Double frequencyPenalty) {
+			this.options.frequencyPenalty = frequencyPenalty;
+			return this;
+		}
+
+		public Builder presencePenalty(Double presencePenalty) {
+			this.options.presencePenalty = presencePenalty;
+			return this;
+		}
+
+		public Builder n(Integer n) {
+			this.options.n = n;
 			return this;
 		}
 

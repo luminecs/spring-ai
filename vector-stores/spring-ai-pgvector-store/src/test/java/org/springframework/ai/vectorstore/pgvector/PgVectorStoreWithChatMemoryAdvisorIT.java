@@ -1,7 +1,24 @@
+/*
+ * Copyright 2023-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.vectorstore.pgvector;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +27,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.postgresql.ds.PGSimpleDataSource;
+import org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -32,6 +50,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+/**
+ * @author Fabian Krüger
+ * @author Soby Chacko
+ * @author Thomas Vitale
+ */
 @Testcontainers
 class PgVectorStoreWithChatMemoryAdvisorIT {
 
@@ -54,22 +77,20 @@ class PgVectorStoreWithChatMemoryAdvisorIT {
 		return chatModel;
 	}
 
-	private static void initStore(PgVectorStore store) throws Exception {
+	private static void initStore(PgVectorStore store, String conversationId) {
 		store.afterPropertiesSet();
-
-		store.add(List.of(new Document("Tell me a good joke", Map.of("conversationId", "default")),
-				new Document("Tell me a bad joke", Map.of("conversationId", "default", "messageType", "USER"))));
+		// fill the store
+		store.add(List.of(new Document("Tell me a good joke", Map.of("conversationId", conversationId)),
+				new Document("Tell me a bad joke", Map.of("conversationId", conversationId, "messageType", "USER"))));
 	}
 
 	private static PgVectorStore createPgVectorStoreUsingTestcontainer(EmbeddingModel embeddingModel) throws Exception {
 		JdbcTemplate jdbcTemplate = createJdbcTemplateWithConnectionToTestcontainer();
-		PgVectorStore vectorStore = PgVectorStore.builder(jdbcTemplate, embeddingModel)
-			.dimensions(3)
-
+		return PgVectorStore.builder(jdbcTemplate, embeddingModel)
+			.dimensions(3) // match
+			// embeddings
 			.initializeSchema(true)
 			.build();
-		initStore(vectorStore);
-		return vectorStore;
 	}
 
 	private static @NotNull JdbcTemplate createJdbcTemplateWithConnectionToTestcontainer() {
@@ -84,7 +105,7 @@ class PgVectorStoreWithChatMemoryAdvisorIT {
 		ArgumentCaptor<Prompt> promptCaptor = ArgumentCaptor.forClass(Prompt.class);
 		verify(chatModel).call(promptCaptor.capture());
 		assertThat(promptCaptor.getValue().getInstructions().get(0)).isInstanceOf(SystemMessage.class);
-		assertThat(promptCaptor.getValue().getInstructions().get(0).getText()).isEqualTo("""
+		assertThat(promptCaptor.getValue().getInstructions().get(0).getText()).isEqualToIgnoringWhitespace("""
 
 				Use the long term conversation memory from the LONG_TERM_MEMORY section to provide accurate answers.
 
@@ -96,24 +117,69 @@ class PgVectorStoreWithChatMemoryAdvisorIT {
 				""");
 	}
 
+	/**
+	 * Test that chats with {@link VectorStoreChatMemoryAdvisor} get advised with similar
+	 * messages from the (gp)vector store.
+	 */
 	@Test
 	@DisplayName("Advised chat should have similar messages from vector store")
 	void advisedChatShouldHaveSimilarMessagesFromVectorStore() throws Exception {
-
+		// faked ChatModel
 		ChatModel chatModel = chatModelAlwaysReturnsTheSameReply();
-
+		// faked embedding model
 		EmbeddingModel embeddingModel = embeddingNModelShouldAlwaysReturnFakedEmbed();
 		PgVectorStore store = createPgVectorStoreUsingTestcontainer(embeddingModel);
+		String conversationId = UUID.randomUUID().toString();
+		initStore(store, conversationId);
 
+		// do the chat
 		ChatClient.builder(chatModel)
 			.build()
 			.prompt()
 			.user("joke")
-			.advisors(VectorStoreChatMemoryAdvisor.builder(store).build())
+			.advisors(a -> a.advisors(VectorStoreChatMemoryAdvisor.builder(store).build())
+				.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY, conversationId))
 			.call()
 			.chatResponse();
 
 		verifyRequestHasBeenAdvisedWithMessagesFromVectorStore(chatModel);
+	}
+
+	@Test
+	void advisedChatShouldHaveSimilarMessagesFromVectorStoreWhenSystemMessageProvided() throws Exception {
+		// faked ChatModel
+		ChatModel chatModel = chatModelAlwaysReturnsTheSameReply();
+		// faked embedding model
+		EmbeddingModel embeddingModel = embeddingNModelShouldAlwaysReturnFakedEmbed();
+		PgVectorStore store = createPgVectorStoreUsingTestcontainer(embeddingModel);
+		String conversationId = UUID.randomUUID().toString();
+		initStore(store, conversationId);
+
+		// do the chat
+		ChatClient.builder(chatModel)
+			.build()
+			.prompt()
+			.system("You are a helpful assistant.")
+			.user("joke")
+			.advisors(a -> a.advisors(VectorStoreChatMemoryAdvisor.builder(store).build())
+				.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY, conversationId))
+			.call()
+			.chatResponse();
+
+		ArgumentCaptor<Prompt> promptCaptor = ArgumentCaptor.forClass(Prompt.class);
+		verify(chatModel).call(promptCaptor.capture());
+		assertThat(promptCaptor.getValue().getInstructions().get(0)).isInstanceOf(SystemMessage.class);
+		assertThat(promptCaptor.getValue().getInstructions().get(0).getText()).isEqualToIgnoringWhitespace("""
+				You are a helpful assistant.
+
+				Use the long term conversation memory from the LONG_TERM_MEMORY section to provide accurate answers.
+
+				---------------------
+				LONG_TERM_MEMORY:
+				Tell me a good joke
+				Tell me a bad joke
+				---------------------
+				""");
 	}
 
 	@SuppressWarnings("unchecked")

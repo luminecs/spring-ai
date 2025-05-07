@@ -28,9 +28,8 @@ class ImageModelPromptContentObservationFilterTests {
 	@Test
 	void whenEmptyPromptThenReturnOriginalContext() {
 		var expectedContext = ImageModelObservationContext.builder()
-			.imagePrompt(new ImagePrompt(""))
+			.imagePrompt(new ImagePrompt("", ImageOptionsBuilder.builder().model("mistral").build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().model("mistral").build())
 			.build();
 		var actualContext = this.observationFilter.map(expectedContext);
 
@@ -40,9 +39,9 @@ class ImageModelPromptContentObservationFilterTests {
 	@Test
 	void whenPromptWithTextThenAugmentContext() {
 		var originalContext = ImageModelObservationContext.builder()
-			.imagePrompt(new ImagePrompt("supercalifragilisticexpialidocious"))
+			.imagePrompt(new ImagePrompt("supercalifragilisticexpialidocious",
+					ImageOptionsBuilder.builder().model("mistral").build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().model("mistral").build())
 			.build();
 		var augmentedContext = this.observationFilter.map(originalContext);
 
@@ -53,10 +52,11 @@ class ImageModelPromptContentObservationFilterTests {
 	@Test
 	void whenPromptWithMessagesThenAugmentContext() {
 		var originalContext = ImageModelObservationContext.builder()
-			.imagePrompt(new ImagePrompt(List.of(new ImageMessage("you're a chimney sweep"),
-					new ImageMessage("supercalifragilisticexpialidocious"))))
+			.imagePrompt(new ImagePrompt(
+					List.of(new ImageMessage("you're a chimney sweep"),
+							new ImageMessage("supercalifragilisticexpialidocious")),
+					ImageOptionsBuilder.builder().model("mistral").build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().model("mistral").build())
 			.build();
 		var augmentedContext = this.observationFilter.map(originalContext);
 

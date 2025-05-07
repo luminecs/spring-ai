@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.chat.observation;
 
 import java.util.HashMap;
@@ -26,6 +42,12 @@ import org.springframework.ai.observation.conventions.AiTokenType;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.ai.chat.observation.ChatModelObservationDocumentation.LowCardinalityKeyNames;
 
+/**
+ * Unit tests for {@link ChatModelMeterObservationHandler}.
+ *
+ * @author Thomas Vitale
+ * @author Alexandros Pappas
+ */
 class ChatModelMeterObservationHandlerTests {
 
 	private MeterRegistry meterRegistry;
@@ -73,14 +95,13 @@ class ChatModelMeterObservationHandlerTests {
 
 	private ChatModelObservationContext generateObservationContext() {
 		return ChatModelObservationContext.builder()
-			.prompt(generatePrompt())
+			.prompt(generatePrompt(ChatOptions.builder().model("mistral").build()))
 			.provider("superprovider")
-			.requestOptions(ChatOptions.builder().model("mistral").build())
 			.build();
 	}
 
-	private Prompt generatePrompt() {
-		return new Prompt("hello");
+	private Prompt generatePrompt(ChatOptions chatOptions) {
+		return new Prompt("hello", chatOptions);
 	}
 
 	static class TestUsage implements Usage {

@@ -51,7 +51,7 @@ class AnthropicChatClientMethodInvokingFunctionCallbackIT {
 
 		String response = ChatClient.create(this.chatModel).prompt()
 				.user("What's the weather like in San Francisco, Tokyo, and Paris?  Use Celsius.")
-				.tools(MethodToolCallback.builder()
+				.toolCallbacks(MethodToolCallback.builder()
 					.toolDefinition(ToolDefinition.builder(toolMethod).build())
 					.toolMethod(toolMethod)
 					.build())
@@ -73,7 +73,7 @@ class AnthropicChatClientMethodInvokingFunctionCallbackIT {
 
 		String response = ChatClient.create(this.chatModel).prompt()
 				.user("What's the weather like in San Francisco, Tokyo, and Paris?  Use Celsius.")
-				.tools(MethodToolCallback.builder()
+				.toolCallbacks(MethodToolCallback.builder()
 					.toolDefinition(ToolDefinition.builder(toolMethod)
 						.description("Get the weather in location")
 						.build())
@@ -100,7 +100,7 @@ class AnthropicChatClientMethodInvokingFunctionCallbackIT {
 
 		String response = ChatClient.create(this.chatModel).prompt()
 				.user("Turn light on in the living room.")
-				.tools(MethodToolCallback.builder()
+				.toolCallbacks(MethodToolCallback.builder()
 					.toolDefinition(ToolDefinition.builder(turnLightMethod)
 						.description("Turn light on in the living room.")
 						.build())
@@ -128,7 +128,7 @@ class AnthropicChatClientMethodInvokingFunctionCallbackIT {
 
 		String response = ChatClient.create(this.chatModel).prompt()
 				.user("What's the weather like in San Francisco, Tokyo, and Paris?  Use Celsius.")
-				.tools(MethodToolCallback.builder()
+				.toolCallbacks(MethodToolCallback.builder()
 					.toolDefinition(ToolDefinition.builder(toolMethod)
 						.description("Get the weather in location")
 						.build())
@@ -155,7 +155,7 @@ class AnthropicChatClientMethodInvokingFunctionCallbackIT {
 
 		String response = ChatClient.create(this.chatModel).prompt()
 				.user("What's the weather like in San Francisco, Tokyo, and Paris?  Use Celsius.")
-				.tools(MethodToolCallback.builder()
+				.toolCallbacks(MethodToolCallback.builder()
 					.toolDefinition(ToolDefinition.builder(toolMethod)
 						.description("Get the weather in location")
 						.build())
@@ -186,7 +186,7 @@ class AnthropicChatClientMethodInvokingFunctionCallbackIT {
 
 		assertThatThrownBy(() -> ChatClient.create(this.chatModel).prompt()
 				.user("What's the weather like in San Francisco, Tokyo, and Paris?  Use Celsius.")
-				.tools(MethodToolCallback.builder()
+				.toolCallbacks(MethodToolCallback.builder()
 					.toolDefinition(ToolDefinition.builder(toolMethod)
 						.description("Get the weather in location")
 						.build())
@@ -211,7 +211,7 @@ class AnthropicChatClientMethodInvokingFunctionCallbackIT {
 
 		String response = ChatClient.create(this.chatModel).prompt()
 				.user("Turn light on in the living room.")
-				.tools(MethodToolCallback.builder()
+				.toolCallbacks(MethodToolCallback.builder()
 					.toolMethod(toolMethod)
 					.toolDefinition(ToolDefinition.builder(toolMethod)
 						.description("Can turn lights on in the Living Room")

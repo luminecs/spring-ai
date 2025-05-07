@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -14,6 +15,7 @@ import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.model.ModelRequest;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -49,6 +51,8 @@ public class Prompt implements ModelRequest<List<Message>> {
 	}
 
 	public Prompt(List<Message> messages, @Nullable ChatOptions chatOptions) {
+		Assert.notNull(messages, "messages cannot be null");
+		Assert.noNullElements(messages, "messages cannot contain null elements");
 		this.messages = messages;
 		this.chatOptions = chatOptions;
 	}
@@ -70,6 +74,34 @@ public class Prompt implements ModelRequest<List<Message>> {
 	@Override
 	public List<Message> getInstructions() {
 		return this.messages;
+	}
+
+	/**
+	 * Get the first system message in the prompt. If no system message is found, an empty
+	 * SystemMessage is returned.
+	 */
+	public SystemMessage getSystemMessage() {
+		for (int i = 0; i <= this.messages.size() - 1; i++) {
+			Message message = this.messages.get(i);
+			if (message instanceof SystemMessage systemMessage) {
+				return systemMessage;
+			}
+		}
+		return new SystemMessage("");
+	}
+
+	/**
+	 * Get the last user message in the prompt. If no user message is found, an empty
+	 * UserMessage is returned.
+	 */
+	public UserMessage getUserMessage() {
+		for (int i = this.messages.size() - 1; i >= 0; i--) {
+			Message message = this.messages.get(i);
+			if (message instanceof UserMessage userMessage) {
+				return userMessage;
+			}
+		}
+		return new UserMessage("");
 	}
 
 	@Override
@@ -101,17 +133,10 @@ public class Prompt implements ModelRequest<List<Message>> {
 		List<Message> messagesCopy = new ArrayList<>();
 		this.messages.forEach(message -> {
 			if (message instanceof UserMessage userMessage) {
-				messagesCopy.add(UserMessage.builder()
-					.text(userMessage.getText())
-					.media(userMessage.getMedia())
-					.metadata(message.getMetadata())
-					.build());
+				messagesCopy.add(userMessage.copy());
 			}
 			else if (message instanceof SystemMessage systemMessage) {
-				messagesCopy.add(SystemMessage.builder()
-					.text(systemMessage.getText())
-					.metadata(systemMessage.getMetadata())
-					.build());
+				messagesCopy.add(systemMessage.copy());
 			}
 			else if (message instanceof AssistantMessage assistantMessage) {
 				messagesCopy.add(new AssistantMessage(assistantMessage.getText(), assistantMessage.getMetadata(),
@@ -127,6 +152,69 @@ public class Prompt implements ModelRequest<List<Message>> {
 		});
 
 		return messagesCopy;
+	}
+
+	/**
+	 * Augments the first system message in the prompt with the provided function. If no
+	 * system message is found, a new one is created with the provided text.
+	 * @return a new {@link Prompt} instance with the augmented system message.
+	 */
+	public Prompt augmentSystemMessage(Function<SystemMessage, SystemMessage> systemMessageAugmenter) {
+
+		var messagesCopy = new ArrayList<>(this.messages);
+		for (int i = 0; i <= this.messages.size() - 1; i++) {
+			Message message = messagesCopy.get(i);
+			if (message instanceof SystemMessage systemMessage) {
+				messagesCopy.set(i, systemMessageAugmenter.apply(systemMessage));
+				break;
+			}
+			if (i == 0) {
+				// If no system message is found, create a new one with the provided text
+				// and add it as the first item in the list.
+				messagesCopy.add(0, systemMessageAugmenter.apply(new SystemMessage("")));
+			}
+		}
+
+		return new Prompt(messagesCopy, null == this.chatOptions ? null : this.chatOptions.copy());
+	}
+
+	/**
+	 * Augments the last system message in the prompt with the provided text. If no system
+	 * message is found, a new one is created with the provided text.
+	 * @return a new {@link Prompt} instance with the augmented system message.
+	 */
+	public Prompt augmentSystemMessage(String newSystemText) {
+		return augmentSystemMessage(systemMessage -> systemMessage.mutate().text(newSystemText).build());
+	}
+
+	/**
+	 * Augments the last user message in the prompt with the provided function. If no user
+	 * message is found, a new one is created with the provided text.
+	 * @return a new {@link Prompt} instance with the augmented user message.
+	 */
+	public Prompt augmentUserMessage(Function<UserMessage, UserMessage> userMessageAugmenter) {
+		var messagesCopy = new ArrayList<>(this.messages);
+		for (int i = messagesCopy.size() - 1; i >= 0; i--) {
+			Message message = messagesCopy.get(i);
+			if (message instanceof UserMessage userMessage) {
+				messagesCopy.set(i, userMessageAugmenter.apply(userMessage));
+				break;
+			}
+			if (i == 0) {
+				messagesCopy.add(userMessageAugmenter.apply(new UserMessage("")));
+			}
+		}
+
+		return new Prompt(messagesCopy, null == this.chatOptions ? null : this.chatOptions.copy());
+	}
+
+	/**
+	 * Augments the last user message in the prompt with the provided text. If no user
+	 * message is found, a new one is created with the provided text.
+	 * @return a new {@link Prompt} instance with the augmented user message.
+	 */
+	public Prompt augmentUserMessage(String newUserText) {
+		return augmentUserMessage(userMessage -> userMessage.mutate().text(newUserText).build());
 	}
 
 	public Builder mutate() {
@@ -147,7 +235,7 @@ public class Prompt implements ModelRequest<List<Message>> {
 		private String content;
 
 		@Nullable
-		private List<Message> messages = new ArrayList<>();
+		private List<Message> messages;
 
 		@Nullable
 		private ChatOptions chatOptions;
@@ -166,14 +254,6 @@ public class Prompt implements ModelRequest<List<Message>> {
 
 		public Builder messages(List<Message> messages) {
 			this.messages = messages;
-			return this;
-		}
-
-		public Builder addMessage(Message message) {
-			if (this.messages == null) {
-				this.messages = new ArrayList<>();
-			}
-			this.messages.add(message);
 			return this;
 		}
 

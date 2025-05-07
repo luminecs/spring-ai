@@ -56,7 +56,7 @@ public class PromptTemplateTest {
 		Map<String, Object> model = new HashMap<>();
 		model.put("name", "Alice");
 		model.put("age", 30);
-		PromptTemplate promptTemplate = new PromptTemplate(template, model);
+		PromptTemplate promptTemplate = PromptTemplate.builder().template(template).variables(model).build();
 		ChatOptions chatOptions = ChatOptions.builder().temperature(0.5).maxTokens(100).build();
 
 		Prompt prompt = promptTemplate.create(model, chatOptions);
@@ -72,7 +72,7 @@ public class PromptTemplateTest {
 		Map<String, Object> initialModel = new HashMap<>();
 		initialModel.put("name", "Bob");
 		initialModel.put("color", "blue");
-		PromptTemplate promptTemplate = new PromptTemplate(template, initialModel);
+		PromptTemplate promptTemplate = PromptTemplate.builder().template(template).variables(initialModel).build();
 
 		Map<String, Object> overriddenModel = new HashMap<>();
 		overriddenModel.put("color", "red");
@@ -98,7 +98,7 @@ public class PromptTemplateTest {
 
 		PromptTemplate unfilledPromptTemplate = new PromptTemplate(templateString);
 		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(unfilledPromptTemplate::render)
-			.withMessage("Not all template variables were replaced. Missing variable names are [items]");
+			.withMessage("Not all variables were replaced in the template. Missing variable names are: [items].");
 	}
 
 	@Test
@@ -107,7 +107,7 @@ public class PromptTemplateTest {
 		model.put("key3", 100);
 
 		String template = "This is a {key1}, it is {key2}, and it costs {key3}";
-		PromptTemplate promptTemplate = new PromptTemplate(template, model);
+		PromptTemplate promptTemplate = PromptTemplate.builder().template(template).variables(model).build();
 
 		String expected = "This is a value1, it is true, and it costs 100";
 		String result = promptTemplate.render();
@@ -124,7 +124,7 @@ public class PromptTemplateTest {
 	public void testRenderWithHyphen() {
 		Map<String, Object> model = Map.of("key-1", "value1");
 		String template = "This is a {key-1}";
-		PromptTemplate promptTemplate = new PromptTemplate(template, model);
+		PromptTemplate promptTemplate = PromptTemplate.builder().template(template).variables(model).build();
 
 		String expected = "This is a value1";
 		String result = promptTemplate.render();
@@ -138,7 +138,7 @@ public class PromptTemplateTest {
 		InputStream inputStream = new ByteArrayInputStream(
 				"key1's value is {key1} and key2's value is {key2}".getBytes(Charset.defaultCharset()));
 		Resource resource = new InputStreamResource(inputStream);
-		PromptTemplate promptTemplate = new PromptTemplate(resource, model);
+		PromptTemplate promptTemplate = PromptTemplate.builder().resource(resource).variables(model).build();
 		String expected = "key1's value is value1 and key2's value is true";
 		String result = promptTemplate.render();
 		assertEquals(expected, result);
@@ -155,7 +155,7 @@ public class PromptTemplateTest {
 		model.put("key3", resource);
 
 		String template = "{key1}, {key2}, {key3}";
-		PromptTemplate promptTemplate = new PromptTemplate(template, model);
+		PromptTemplate promptTemplate = PromptTemplate.builder().resource(resource).variables(model).build();
 
 		String expected = "value1, true, it costs 100";
 		String result = promptTemplate.render();
@@ -170,7 +170,7 @@ public class PromptTemplateTest {
 		model.put("key1", "value1");
 
 		String template = "This is a {key2}!";
-		PromptTemplate promptTemplate = new PromptTemplate(template, model);
+		PromptTemplate promptTemplate = PromptTemplate.builder().template(template).variables(model).build();
 
 		assertThrows(IllegalStateException.class, promptTemplate::render);
 	}

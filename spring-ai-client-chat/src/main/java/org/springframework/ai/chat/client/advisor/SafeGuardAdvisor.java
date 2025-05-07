@@ -1,22 +1,48 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.chat.client.advisor;
 
 import java.util.List;
+import java.util.Map;
 
 import reactor.core.publisher.Flux;
 
-import org.springframework.ai.chat.client.advisor.api.AdvisedRequest;
-import org.springframework.ai.chat.client.advisor.api.AdvisedResponse;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisor;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisorChain;
-import org.springframework.ai.chat.client.advisor.api.StreamAroundAdvisor;
-import org.springframework.ai.chat.client.advisor.api.StreamAroundAdvisorChain;
+import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
+import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
+import org.springframework.ai.chat.client.advisor.api.StreamAdvisor;
+import org.springframework.ai.chat.client.advisor.api.StreamAdvisorChain;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-public class SafeGuardAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
+/**
+ * An advisor that blocks the call to the model provider if the user input contains any of
+ * the sensitive words.
+ *
+ * @author Christian Tzolov
+ * @author Ilayaperumal Gopinathan
+ * @author Thomas Vitale
+ * @since 1.0.0
+ */
+public class SafeGuardAdvisor implements CallAdvisor, StreamAdvisor {
 
 	private static final String DEFAULT_FAILURE_RESPONSE = "I'm unable to respond to that due to sensitive content. Could we rephrase or discuss something else?";
 
@@ -49,32 +75,33 @@ public class SafeGuardAdvisor implements CallAroundAdvisor, StreamAroundAdvisor 
 	}
 
 	@Override
-	public AdvisedResponse aroundCall(AdvisedRequest advisedRequest, CallAroundAdvisorChain chain) {
-
+	public ChatClientResponse adviseCall(ChatClientRequest chatClientRequest, CallAdvisorChain callAdvisorChain) {
 		if (!CollectionUtils.isEmpty(this.sensitiveWords)
-				&& this.sensitiveWords.stream().anyMatch(w -> advisedRequest.userText().contains(w))) {
-
-			return createFailureResponse(advisedRequest);
+				&& this.sensitiveWords.stream().anyMatch(w -> chatClientRequest.prompt().getContents().contains(w))) {
+			return createFailureResponse(chatClientRequest);
 		}
 
-		return chain.nextAroundCall(advisedRequest);
+		return callAdvisorChain.nextCall(chatClientRequest);
 	}
 
 	@Override
-	public Flux<AdvisedResponse> aroundStream(AdvisedRequest advisedRequest, StreamAroundAdvisorChain chain) {
-
+	public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest,
+			StreamAdvisorChain streamAdvisorChain) {
 		if (!CollectionUtils.isEmpty(this.sensitiveWords)
-				&& this.sensitiveWords.stream().anyMatch(w -> advisedRequest.userText().contains(w))) {
-			return Flux.just(createFailureResponse(advisedRequest));
+				&& this.sensitiveWords.stream().anyMatch(w -> chatClientRequest.prompt().getContents().contains(w))) {
+			return Flux.just(createFailureResponse(chatClientRequest));
 		}
 
-		return chain.nextAroundStream(advisedRequest);
+		return streamAdvisorChain.nextStream(chatClientRequest);
 	}
 
-	private AdvisedResponse createFailureResponse(AdvisedRequest advisedRequest) {
-		return new AdvisedResponse(ChatResponse.builder()
-			.generations(List.of(new Generation(new AssistantMessage(this.failureResponse))))
-			.build(), advisedRequest.adviseContext());
+	private ChatClientResponse createFailureResponse(ChatClientRequest chatClientRequest) {
+		return ChatClientResponse.builder()
+			.chatResponse(ChatResponse.builder()
+				.generations(List.of(new Generation(new AssistantMessage(this.failureResponse))))
+				.build())
+			.context(Map.copyOf(chatClientRequest.context()))
+			.build();
 	}
 
 	@Override

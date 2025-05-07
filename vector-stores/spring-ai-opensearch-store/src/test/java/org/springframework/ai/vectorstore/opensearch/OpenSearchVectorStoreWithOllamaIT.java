@@ -72,7 +72,7 @@ class OpenSearchVectorStoreWithOllamaIT {
 	}
 
 	private static void ensureModelIsPresent(final String model) {
-		final OllamaApi api = new OllamaApi(OLLAMA_LOCAL_URL);
+		final OllamaApi api = OllamaApi.builder().baseUrl(OLLAMA_LOCAL_URL).build();
 		final var modelManagementOptions = ModelManagementOptions.builder()
 			.maxRetries(DEFAULT_MAX_RETRIES)
 			.timeout(DEFAULT_TIMEOUT)
@@ -182,7 +182,7 @@ class OpenSearchVectorStoreWithOllamaIT {
 		@Bean
 		public EmbeddingModel embeddingModel() {
 			return OllamaEmbeddingModel.builder()
-				.ollamaApi(new OllamaApi())
+				.ollamaApi(OllamaApi.builder().build())
 				.defaultOptions(OllamaOptions.builder()
 					.model(OllamaModel.MXBAI_EMBED_LARGE)
 					.mainGPU(11)

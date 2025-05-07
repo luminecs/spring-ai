@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.model.tool;
 
 import java.util.ArrayList;
@@ -17,7 +33,6 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.execution.DefaultToolExecutionExceptionProcessor;
@@ -28,7 +43,13 @@ import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-public class DefaultToolCallingManager implements ToolCallingManager {
+/**
+ * Default implementation of {@link ToolCallingManager}.
+ *
+ * @author Thomas Vitale
+ * @since 1.0.0
+ */
+public final class DefaultToolCallingManager implements ToolCallingManager {
 
 	private static final Logger logger = LoggerFactory.getLogger(DefaultToolCallingManager.class);
 
@@ -68,8 +89,12 @@ public class DefaultToolCallingManager implements ToolCallingManager {
 
 		List<ToolCallback> toolCallbacks = new ArrayList<>(chatOptions.getToolCallbacks());
 		for (String toolName : chatOptions.getToolNames()) {
-
-			if (chatOptions.getToolCallbacks().stream().anyMatch(tool -> tool.getName().equals(toolName))) {
+			// Skip the tool if it is already present in the request toolCallbacks.
+			// That might happen if a tool is defined in the options
+			// both as a ToolCallback and as a tool name.
+			if (chatOptions.getToolCallbacks()
+				.stream()
+				.anyMatch(tool -> tool.getToolDefinition().name().equals(toolName))) {
 				continue;
 			}
 			ToolCallback toolCallback = this.toolCallbackResolver.resolve(toolName);
@@ -138,6 +163,9 @@ public class DefaultToolCallingManager implements ToolCallingManager {
 		return messageHistory;
 	}
 
+	/**
+	 * Execute the tool call and return the response message.
+	 */
 	private InternalToolExecutionResult executeToolCall(Prompt prompt, AssistantMessage assistantMessage,
 			ToolContext toolContext) {
 		List<ToolCallback> toolCallbacks = List.of();
@@ -157,7 +185,7 @@ public class DefaultToolCallingManager implements ToolCallingManager {
 			String toolInputArguments = toolCall.arguments();
 
 			ToolCallback toolCallback = toolCallbacks.stream()
-				.filter(tool -> toolName.equals(tool.getName()))
+				.filter(tool -> toolName.equals(tool.getToolDefinition().name()))
 				.findFirst()
 				.orElseGet(() -> this.toolCallbackResolver.resolve(toolName));
 

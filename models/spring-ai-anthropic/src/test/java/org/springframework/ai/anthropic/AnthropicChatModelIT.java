@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.anthropic;
 
 import java.io.IOException;
@@ -138,8 +154,10 @@ class AnthropicChatModelIT {
 				List five {subject}
 				{format}
 				""";
-		PromptTemplate promptTemplate = new PromptTemplate(template,
-				Map.of("subject", "ice cream flavors", "format", format));
+		PromptTemplate promptTemplate = PromptTemplate.builder()
+			.template(template)
+			.variables(Map.of("subject", "ice cream flavors", "format", format))
+			.build();
 		Prompt prompt = new Prompt(promptTemplate.createMessage());
 		Generation generation = this.chatModel.call(prompt).getResult();
 
@@ -156,8 +174,11 @@ class AnthropicChatModelIT {
 				Provide me a List of {subject}
 				{format}
 				""";
-		PromptTemplate promptTemplate = new PromptTemplate(template,
-				Map.of("subject", "an array of numbers from 1 to 9 under they key name 'numbers'", "format", format));
+		PromptTemplate promptTemplate = PromptTemplate.builder()
+			.template(template)
+			.variables(Map.of("subject", "an array of numbers from 1 to 9 under they key name 'numbers'", "format",
+					format))
+			.build();
 		Prompt prompt = new Prompt(promptTemplate.createMessage());
 		Generation generation = this.chatModel.call(prompt).getResult();
 
@@ -176,7 +197,10 @@ class AnthropicChatModelIT {
 				Generate the filmography of 5 movies for Tom Hanks.
 				{format}
 				""";
-		PromptTemplate promptTemplate = new PromptTemplate(template, Map.of("format", format));
+		PromptTemplate promptTemplate = PromptTemplate.builder()
+			.template(template)
+			.variables(Map.of("format", format))
+			.build();
 		Prompt prompt = new Prompt(promptTemplate.createMessage());
 		Generation generation = this.chatModel.call(prompt).getResult();
 
@@ -196,7 +220,10 @@ class AnthropicChatModelIT {
 				Generate the filmography of 5 movies for Tom Hanks.
 				{format}
 				""";
-		PromptTemplate promptTemplate = new PromptTemplate(template, Map.of("format", format));
+		PromptTemplate promptTemplate = PromptTemplate.builder()
+			.template(template)
+			.variables(Map.of("format", format))
+			.build();
 		Prompt prompt = new Prompt(promptTemplate.createMessage());
 
 		String generationTextFromStream = this.streamingChatModel.stream(prompt)
@@ -220,8 +247,10 @@ class AnthropicChatModelIT {
 
 		var imageData = new ClassPathResource("/test.png");
 
-		var userMessage = new UserMessage("Explain what do you see on this picture?",
-				List.of(new Media(MimeTypeUtils.IMAGE_PNG, imageData)));
+		var userMessage = UserMessage.builder()
+			.text("Explain what do you see on this picture?")
+			.media(List.of(new Media(MimeTypeUtils.IMAGE_PNG, imageData)))
+			.build();
 
 		var response = this.chatModel.call(new Prompt(List.of(userMessage)));
 
@@ -235,9 +264,10 @@ class AnthropicChatModelIT {
 
 		var pdfData = new ClassPathResource("/spring-ai-reference-overview.pdf");
 
-		var userMessage = new UserMessage(
-				"You are a very professional document summarization specialist. Please summarize the given document.",
-				List.of(new Media(new MimeType("application", "pdf"), pdfData)));
+		var userMessage = UserMessage.builder()
+			.text("You are a very professional document summarization specialist. Please summarize the given document.")
+			.media(List.of(new Media(new MimeType("application", "pdf"), pdfData)))
+			.build();
 
 		var response = this.chatModel.call(new Prompt(List.of(userMessage),
 				ToolCallingChatOptions.builder().model(AnthropicApi.ChatModel.CLAUDE_3_5_SONNET.getName()).build()));
@@ -279,7 +309,8 @@ class AnthropicChatModelIT {
 	void streamFunctionCallTest() {
 
 		UserMessage userMessage = new UserMessage(
-
+				// "What's the weather like in San Francisco? Return the result in
+				// Celsius.");
 				"What's the weather like in San Francisco, Tokyo and Paris? Return the result in Celsius.");
 
 		List<Message> messages = new ArrayList<>(List.of(userMessage));
@@ -362,7 +393,7 @@ class AnthropicChatModelIT {
 		// @formatter:on
 
 		logger.info(response.toString());
-
+		// Note, brittle test.
 		validateChatResponseMetadata(response, "claude-3-5-sonnet-latest");
 	}
 
@@ -373,10 +404,10 @@ class AnthropicChatModelIT {
 
 		var promptOptions = AnthropicChatOptions.builder()
 			.model(AnthropicApi.ChatModel.CLAUDE_3_7_SONNET.getName())
-			.temperature(1.0)
+			.temperature(1.0) // temperature should be set to 1 when thinking is enabled
 			.maxTokens(8192)
-			.thinking(AnthropicApi.ThinkingType.ENABLED, 2048)
-
+			.thinking(AnthropicApi.ThinkingType.ENABLED, 2048) // Must be ≥1024 && <
+																// max_tokens
 			.build();
 
 		ChatResponse response = this.chatModel.call(new Prompt(List.of(userMessage), promptOptions));
@@ -385,14 +416,14 @@ class AnthropicChatModelIT {
 
 		for (Generation generation : response.getResults()) {
 			AssistantMessage message = generation.getOutput();
-			if (message.getText() != null) {
+			if (message.getText() != null) { // text
 				assertThat(message.getText()).isNotBlank();
 			}
-			else if (message.getMetadata().containsKey("signature")) {
+			else if (message.getMetadata().containsKey("signature")) { // thinking
 				assertThat(message.getMetadata().get("signature")).isNotNull();
 				assertThat(message.getMetadata().get("thinking")).isNotNull();
 			}
-			else if (message.getMetadata().containsKey("data")) {
+			else if (message.getMetadata().containsKey("data")) { // redacted thinking
 				assertThat(message.getMetadata().get("data")).isNotNull();
 			}
 		}
@@ -438,7 +469,7 @@ class AnthropicChatModelIT {
 
 		@Bean
 		public AnthropicApi anthropicApi() {
-			return new AnthropicApi(getApiKey());
+			return AnthropicApi.builder().apiKey(getApiKey()).build();
 		}
 
 		private String getApiKey() {

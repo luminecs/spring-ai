@@ -1,7 +1,34 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.moderation;
 
 import java.util.Objects;
 
+/**
+ * This class represents the scores for different categories of content. Each category has
+ * a score ranging from 0.0 to 1.0. The scores represent the severity or intensity of the
+ * content in each respective category.
+ *
+ * @author Ahmed Yousri
+ * @author Ilayaperumal Gopinathan
+ * @author Ricken Bazolo
+ * @author Jonghoon Park
+ * @since 1.0.0
+ */
 public final class CategoryScores {
 
 	private final double sexual;
@@ -103,6 +130,26 @@ public final class CategoryScores {
 		return this.violence;
 	}
 
+	public double getDangerousAndCriminalContent() {
+		return dangerousAndCriminalContent;
+	}
+
+	public double getHealth() {
+		return health;
+	}
+
+	public double getFinancial() {
+		return financial;
+	}
+
+	public double getLaw() {
+		return law;
+	}
+
+	public double getPii() {
+		return pii;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -121,14 +168,18 @@ public final class CategoryScores {
 				&& Double.compare(that.selfHarmIntent, this.selfHarmIntent) == 0
 				&& Double.compare(that.selfHarmInstructions, this.selfHarmInstructions) == 0
 				&& Double.compare(that.harassmentThreatening, this.harassmentThreatening) == 0
-				&& Double.compare(that.violence, this.violence) == 0;
+				&& Double.compare(that.violence, this.violence) == 0
+				&& Double.compare(that.dangerousAndCriminalContent, this.dangerousAndCriminalContent) == 0
+				&& Double.compare(that.health, this.health) == 0 && Double.compare(that.financial, this.financial) == 0
+				&& Double.compare(that.law, this.law) == 0 && Double.compare(that.pii, this.pii) == 0;
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.sexual, this.hate, this.harassment, this.selfHarm, this.sexualMinors,
 				this.hateThreatening, this.violenceGraphic, this.selfHarmIntent, this.selfHarmInstructions,
-				this.harassmentThreatening, this.violence);
+				this.harassmentThreatening, this.violence, this.dangerousAndCriminalContent, this.health,
+				this.financial, this.law, this.pii);
 	}
 
 	@Override
@@ -137,7 +188,9 @@ public final class CategoryScores {
 				+ ", selfHarm=" + this.selfHarm + ", sexualMinors=" + this.sexualMinors + ", hateThreatening="
 				+ this.hateThreatening + ", violenceGraphic=" + this.violenceGraphic + ", selfHarmIntent="
 				+ this.selfHarmIntent + ", selfHarmInstructions=" + this.selfHarmInstructions
-				+ ", harassmentThreatening=" + this.harassmentThreatening + ", violence=" + this.violence + '}';
+				+ ", harassmentThreatening=" + this.harassmentThreatening + ", violence=" + this.violence
+				+ ", dangerousAndCriminalContent=" + dangerousAndCriminalContent + ", health=" + health + ", financial="
+				+ financial + ", law=" + law + ", pii=" + pii + '}';
 	}
 
 	public static class Builder {

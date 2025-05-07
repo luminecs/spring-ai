@@ -12,9 +12,11 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServer.AsyncSpecification;
 import io.modelcontextprotocol.server.McpServer.SyncSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures;
+import io.modelcontextprotocol.server.McpServerFeatures.AsyncCompletionSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.AsyncPromptSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.AsyncResourceSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.AsyncToolSpecification;
+import io.modelcontextprotocol.server.McpServerFeatures.SyncCompletionSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncPromptSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncResourceSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
@@ -104,6 +106,7 @@ public class McpServerAutoConfiguration {
 			ObjectProvider<List<SyncToolSpecification>> tools,
 			ObjectProvider<List<SyncResourceSpecification>> resources,
 			ObjectProvider<List<SyncPromptSpecification>> prompts,
+			ObjectProvider<List<SyncCompletionSpecification>> completions,
 			ObjectProvider<BiConsumer<McpSyncServerExchange, List<McpSchema.Root>>> rootsChangeConsumers,
 			List<ToolCallbackProvider> toolCallbackProvider) {
 
@@ -144,6 +147,15 @@ public class McpServerAutoConfiguration {
 			capabilitiesBuilder.prompts(serverProperties.isPromptChangeNotification());
 			logger.info("Registered prompts: " + promptSpecifications.size() + ", notification: "
 					+ serverProperties.isPromptChangeNotification());
+		}
+
+		List<SyncCompletionSpecification> completionSpecifications = completions.stream()
+			.flatMap(List::stream)
+			.toList();
+		if (!CollectionUtils.isEmpty(completionSpecifications)) {
+			serverBuilder.completions(completionSpecifications);
+			capabilitiesBuilder.completions();
+			logger.info("Registered completions: " + completionSpecifications.size());
 		}
 
 		rootsChangeConsumers.ifAvailable(consumer -> {
@@ -197,6 +209,7 @@ public class McpServerAutoConfiguration {
 			ObjectProvider<List<AsyncToolSpecification>> tools,
 			ObjectProvider<List<AsyncResourceSpecification>> resources,
 			ObjectProvider<List<AsyncPromptSpecification>> prompts,
+			ObjectProvider<List<AsyncCompletionSpecification>> completions,
 			ObjectProvider<BiConsumer<McpAsyncServerExchange, List<McpSchema.Root>>> rootsChangeConsumer,
 			List<ToolCallbackProvider> toolCallbackProvider) {
 
@@ -237,6 +250,15 @@ public class McpServerAutoConfiguration {
 			capabilitiesBuilder.prompts(serverProperties.isPromptChangeNotification());
 			logger.info("Registered prompts: " + promptSpecifications.size() + ", notification: "
 					+ serverProperties.isPromptChangeNotification());
+		}
+
+		List<AsyncCompletionSpecification> completionSpecifications = completions.stream()
+			.flatMap(List::stream)
+			.toList();
+		if (!CollectionUtils.isEmpty(completionSpecifications)) {
+			serverBuilder.completions(completionSpecifications);
+			capabilitiesBuilder.completions();
+			logger.info("Registered completions: " + completionSpecifications.size());
 		}
 
 		rootsChangeConsumer.ifAvailable(consumer -> {

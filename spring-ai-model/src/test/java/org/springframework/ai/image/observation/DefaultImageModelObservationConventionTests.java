@@ -4,6 +4,7 @@ import io.micrometer.common.KeyValue;
 import io.micrometer.observation.Observation;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.ai.image.ImageOptions;
 import org.springframework.ai.image.ImageOptionsBuilder;
 import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.observation.conventions.AiObservationAttributes;
@@ -23,9 +24,8 @@ class DefaultImageModelObservationConventionTests {
 	@Test
 	void contextualNameWhenModelIsDefined() {
 		ImageModelObservationContext observationContext = ImageModelObservationContext.builder()
-			.imagePrompt(generateImagePrompt())
+			.imagePrompt(generateImagePrompt(ImageOptionsBuilder.builder().model("mistral").build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().model("mistral").build())
 			.build();
 		assertThat(this.observationConvention.getContextualName(observationContext)).isEqualTo("image mistral");
 	}
@@ -33,9 +33,8 @@ class DefaultImageModelObservationConventionTests {
 	@Test
 	void contextualNameWhenModelIsNotDefined() {
 		ImageModelObservationContext observationContext = ImageModelObservationContext.builder()
-			.imagePrompt(generateImagePrompt())
+			.imagePrompt(generateImagePrompt(ImageOptionsBuilder.builder().build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().build())
 			.build();
 		assertThat(this.observationConvention.getContextualName(observationContext)).isEqualTo("image");
 	}
@@ -43,9 +42,8 @@ class DefaultImageModelObservationConventionTests {
 	@Test
 	void supportsOnlyImageModelObservationContext() {
 		ImageModelObservationContext observationContext = ImageModelObservationContext.builder()
-			.imagePrompt(generateImagePrompt())
+			.imagePrompt(generateImagePrompt(ImageOptionsBuilder.builder().model("mistral").build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().model("mistral").build())
 			.build();
 		assertThat(this.observationConvention.supportsContext(observationContext)).isTrue();
 		assertThat(this.observationConvention.supportsContext(new Observation.Context())).isFalse();
@@ -54,9 +52,8 @@ class DefaultImageModelObservationConventionTests {
 	@Test
 	void shouldHaveLowCardinalityKeyValuesWhenDefined() {
 		ImageModelObservationContext observationContext = ImageModelObservationContext.builder()
-			.imagePrompt(generateImagePrompt())
+			.imagePrompt(generateImagePrompt(ImageOptionsBuilder.builder().model("mistral").build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().model("mistral").build())
 			.build();
 		assertThat(this.observationConvention.getLowCardinalityKeyValues(observationContext)).contains(
 				KeyValue.of(AiObservationAttributes.AI_OPERATION_TYPE.value(), "image"),
@@ -66,17 +63,17 @@ class DefaultImageModelObservationConventionTests {
 
 	@Test
 	void shouldHaveHighCardinalityKeyValuesWhenDefined() {
+		var imageOptions = ImageOptionsBuilder.builder()
+			.model("mistral")
+			.N(1)
+			.height(1080)
+			.width(1920)
+			.style("sketch")
+			.responseFormat("base64")
+			.build();
 		ImageModelObservationContext observationContext = ImageModelObservationContext.builder()
-			.imagePrompt(generateImagePrompt())
+			.imagePrompt(generateImagePrompt(imageOptions))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder()
-				.model("mistral")
-				.N(1)
-				.height(1080)
-				.width(1920)
-				.style("sketch")
-				.responseFormat("base64")
-				.build())
 			.build();
 
 		assertThat(this.observationConvention.getHighCardinalityKeyValues(observationContext)).contains(
@@ -88,9 +85,8 @@ class DefaultImageModelObservationConventionTests {
 	@Test
 	void shouldNotHaveKeyValuesWhenEmptyValues() {
 		ImageModelObservationContext observationContext = ImageModelObservationContext.builder()
-			.imagePrompt(generateImagePrompt())
+			.imagePrompt(generateImagePrompt(ImageOptionsBuilder.builder().build()))
 			.provider("superprovider")
-			.requestOptions(ImageOptionsBuilder.builder().build())
 			.build();
 
 		assertThat(this.observationConvention.getLowCardinalityKeyValues(observationContext))
@@ -103,8 +99,8 @@ class DefaultImageModelObservationConventionTests {
 					HighCardinalityKeyNames.REQUEST_IMAGE_STYLE.asString());
 	}
 
-	private ImagePrompt generateImagePrompt() {
-		return new ImagePrompt("here comes the sun");
+	private ImagePrompt generateImagePrompt(ImageOptions imageOptions) {
+		return new ImagePrompt("here comes the sun", imageOptions);
 	}
 
 }

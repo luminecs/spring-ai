@@ -10,8 +10,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.embedding.EmbeddingOptions;
 import org.springframework.ai.image.ImageMessage;
 import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.retry.RetryUtils;
@@ -69,7 +71,7 @@ public class ZhiPuAiRetryTests {
 		this.retryListener = new TestRetryListener();
 		this.retryTemplate.registerListener(this.retryListener);
 
-		this.chatModel = new ZhiPuAiChatModel(this.zhiPuAiApi, ZhiPuAiChatOptions.builder().build(), null,
+		this.chatModel = new ZhiPuAiChatModel(this.zhiPuAiApi, ZhiPuAiChatOptions.builder().build(),
 				this.retryTemplate);
 		this.embeddingModel = new ZhiPuAiEmbeddingModel(this.zhiPuAiApi, MetadataMode.EMBED,
 				ZhiPuAiEmbeddingOptions.builder().build(), this.retryTemplate);
@@ -90,7 +92,7 @@ public class ZhiPuAiRetryTests {
 			.willThrow(new TransientAiException("Transient Error 2"))
 			.willReturn(ResponseEntity.of(Optional.of(expectedChatCompletion)));
 
-		var result = this.chatModel.call(new Prompt("text"));
+		var result = this.chatModel.call(new Prompt("text", ChatOptions.builder().build()));
 
 		assertThat(result).isNotNull();
 		assertThat(result.getResult().getOutput().getText()).isSameAs("Response");
@@ -102,7 +104,8 @@ public class ZhiPuAiRetryTests {
 	public void zhiPuAiChatNonTransientError() {
 		given(this.zhiPuAiApi.chatCompletionEntity(isA(ChatCompletionRequest.class)))
 			.willThrow(new RuntimeException("Non Transient Error"));
-		assertThrows(RuntimeException.class, () -> this.chatModel.call(new Prompt("text")));
+		assertThrows(RuntimeException.class,
+				() -> this.chatModel.call(new Prompt("text", ChatOptions.builder().build())));
 	}
 
 	@Test
@@ -143,9 +146,9 @@ public class ZhiPuAiRetryTests {
 			.willThrow(new TransientAiException("Transient Error 1"))
 			.willThrow(new TransientAiException("Transient Error 2"))
 			.willReturn(ResponseEntity.of(Optional.of(expectedEmbeddings)));
-
+		EmbeddingOptions options = ZhiPuAiEmbeddingOptions.builder().model("model").build();
 		var result = this.embeddingModel
-			.call(new org.springframework.ai.embedding.EmbeddingRequest(List.of("text1", "text2"), null));
+			.call(new org.springframework.ai.embedding.EmbeddingRequest(List.of("text1", "text2"), options));
 
 		assertThat(result).isNotNull();
 		assertThat(result.getResult().getOutput()).isEqualTo(new float[] { 9.9f, 8.8f });
@@ -157,8 +160,9 @@ public class ZhiPuAiRetryTests {
 	public void zhiPuAiEmbeddingNonTransientError() {
 		given(this.zhiPuAiApi.embeddings(isA(EmbeddingRequest.class)))
 			.willThrow(new RuntimeException("Non Transient Error"));
+		EmbeddingOptions options = ZhiPuAiEmbeddingOptions.builder().model("model").build();
 		assertThrows(RuntimeException.class, () -> this.embeddingModel
-			.call(new org.springframework.ai.embedding.EmbeddingRequest(List.of("text1", "text2"), null)));
+			.call(new org.springframework.ai.embedding.EmbeddingRequest(List.of("text1", "text2"), options)));
 	}
 
 	@Test

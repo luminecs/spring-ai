@@ -34,10 +34,10 @@ public class VertexAiTextEmbeddingModelAutoConfigurationIT {
 	public void textEmbedding() {
 		this.contextRunner.withConfiguration(AutoConfigurations.of(VertexAiTextEmbeddingAutoConfiguration.class))
 			.run(context -> {
-				var conntectionProperties = context.getBean(VertexAiEmbeddingConnectionProperties.class);
+				var connectionProperties = context.getBean(VertexAiEmbeddingConnectionProperties.class);
 				var textEmbeddingProperties = context.getBean(VertexAiTextEmbeddingProperties.class);
 
-				assertThat(conntectionProperties).isNotNull();
+				assertThat(connectionProperties).isNotNull();
 
 				VertexAiTextEmbeddingModel embeddingModel = context.getBean(VertexAiTextEmbeddingModel.class);
 				assertThat(embeddingModel).isInstanceOf(VertexAiTextEmbeddingModel.class);
@@ -77,10 +77,10 @@ public class VertexAiTextEmbeddingModelAutoConfigurationIT {
 	public void multimodalEmbedding() {
 		this.contextRunner.withConfiguration(AutoConfigurations.of(VertexAiMultiModalEmbeddingAutoConfiguration.class))
 			.run(context -> {
-				var conntectionProperties = context.getBean(VertexAiEmbeddingConnectionProperties.class);
+				var connectionProperties = context.getBean(VertexAiEmbeddingConnectionProperties.class);
 				var multimodalEmbeddingProperties = context.getBean(VertexAiMultimodalEmbeddingProperties.class);
 
-				assertThat(conntectionProperties).isNotNull();
+				assertThat(connectionProperties).isNotNull();
 
 				VertexAiMultimodalEmbeddingModel multiModelEmbeddingModel = context
 					.getBean(VertexAiMultimodalEmbeddingModel.class);

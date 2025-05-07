@@ -39,7 +39,7 @@ public class OpenAiFunctionCallback2IT {
 
 			// @formatter:off
 			ChatClient chatClient = ChatClient.builder(chatModel)
-				.defaultTools("WeatherInfo")
+				.defaultToolNames("WeatherInfo")
 				.defaultUser(u -> u.text("What's the weather like in {cities}?"))
 				.build();
 
@@ -62,7 +62,7 @@ public class OpenAiFunctionCallback2IT {
 
 			// @formatter:off
 			String content = ChatClient.builder(chatModel).build().prompt()
-				.tools("WeatherInfo")
+				.toolNames("WeatherInfo")
 				.user("What's the weather like in San Francisco, Tokyo, and Paris?")
 				.stream().content()
 				.collectList().block().stream().collect(Collectors.joining());

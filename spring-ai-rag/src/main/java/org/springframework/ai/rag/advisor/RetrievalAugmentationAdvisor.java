@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.rag.advisor;
 
 import java.util.Arrays;
@@ -9,11 +25,11 @@ import java.util.stream.Collectors;
 
 import reactor.core.scheduler.Scheduler;
 
-import org.springframework.ai.chat.client.advisor.api.AdvisedRequest;
-import org.springframework.ai.chat.client.advisor.api.AdvisedResponse;
 import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
+import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
@@ -29,6 +45,18 @@ import org.springframework.lang.Nullable;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.Assert;
 
+/**
+ * Advisor that implements common Retrieval Augmented Generation (RAG) flows using the
+ * building blocks defined in the {@link org.springframework.ai.rag} package and following
+ * the Modular RAG Architecture.
+ *
+ * @author Christian Tzolov
+ * @author Thomas Vitale
+ * @since 1.0.0
+ * @see <a href="http://export.arxiv.org/abs/2407.21059">arXiv:2407.21059</a>
+ * @see <a href="https://export.arxiv.org/abs/2312.10997">arXiv:2312.10997</a>
+ * @see <a href="https://export.arxiv.org/abs/2410.20878">arXiv:2410.20878</a>
+ */
 public final class RetrievalAugmentationAdvisor implements BaseAdvisor {
 
 	public static final String DOCUMENT_CONTEXT = "rag_document_context";
@@ -50,7 +78,7 @@ public final class RetrievalAugmentationAdvisor implements BaseAdvisor {
 
 	private final int order;
 
-	public RetrievalAugmentationAdvisor(@Nullable List<QueryTransformer> queryTransformers,
+	private RetrievalAugmentationAdvisor(@Nullable List<QueryTransformer> queryTransformers,
 			@Nullable QueryExpander queryExpander, DocumentRetriever documentRetriever,
 			@Nullable DocumentJoiner documentJoiner, @Nullable QueryAugmenter queryAugmenter,
 			@Nullable TaskExecutor taskExecutor, @Nullable Scheduler scheduler, @Nullable Integer order) {
@@ -71,23 +99,27 @@ public final class RetrievalAugmentationAdvisor implements BaseAdvisor {
 	}
 
 	@Override
-	public AdvisedRequest before(AdvisedRequest request) {
-		Map<String, Object> context = new HashMap<>(request.adviseContext());
+	public ChatClientRequest before(ChatClientRequest chatClientRequest, @Nullable AdvisorChain advisorChain) {
+		Map<String, Object> context = new HashMap<>(chatClientRequest.context());
 
+		// 0. Create a query from the user text, parameters, and conversation history.
 		Query originalQuery = Query.builder()
-			.text(new PromptTemplate(request.userText(), request.userParams()).render())
-			.history(request.messages())
+			.text(chatClientRequest.prompt().getUserMessage().getText())
+			.history(chatClientRequest.prompt().getInstructions())
 			.context(context)
 			.build();
 
+		// 1. Transform original user query based on a chain of query transformers.
 		Query transformedQuery = originalQuery;
 		for (var queryTransformer : this.queryTransformers) {
 			transformedQuery = queryTransformer.apply(transformedQuery);
 		}
 
+		// 2. Expand query into one or multiple queries.
 		List<Query> expandedQueries = this.queryExpander != null ? this.queryExpander.expand(transformedQuery)
 				: List.of(transformedQuery);
 
+		// 3. Get similar documents for each query.
 		Map<Query, List<List<Document>>> documentsForQuery = expandedQueries.stream()
 			.map(query -> CompletableFuture.supplyAsync(() -> getDocumentsForQuery(query), this.taskExecutor))
 			.toList()
@@ -95,30 +127,44 @@ public final class RetrievalAugmentationAdvisor implements BaseAdvisor {
 			.map(CompletableFuture::join)
 			.collect(Collectors.toMap(Map.Entry::getKey, entry -> List.of(entry.getValue())));
 
+		// 4. Combine documents retrieved based on multiple queries and from multiple data
+		// sources.
 		List<Document> documents = this.documentJoiner.join(documentsForQuery);
 		context.put(DOCUMENT_CONTEXT, documents);
 
+		// 5. Augment user query with the document contextual data.
 		Query augmentedQuery = this.queryAugmenter.augment(originalQuery, documents);
 
-		return AdvisedRequest.from(request).userText(augmentedQuery.text()).adviseContext(context).build();
+		// 6. Update ChatClientRequest with augmented prompt.
+		return chatClientRequest.mutate()
+			.prompt(chatClientRequest.prompt().augmentUserMessage(augmentedQuery.text()))
+			.context(context)
+			.build();
 	}
 
+	/**
+	 * Processes a single query by routing it to document retrievers and collecting
+	 * documents.
+	 */
 	private Map.Entry<Query, List<Document>> getDocumentsForQuery(Query query) {
 		List<Document> documents = this.documentRetriever.retrieve(query);
 		return Map.entry(query, documents);
 	}
 
 	@Override
-	public AdvisedResponse after(AdvisedResponse advisedResponse) {
+	public ChatClientResponse after(ChatClientResponse chatClientResponse, @Nullable AdvisorChain advisorChain) {
 		ChatResponse.Builder chatResponseBuilder;
-		if (advisedResponse.response() == null) {
+		if (chatClientResponse.chatResponse() == null) {
 			chatResponseBuilder = ChatResponse.builder();
 		}
 		else {
-			chatResponseBuilder = ChatResponse.builder().from(advisedResponse.response());
+			chatResponseBuilder = ChatResponse.builder().from(chatClientResponse.chatResponse());
 		}
-		chatResponseBuilder.metadata(DOCUMENT_CONTEXT, advisedResponse.adviseContext().get(DOCUMENT_CONTEXT));
-		return new AdvisedResponse(chatResponseBuilder.build(), advisedResponse.adviseContext());
+		chatResponseBuilder.metadata(DOCUMENT_CONTEXT, chatClientResponse.context().get(DOCUMENT_CONTEXT));
+		return ChatClientResponse.builder()
+			.chatResponse(chatResponseBuilder.build())
+			.context(chatClientResponse.context())
+			.build();
 	}
 
 	@Override

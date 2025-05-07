@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.ollama;
 
 import java.time.Duration;
@@ -45,6 +61,7 @@ import org.springframework.ai.ollama.api.OllamaApi.Message.ToolCall;
 import org.springframework.ai.ollama.api.OllamaApi.Message.ToolCallFunction;
 import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.ai.ollama.api.common.OllamaApiConstants;
 import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.ai.ollama.management.OllamaModelManager;
 import org.springframework.ai.ollama.management.PullModelStrategy;
@@ -54,6 +71,21 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+/**
+ * {@link ChatModel} implementation for {@literal Ollama}. Ollama allows developers to run
+ * large language models and generate embeddings locally. It supports open-source models
+ * available on [Ollama AI Library](<a href="https://ollama.ai/library">...</a>) and on
+ * Hugging Face. Please refer to the <a href="https://ollama.ai/">official Ollama
+ * website</a> for the most up-to-date information on available models.
+ *
+ * @author Christian Tzolov
+ * @author luocongqiu
+ * @author Thomas Vitale
+ * @author Jihoon Kim
+ * @author Alexandros Pappas
+ * @author Ilayaperumal Gopinathan
+ * @since 1.0.0
+ */
 public class OllamaChatModel implements ChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(OllamaChatModel.class);
@@ -88,6 +120,10 @@ public class OllamaChatModel implements ChatModel {
 
 	private final ToolCallingManager toolCallingManager;
 
+	/**
+	 * The tool execution eligibility predicate used to determine if a tool can be
+	 * executed.
+	 */
 	private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
 
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
@@ -177,7 +213,8 @@ public class OllamaChatModel implements ChatModel {
 
 	@Override
 	public ChatResponse call(Prompt prompt) {
-
+		// Before moving any further, build the final request Prompt,
+		// merging runtime and default options.
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return this.internalCall(requestPrompt, null);
 	}
@@ -188,8 +225,7 @@ public class OllamaChatModel implements ChatModel {
 
 		ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
 			.prompt(prompt)
-			.provider(OllamaApi.PROVIDER_NAME)
-			.requestOptions(prompt.getOptions())
+			.provider(OllamaApiConstants.PROVIDER_NAME)
 			.build();
 
 		ChatResponse response = ChatModelObservationDocumentation.CHAT_MODEL_OPERATION
@@ -229,14 +265,14 @@ public class OllamaChatModel implements ChatModel {
 		if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), response)) {
 			var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
 			if (toolExecutionResult.returnDirect()) {
-
+				// Return tool execution result directly to the client.
 				return ChatResponse.builder()
 					.from(response)
 					.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 					.build();
 			}
 			else {
-
+				// Send the tool execution result back to the model.
 				return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 						response);
 			}
@@ -247,7 +283,8 @@ public class OllamaChatModel implements ChatModel {
 
 	@Override
 	public Flux<ChatResponse> stream(Prompt prompt) {
-
+		// Before moving any further, build the final request Prompt,
+		// merging runtime and default options.
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return this.internalStream(requestPrompt, null);
 	}
@@ -258,8 +295,7 @@ public class OllamaChatModel implements ChatModel {
 
 			final ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
 				.prompt(prompt)
-				.provider(OllamaApi.PROVIDER_NAME)
-				.requestOptions(prompt.getOptions())
+				.provider(OllamaApiConstants.PROVIDER_NAME)
 				.build();
 
 			Observation observation = ChatModelObservationDocumentation.CHAT_MODEL_OPERATION.observation(
@@ -275,6 +311,7 @@ public class OllamaChatModel implements ChatModel {
 
 				List<AssistantMessage.ToolCall> toolCalls = List.of();
 
+				// Added null checks to prevent NPE when accessing tool calls
 				if (chunk.message() != null && chunk.message().toolCalls() != null) {
 					toolCalls = chunk.message()
 						.toolCalls()
@@ -298,17 +335,17 @@ public class OllamaChatModel implements ChatModel {
 			// @formatter:off
 			Flux<ChatResponse> chatResponseFlux = chatResponse.flatMap(response -> {
 				if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(), response)) {
-
+					// FIXME: bounded elastic needs to be used since tool calling
+					//  is currently only synchronous
 					return Flux.defer(() -> {
 						var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
 						if (toolExecutionResult.returnDirect()) {
-
+							// Return tool execution result directly to the client.
 							return Flux.just(ChatResponse.builder().from(response)
 									.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 									.build());
-						}
-						else {
-
+						} else {
+							// Send the tool execution result back to the model.
 							return this.internalStream(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
 									response);
 						}
@@ -330,7 +367,7 @@ public class OllamaChatModel implements ChatModel {
 	}
 
 	Prompt buildRequestPrompt(Prompt prompt) {
-
+		// Process runtime options
 		OllamaOptions runtimeOptions = null;
 		if (prompt.getOptions() != null) {
 			if (prompt.getOptions() instanceof ToolCallingChatOptions toolCallingChatOptions) {
@@ -343,9 +380,11 @@ public class OllamaChatModel implements ChatModel {
 			}
 		}
 
+		// Define request options by merging runtime options and default options
 		OllamaOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				OllamaOptions.class);
-
+		// Merge @JsonIgnore-annotated options explicitly since they are ignored by
+		// Jackson, used by ModelOptionsUtils.
 		if (runtimeOptions != null) {
 			requestOptions.setInternalToolExecutionEnabled(
 					ModelOptionsUtils.mergeOption(runtimeOptions.getInternalToolExecutionEnabled(),
@@ -364,6 +403,7 @@ public class OllamaChatModel implements ChatModel {
 			requestOptions.setToolContext(this.defaultOptions.getToolContext());
 		}
 
+		// Validate request options
 		if (!StringUtils.hasText(requestOptions.getModel())) {
 			throw new IllegalArgumentException("model cannot be null or empty");
 		}
@@ -373,6 +413,9 @@ public class OllamaChatModel implements ChatModel {
 		return new Prompt(prompt.getInstructions(), requestOptions);
 	}
 
+	/**
+	 * Package access for testing.
+	 */
 	OllamaApi.ChatRequest ollamaChatRequest(Prompt prompt, boolean stream) {
 
 		List<OllamaApi.Message> ollamaMessages = prompt.getInstructions().stream().map(message -> {
@@ -460,12 +503,19 @@ public class OllamaChatModel implements ChatModel {
 		return OllamaOptions.fromOptions(this.defaultOptions);
 	}
 
+	/**
+	 * Pull the given model into Ollama based on the specified strategy.
+	 */
 	private void initializeModel(String model, PullModelStrategy pullModelStrategy) {
 		if (pullModelStrategy != null && !PullModelStrategy.NEVER.equals(pullModelStrategy)) {
 			this.modelManager.pullModel(model, pullModelStrategy);
 		}
 	}
 
+	/**
+	 * Use the provided convention for reporting observation data
+	 * @param observationConvention The provided convention
+	 */
 	public void setObservationConvention(ChatModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;

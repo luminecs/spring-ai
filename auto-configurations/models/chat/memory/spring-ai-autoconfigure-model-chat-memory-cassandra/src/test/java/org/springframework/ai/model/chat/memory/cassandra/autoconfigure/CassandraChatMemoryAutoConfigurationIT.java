@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.model.chat.memory.cassandra.autoconfigure;
 
 import java.time.Duration;
@@ -5,7 +21,7 @@ import java.util.List;
 
 import com.datastax.driver.core.utils.UUIDs;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.cassandra.CassandraContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -20,6 +36,11 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * @author Mick Semb Wever
+ * @author Jihoon Kim
+ * @since 1.0.0
+ */
 @Testcontainers
 class CassandraChatMemoryAutoConfigurationIT {
 
@@ -59,11 +80,11 @@ class CassandraChatMemoryAutoConfigurationIT {
 
 				assertThat(memory.get(sessionId, Integer.MAX_VALUE)).hasSize(2);
 				assertThat(memory.get(sessionId, Integer.MAX_VALUE).get(1).getMessageType())
-					.isEqualTo(MessageType.USER);
-				assertThat(memory.get(sessionId, Integer.MAX_VALUE).get(1).getText()).isEqualTo("test question");
-				assertThat(memory.get(sessionId, Integer.MAX_VALUE).get(0).getMessageType())
 					.isEqualTo(MessageType.ASSISTANT);
-				assertThat(memory.get(sessionId, Integer.MAX_VALUE).get(0).getText()).isEqualTo("test answer");
+				assertThat(memory.get(sessionId, Integer.MAX_VALUE).get(1).getText()).isEqualTo("test answer");
+				assertThat(memory.get(sessionId, Integer.MAX_VALUE).get(0).getMessageType())
+					.isEqualTo(MessageType.USER);
+				assertThat(memory.get(sessionId, Integer.MAX_VALUE).get(0).getText()).isEqualTo("test question");
 
 				CassandraChatMemoryProperties properties = context.getBean(CassandraChatMemoryProperties.class);
 				assertThat(properties.getTimeToLive()).isEqualTo(getTimeToLive());

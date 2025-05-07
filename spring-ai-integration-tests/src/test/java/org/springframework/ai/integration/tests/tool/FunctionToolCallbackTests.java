@@ -22,12 +22,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = TestApplication.class)
 @Import(FunctionToolCallbackTests.Tools.class)
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".*")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class FunctionToolCallbackTests {
 
 	// @formatter:off
@@ -43,7 +45,7 @@ public class FunctionToolCallbackTests {
 			.build()
 			.prompt()
 			.user("Welcome the users to the library")
-			.tools(Tools.WELCOME)
+			.toolNames(Tools.WELCOME)
 			.call()
 			.content();
 		assertThat(content).isNotEmpty();
@@ -55,7 +57,7 @@ public class FunctionToolCallbackTests {
 			.build()
 			.prompt()
 			.user("Welcome the users to the library")
-			.tools(FunctionToolCallback.builder("sayWelcome",
+			.toolCallbacks(FunctionToolCallback.builder("sayWelcome",
 							(Consumer<Object>) input -> logger.info("CALLBACK - Welcoming users to the library"))
 					.description("Welcome users to the library")
 					.inputType(Void.class)
@@ -71,7 +73,7 @@ public class FunctionToolCallbackTests {
 			.build()
 			.prompt()
 			.user("Welcome %s to the library".formatted("James Bond"))
-			.tools(Tools.WELCOME_USER)
+			.toolNames(Tools.WELCOME_USER)
 			.call()
 			.content();
 		assertThat(content).isNotEmpty();
@@ -83,7 +85,7 @@ public class FunctionToolCallbackTests {
 			.build()
 			.prompt()
 			.user("Welcome %s to the library".formatted("James Bond"))
-			.tools(FunctionToolCallback.builder("welcomeUser",
+			.toolCallbacks(FunctionToolCallback.builder("welcomeUser",
 							(Consumer<Object>) user -> logger.info("CALLBACK - Welcoming {} to the library", ((User) user).name()))
 					.description("Welcome a specific user to the library")
 					.inputType(User.class)
@@ -99,7 +101,7 @@ public class FunctionToolCallbackTests {
 			.build()
 			.prompt()
 			.user("What books written by %s are available in the library?".formatted("J.R.R. Tolkien"))
-			.tools(Tools.BOOKS_BY_AUTHOR)
+			.toolNames(Tools.BOOKS_BY_AUTHOR)
 			.call()
 			.content();
 		assertThat(content).isNotEmpty()
@@ -118,7 +120,7 @@ public class FunctionToolCallbackTests {
 			.build()
 			.prompt()
 			.user("What books written by %s are available in the library?".formatted("J.R.R. Tolkien"))
-			.tools(FunctionToolCallback.builder("availableBooksByAuthor", function)
+			.toolCallbacks(FunctionToolCallback.builder("availableBooksByAuthor", function)
 				.description("Get the list of books written by the given author available in the library")
 				.inputType(Author.class)
 				.build())
@@ -136,7 +138,7 @@ public class FunctionToolCallbackTests {
 			.build()
 			.prompt()
 			.user("What authors wrote the books %s and %s available in the library?".formatted("The Hobbit", "The Lion, the Witch and the Wardrobe"))
-			.tools(Tools.AUTHORS_BY_BOOKS)
+			.toolNames(Tools.AUTHORS_BY_BOOKS)
 			.call()
 			.content();
 		assertThat(content).isNotEmpty().contains("J.R.R. Tolkien").contains("C.S. Lewis");
@@ -152,7 +154,7 @@ public class FunctionToolCallbackTests {
 			.build()
 			.prompt()
 			.user("What authors wrote the books %s and %s available in the library?".formatted("The Hobbit", "The Lion, the Witch and the Wardrobe"))
-			.tools(FunctionToolCallback.builder("authorsByAvailableBooks", function)
+			.toolCallbacks(FunctionToolCallback.builder("authorsByAvailableBooks", function)
 				.description("Get the list of authors who wrote the given books available in the library")
 				.inputType(Books.class)
 				.build())

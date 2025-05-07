@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.azure.openai;
 
 import java.util.ArrayList;
@@ -29,6 +45,15 @@ import org.springframework.ai.observation.conventions.AiProvider;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+/**
+ * Azure Open AI Embedding Model implementation.
+ *
+ * @author Mark Pollack
+ * @author Christian Tzolov
+ * @author Thomas Vitale
+ * @author Soby Chacko
+ * @since 1.0.0
+ */
 public class AzureOpenAiEmbeddingModel extends AbstractEmbeddingModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(AzureOpenAiEmbeddingModel.class);
@@ -41,8 +66,14 @@ public class AzureOpenAiEmbeddingModel extends AbstractEmbeddingModel {
 
 	private final MetadataMode metadataMode;
 
+	/**
+	 * Observation registry used for instrumentation.
+	 */
 	private final ObservationRegistry observationRegistry;
 
+	/**
+	 * Conventions to use for generating observations.
+	 */
 	private EmbeddingModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
 	public AzureOpenAiEmbeddingModel(OpenAIClient azureOpenAiClient) {
@@ -94,12 +125,15 @@ public class AzureOpenAiEmbeddingModel extends AbstractEmbeddingModel {
 			.from(this.defaultOptions)
 			.merge(embeddingRequest.getOptions())
 			.build();
-		EmbeddingsOptions azureOptions = options.toAzureOptions(embeddingRequest.getInstructions());
+
+		EmbeddingRequest embeddingRequestWithMergedOptions = new EmbeddingRequest(embeddingRequest.getInstructions(),
+				options);
+
+		EmbeddingsOptions azureOptions = options.toAzureOptions(embeddingRequestWithMergedOptions.getInstructions());
 
 		var observationContext = EmbeddingModelObservationContext.builder()
-			.embeddingRequest(embeddingRequest)
+			.embeddingRequest(embeddingRequestWithMergedOptions)
 			.provider(AiProvider.AZURE_OPENAI.value())
-			.requestOptions(options)
 			.build();
 
 		return EmbeddingModelObservationDocumentation.EMBEDDING_MODEL_OPERATION
@@ -115,6 +149,9 @@ public class AzureOpenAiEmbeddingModel extends AbstractEmbeddingModel {
 			});
 	}
 
+	/**
+	 * Test access
+	 */
 	EmbeddingsOptions toEmbeddingOptions(EmbeddingRequest embeddingRequest) {
 
 		return AzureOpenAiEmbeddingOptions.builder()
@@ -150,6 +187,10 @@ public class AzureOpenAiEmbeddingModel extends AbstractEmbeddingModel {
 		return this.defaultOptions;
 	}
 
+	/**
+	 * Use the provided convention for reporting observation data
+	 * @param observationConvention The provided convention
+	 */
 	public void setObservationConvention(EmbeddingModelObservationConvention observationConvention) {
 		Assert.notNull(observationConvention, "observationConvention cannot be null");
 		this.observationConvention = observationConvention;

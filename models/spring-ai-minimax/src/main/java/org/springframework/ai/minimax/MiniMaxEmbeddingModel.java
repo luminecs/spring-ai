@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.minimax;
 
 import java.util.ArrayList;
@@ -27,7 +43,16 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
+/**
+ * MiniMax Embedding Model implementation.
+ *
+ * @author Geng Rong
+ * @author Thomas Vitale
+ * @author Soby Chacko
+ * @since 1.0.0
+ */
 public class MiniMaxEmbeddingModel extends AbstractEmbeddingModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(MiniMaxEmbeddingModel.class);
@@ -42,31 +67,67 @@ public class MiniMaxEmbeddingModel extends AbstractEmbeddingModel {
 
 	private final MetadataMode metadataMode;
 
+	/**
+	 * Observation registry used for instrumentation.
+	 */
 	private final ObservationRegistry observationRegistry;
 
+	/**
+	 * Conventions to use for generating observations.
+	 */
 	private EmbeddingModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
+	/**
+	 * Constructor for the MiniMaxEmbeddingModel class.
+	 * @param miniMaxApi The MiniMaxApi instance to use for making API requests.
+	 */
 	public MiniMaxEmbeddingModel(MiniMaxApi miniMaxApi) {
 		this(miniMaxApi, MetadataMode.EMBED);
 	}
 
+	/**
+	 * Initializes a new instance of the MiniMaxEmbeddingModel class.
+	 * @param miniMaxApi The MiniMaxApi instance to use for making API requests.
+	 * @param metadataMode The mode for generating metadata.
+	 */
 	public MiniMaxEmbeddingModel(MiniMaxApi miniMaxApi, MetadataMode metadataMode) {
 		this(miniMaxApi, metadataMode,
 				MiniMaxEmbeddingOptions.builder().model(MiniMaxApi.DEFAULT_EMBEDDING_MODEL).build(),
 				RetryUtils.DEFAULT_RETRY_TEMPLATE, ObservationRegistry.NOOP);
 	}
 
+	/**
+	 * Initializes a new instance of the MiniMaxEmbeddingModel class.
+	 * @param miniMaxApi The MiniMaxApi instance to use for making API requests.
+	 * @param metadataMode The mode for generating metadata.
+	 * @param miniMaxEmbeddingOptions The options for MiniMax embedding.
+	 */
 	public MiniMaxEmbeddingModel(MiniMaxApi miniMaxApi, MetadataMode metadataMode,
 			MiniMaxEmbeddingOptions miniMaxEmbeddingOptions) {
 		this(miniMaxApi, metadataMode, miniMaxEmbeddingOptions, RetryUtils.DEFAULT_RETRY_TEMPLATE,
 				ObservationRegistry.NOOP);
 	}
 
+	/**
+	 * Initializes a new instance of the MiniMaxEmbeddingModel class.
+	 * @param miniMaxApi The MiniMaxApi instance to use for making API requests.
+	 * @param metadataMode The mode for generating metadata.
+	 * @param miniMaxEmbeddingOptions The options for MiniMax embedding.
+	 * @param retryTemplate - The RetryTemplate for retrying failed API requests.
+	 */
 	public MiniMaxEmbeddingModel(MiniMaxApi miniMaxApi, MetadataMode metadataMode,
 			MiniMaxEmbeddingOptions miniMaxEmbeddingOptions, RetryTemplate retryTemplate) {
 		this(miniMaxApi, metadataMode, miniMaxEmbeddingOptions, retryTemplate, ObservationRegistry.NOOP);
 	}
 
+	/**
+	 * Initializes a new instance of the MiniMaxEmbeddingModel class.
+	 * @param miniMaxApi - The MiniMaxApi instance to use for making API requests.
+	 * @param metadataMode - The mode for generating metadata.
+	 * @param options - The options for MiniMax embedding.
+	 * @param retryTemplate - The RetryTemplate for retrying failed API requests.
+	 * @param observationRegistry - The ObservationRegistry used for instrumentation.
+	 */
 	public MiniMaxEmbeddingModel(MiniMaxApi miniMaxApi, MetadataMode metadataMode, MiniMaxEmbeddingOptions options,
 			RetryTemplate retryTemplate, ObservationRegistry observationRegistry) {
 		Assert.notNull(miniMaxApi, "MiniMaxApi must not be null");
@@ -90,14 +151,15 @@ public class MiniMaxEmbeddingModel extends AbstractEmbeddingModel {
 
 	@Override
 	public EmbeddingResponse call(EmbeddingRequest request) {
-		MiniMaxEmbeddingOptions requestOptions = mergeOptions(request.getOptions(), this.defaultOptions);
+
+		EmbeddingRequest embeddingRequest = buildEmbeddingRequest(request);
+
 		MiniMaxApi.EmbeddingRequest apiRequest = new MiniMaxApi.EmbeddingRequest(request.getInstructions(),
-				requestOptions.getModel());
+				embeddingRequest.getOptions().getModel());
 
 		var observationContext = EmbeddingModelObservationContext.builder()
 			.embeddingRequest(request)
 			.provider(MiniMaxApiConstants.PROVIDER_NAME)
-			.requestOptions(requestOptions)
 			.build();
 
 		return EmbeddingModelObservationDocumentation.EMBEDDING_MODEL_OPERATION
@@ -129,22 +191,24 @@ public class MiniMaxEmbeddingModel extends AbstractEmbeddingModel {
 		return new DefaultUsage(0, 0, apiEmbeddingList.totalTokens());
 	}
 
-	private MiniMaxEmbeddingOptions mergeOptions(@Nullable EmbeddingOptions runtimeOptions,
-			MiniMaxEmbeddingOptions defaultOptions) {
-		var runtimeOptionsForProvider = ModelOptionsUtils.copyToTarget(runtimeOptions, EmbeddingOptions.class,
+	EmbeddingRequest buildEmbeddingRequest(EmbeddingRequest embeddingRequest) {
+		// Process runtime options
+		MiniMaxEmbeddingOptions runtimeOptions = null;
+		if (embeddingRequest.getOptions() != null) {
+			runtimeOptions = ModelOptionsUtils.copyToTarget(embeddingRequest.getOptions(), EmbeddingOptions.class,
+					MiniMaxEmbeddingOptions.class);
+		}
+
+		// Define request options by merging runtime options and default options
+		MiniMaxEmbeddingOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				MiniMaxEmbeddingOptions.class);
 
-		var optionBuilder = MiniMaxEmbeddingOptions.builder();
-		if (runtimeOptionsForProvider != null && runtimeOptionsForProvider.getModel() != null) {
-			optionBuilder.model(runtimeOptionsForProvider.getModel());
+		// Validate request options
+		if (!StringUtils.hasText(requestOptions.getModel())) {
+			throw new IllegalArgumentException("model cannot be null or empty");
 		}
-		else if (defaultOptions.getModel() != null) {
-			optionBuilder.model(defaultOptions.getModel());
-		}
-		else {
-			optionBuilder.model(MiniMaxApi.DEFAULT_EMBEDDING_MODEL);
-		}
-		return optionBuilder.build();
+
+		return new EmbeddingRequest(embeddingRequest.getInstructions(), requestOptions);
 	}
 
 	public void setObservationConvention(EmbeddingModelObservationConvention observationConvention) {

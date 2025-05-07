@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.zhipuai;
 
 import java.util.ArrayList;
@@ -25,10 +41,17 @@ import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.ai.zhipuai.api.ZhiPuAiApi;
 import org.springframework.ai.zhipuai.api.ZhiPuApiConstants;
-import org.springframework.lang.Nullable;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
+/**
+ * ZhiPuAI Embedding Model implementation.
+ *
+ * @author Geng Rong
+ * @author Soby Chacko
+ * @since 1.0.0
+ */
 public class ZhiPuAiEmbeddingModel extends AbstractEmbeddingModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(ZhiPuAiEmbeddingModel.class);
@@ -43,30 +66,66 @@ public class ZhiPuAiEmbeddingModel extends AbstractEmbeddingModel {
 
 	private final MetadataMode metadataMode;
 
+	/**
+	 * Observation registry used for instrumentation.
+	 */
 	private final ObservationRegistry observationRegistry;
 
+	/**
+	 * Conventions to use for generating observations.
+	 */
 	private EmbeddingModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
+	/**
+	 * Constructor for the ZhiPuAiEmbeddingModel class.
+	 * @param zhiPuAiApi The ZhiPuAiApi instance to use for making API requests.
+	 */
 	public ZhiPuAiEmbeddingModel(ZhiPuAiApi zhiPuAiApi) {
 		this(zhiPuAiApi, MetadataMode.EMBED);
 	}
 
+	/**
+	 * Initializes a new instance of the ZhiPuAiEmbeddingModel class.
+	 * @param zhiPuAiApi The ZhiPuAiApi instance to use for making API requests.
+	 * @param metadataMode The mode for generating metadata.
+	 */
 	public ZhiPuAiEmbeddingModel(ZhiPuAiApi zhiPuAiApi, MetadataMode metadataMode) {
 		this(zhiPuAiApi, metadataMode,
 				ZhiPuAiEmbeddingOptions.builder().model(ZhiPuAiApi.DEFAULT_EMBEDDING_MODEL).build(),
 				RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
+	/**
+	 * Initializes a new instance of the ZhiPuAiEmbeddingModel class.
+	 * @param zhiPuAiApi The ZhiPuAiApi instance to use for making API requests.
+	 * @param metadataMode The mode for generating metadata.
+	 * @param zhiPuAiEmbeddingOptions The options for ZhiPuAI embedding.
+	 */
 	public ZhiPuAiEmbeddingModel(ZhiPuAiApi zhiPuAiApi, MetadataMode metadataMode,
 			ZhiPuAiEmbeddingOptions zhiPuAiEmbeddingOptions) {
 		this(zhiPuAiApi, metadataMode, zhiPuAiEmbeddingOptions, RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
+	/**
+	 * Initializes a new instance of the ZhiPuAiEmbeddingModel class.
+	 * @param zhiPuAiApi The ZhiPuAiApi instance to use for making API requests.
+	 * @param metadataMode The mode for generating metadata.
+	 * @param zhiPuAiEmbeddingOptions The options for ZhiPuAI embedding.
+	 * @param retryTemplate - The RetryTemplate for retrying failed API requests.
+	 */
 	public ZhiPuAiEmbeddingModel(ZhiPuAiApi zhiPuAiApi, MetadataMode metadataMode,
 			ZhiPuAiEmbeddingOptions zhiPuAiEmbeddingOptions, RetryTemplate retryTemplate) {
 		this(zhiPuAiApi, metadataMode, zhiPuAiEmbeddingOptions, retryTemplate, ObservationRegistry.NOOP);
 	}
 
+	/**
+	 * Initializes a new instance of the ZhiPuAiEmbeddingModel class.
+	 * @param zhiPuAiApi - The ZhiPuAiApi instance to use for making API requests.
+	 * @param metadataMode - The mode for generating metadata.
+	 * @param options - The options for ZhiPuAI embedding.
+	 * @param retryTemplate - The RetryTemplate for retrying failed API requests.
+	 * @param observationRegistry - The ObservationRegistry used for instrumentation.
+	 */
 	public ZhiPuAiEmbeddingModel(ZhiPuAiApi zhiPuAiApi, MetadataMode metadataMode, ZhiPuAiEmbeddingOptions options,
 			RetryTemplate retryTemplate, ObservationRegistry observationRegistry) {
 		Assert.notNull(zhiPuAiApi, "ZhiPuAiApi must not be null");
@@ -95,12 +154,12 @@ public class ZhiPuAiEmbeddingModel extends AbstractEmbeddingModel {
 			logger.warn(
 					"ZhiPu Embedding does not support batch embedding. Will make multiple API calls to embed(Document)");
 		}
-		ZhiPuAiEmbeddingOptions requestOptions = mergeOptions(request.getOptions(), this.defaultOptions);
+
+		EmbeddingRequest embeddingRequest = buildEmbeddingRequest(request);
 
 		var observationContext = EmbeddingModelObservationContext.builder()
-			.embeddingRequest(request)
+			.embeddingRequest(embeddingRequest)
 			.provider(ZhiPuApiConstants.PROVIDER_NAME)
-			.requestOptions(requestOptions)
 			.build();
 
 		return EmbeddingModelObservationDocumentation.EMBEDDING_MODEL_OPERATION
@@ -112,7 +171,7 @@ public class ZhiPuAiEmbeddingModel extends AbstractEmbeddingModel {
 				var totalUsage = new ZhiPuAiApi.Usage(0, 0, 0);
 
 				for (String inputContent : request.getInstructions()) {
-					var apiRequest = createEmbeddingRequest(inputContent, requestOptions);
+					var apiRequest = createEmbeddingRequest(inputContent, embeddingRequest.getOptions());
 
 					ZhiPuAiApi.EmbeddingList<ZhiPuAiApi.Embedding> response = this.retryTemplate
 						.execute(ctx -> this.zhiPuAiApi.embeddings(apiRequest).getBody());
@@ -152,20 +211,24 @@ public class ZhiPuAiEmbeddingModel extends AbstractEmbeddingModel {
 		return new DefaultUsage(usage.promptTokens(), usage.completionTokens(), usage.totalTokens(), usage);
 	}
 
-	private ZhiPuAiEmbeddingOptions mergeOptions(@Nullable EmbeddingOptions runtimeOptions,
-			ZhiPuAiEmbeddingOptions defaultOptions) {
-		var runtimeOptionsForProvider = ModelOptionsUtils.copyToTarget(runtimeOptions, EmbeddingOptions.class,
-				ZhiPuAiEmbeddingOptions.class);
-
-		if (runtimeOptionsForProvider == null) {
-			return defaultOptions;
+	EmbeddingRequest buildEmbeddingRequest(EmbeddingRequest embeddingRequest) {
+		// Process runtime options
+		ZhiPuAiEmbeddingOptions runtimeOptions = null;
+		if (embeddingRequest.getOptions() != null) {
+			runtimeOptions = ModelOptionsUtils.copyToTarget(embeddingRequest.getOptions(), EmbeddingOptions.class,
+					ZhiPuAiEmbeddingOptions.class);
 		}
 
-		return ZhiPuAiEmbeddingOptions.builder()
-			.model(ModelOptionsUtils.mergeOption(runtimeOptionsForProvider.getModel(), defaultOptions.getModel()))
-			.dimensions(ModelOptionsUtils.mergeOption(runtimeOptionsForProvider.getDimensions(),
-					defaultOptions.getDimensions()))
-			.build();
+		// Define request options by merging runtime options and default options
+		ZhiPuAiEmbeddingOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
+				ZhiPuAiEmbeddingOptions.class);
+
+		// Validate request options
+		if (!StringUtils.hasText(requestOptions.getModel())) {
+			throw new IllegalArgumentException("model cannot be null or empty");
+		}
+
+		return new EmbeddingRequest(embeddingRequest.getInstructions(), requestOptions);
 	}
 
 	private ZhiPuAiApi.EmbeddingRequest<String> createEmbeddingRequest(String text, EmbeddingOptions requestOptions) {

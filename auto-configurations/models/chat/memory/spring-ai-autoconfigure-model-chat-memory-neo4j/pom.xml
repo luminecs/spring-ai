@@ -21,7 +21,6 @@
 		<developerConnection>git@github.com:spring-projects/spring-ai.git</developerConnection>
 	</scm>
 
-
 	<dependencies>
 
 		<dependency>
@@ -30,7 +29,11 @@
 			<version>${project.parent.version}</version>
 		</dependency>
 
-
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-autoconfigure-model-chat-memory</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
 
 		<!-- Boot dependencies -->
 		<dependency>
@@ -41,6 +44,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-autoconfigure-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
 
@@ -90,5 +99,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
 </project>

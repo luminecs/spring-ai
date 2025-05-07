@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.anthropic.api.tool;
 
 import java.util.ArrayList;
@@ -24,6 +40,16 @@ import org.springframework.util.CollectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ *
+ * <a href="https://docs.anthropic.com/claude/docs/tool-use-examples">Tool use
+ * examples</a> <br/>
+ * <a href="https://docs.anthropic.com/claude/docs/tool-use">Tool use (function
+ * calling)</a>
+ *
+ * @author Christian Tzolov
+ * @since 1.0.0
+ */
 @EnabledIfEnvironmentVariable(named = "ANTHROPIC_API_KEY", matches = ".+")
 @SuppressWarnings("null")
 public class AnthropicApiToolIT {
@@ -32,7 +58,7 @@ public class AnthropicApiToolIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(AnthropicApiToolIT.class);
 
-	AnthropicApi anthropicApi = new AnthropicApi(System.getenv("ANTHROPIC_API_KEY"));
+	AnthropicApi anthropicApi = AnthropicApi.builder().apiKey(System.getenv("ANTHROPIC_API_KEY")).build();
 
 	List<Tool> tools = List.of(new Tool("getCurrentWeather",
 			"Get the weather in location. Return temperature in 30°F or 30°C format.", ModelOptionsUtils.jsonToMap("""
@@ -94,7 +120,7 @@ public class AnthropicApiToolIT {
 		if (CollectionUtils.isEmpty(toolToUseList)) {
 			return response;
 		}
-
+		// Add use tool message to the conversation history
 		messageConversation.add(new AnthropicMessage(response.getBody().content(), Role.ASSISTANT));
 
 		List<ContentBlock> toolResults = new ArrayList<>();
@@ -120,6 +146,7 @@ public class AnthropicApiToolIT {
 			toolResults.add(new ContentBlock(Type.TOOL_RESULT, id, content));
 		}
 
+		// Add function response message to the conversation history
 		messageConversation.add(new AnthropicMessage(toolResults, Role.USER));
 
 		return doCall(messageConversation);

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.vertexai.embedding.text;
 
 import java.util.List;
@@ -14,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.ai.embedding.EmbeddingOptions;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.retry.RetryUtils;
@@ -31,6 +48,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+/**
+ * @author Mark Pollack
+ */
 @ExtendWith(MockitoExtension.class)
 public class VertexAiTextEmbeddingRetryTests {
 
@@ -67,7 +87,7 @@ public class VertexAiTextEmbeddingRetryTests {
 
 	@Test
 	public void vertexAiEmbeddingTransientError() {
-
+		// Setup the mock PredictResponse
 		PredictResponse mockResponse = PredictResponse.newBuilder()
 			.addPredictions(Value.newBuilder()
 				.setStructValue(Struct.newBuilder()
@@ -92,11 +112,13 @@ public class VertexAiTextEmbeddingRetryTests {
 				.build())
 			.build();
 
+		// Setup the mock PredictionServiceClient
 		given(this.mockPredictionServiceClient.predict(any())).willThrow(new TransientAiException("Transient Error 1"))
 			.willThrow(new TransientAiException("Transient Error 2"))
 			.willReturn(mockResponse);
 
-		EmbeddingResponse result = this.embeddingModel.call(new EmbeddingRequest(List.of("text1", "text2"), null));
+		EmbeddingOptions options = VertexAiTextEmbeddingOptions.builder().model("model").build();
+		EmbeddingResponse result = this.embeddingModel.call(new EmbeddingRequest(List.of("text1", "text2"), options));
 
 		assertThat(result).isNotNull();
 		assertThat(result.getResults()).hasSize(1);
@@ -109,12 +131,15 @@ public class VertexAiTextEmbeddingRetryTests {
 
 	@Test
 	public void vertexAiEmbeddingNonTransientError() {
-
+		// Setup the mock PredictionServiceClient to throw a non-transient error
 		given(this.mockPredictionServiceClient.predict(any())).willThrow(new RuntimeException("Non Transient Error"));
 
-		assertThatThrownBy(() -> this.embeddingModel.call(new EmbeddingRequest(List.of("text1", "text2"), null)))
+		EmbeddingOptions options = VertexAiTextEmbeddingOptions.builder().model("model").build();
+		// Assert that a RuntimeException is thrown and not retried
+		assertThatThrownBy(() -> this.embeddingModel.call(new EmbeddingRequest(List.of("text1", "text2"), options)))
 			.isInstanceOf(RuntimeException.class);
 
+		// Verify that predict was called only once (no retries for non-transient errors)
 		verify(this.mockPredictionServiceClient, times(1)).predict(any());
 	}
 

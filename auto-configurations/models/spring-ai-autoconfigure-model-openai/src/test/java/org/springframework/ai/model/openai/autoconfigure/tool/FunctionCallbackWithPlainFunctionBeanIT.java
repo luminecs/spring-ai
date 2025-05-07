@@ -153,7 +153,7 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 			ChatClient chatClient = ChatClient.builder(chatModel).build();
 
 			String content = chatClient.prompt("What's the weather like in San Francisco, Tokyo, and Paris?")
-				.tools("weatherFunctionWithContext")
+				.toolNames("weatherFunctionWithContext")
 				.toolContext(Map.of("sessionId", "123"))
 				.call()
 				.content();
@@ -184,7 +184,7 @@ class FunctionCallbackWithPlainFunctionBeanIT {
 			ChatClient chatClient = ChatClient.builder(chatModel).build();
 
 			String content = chatClient.prompt("What's the weather like in San Francisco, Tokyo, and Paris?")
-				.tools("weatherFunctionWithClassBiFunction")
+				.toolNames("weatherFunctionWithClassBiFunction")
 				.toolContext(Map.of("sessionId", "123"))
 				.call()
 				.content();

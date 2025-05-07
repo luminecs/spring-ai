@@ -50,13 +50,13 @@ public class AzureOpenAiClientBuilderConfiguration {
 		Assert.hasText(connectionProperties.getEndpoint(), "Endpoint must not be empty");
 
 		if (!StringUtils.hasText(connectionProperties.getApiKey())) {
-			// Entra ID configuration, as the API key is not set
+
 			clientBuilder = new OpenAIClientBuilder().endpoint(connectionProperties.getEndpoint())
 				.credential(new DefaultAzureCredentialBuilder().build())
 				.clientOptions(clientOptions);
 		}
 		else {
-			// Azure OpenAI configuration using API key and endpoint
+
 			clientBuilder = new OpenAIClientBuilder().endpoint(connectionProperties.getEndpoint())
 				.credential(new AzureKeyCredential(connectionProperties.getApiKey()))
 				.clientOptions(clientOptions);

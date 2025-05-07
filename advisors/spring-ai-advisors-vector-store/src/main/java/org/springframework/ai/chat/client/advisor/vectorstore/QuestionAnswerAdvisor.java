@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor.vectorstore;
 
 import java.util.HashMap;
@@ -39,16 +23,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * Context for the question is retrieved from a Vector Store and added to the prompt's
- * user text.
- *
- * @author Christian Tzolov
- * @author Timo Salm
- * @author Ilayaperumal Gopinathan
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class QuestionAnswerAdvisor implements BaseAdvisor {
 
 	public static final String RETRIEVED_DOCUMENTS = "qa_retrieved_documents";
@@ -108,7 +82,7 @@ public class QuestionAnswerAdvisor implements BaseAdvisor {
 
 	@Override
 	public ChatClientRequest before(ChatClientRequest chatClientRequest, AdvisorChain advisorChain) {
-		// 1. Search for similar documents in the vector store.
+
 		var searchRequestToUse = SearchRequest.from(this.searchRequest)
 			.query(chatClientRequest.prompt().getUserMessage().getText())
 			.filterExpression(doGetFilterExpression(chatClientRequest.context()))
@@ -116,14 +90,12 @@ public class QuestionAnswerAdvisor implements BaseAdvisor {
 
 		List<Document> documents = this.vectorStore.similaritySearch(searchRequestToUse);
 
-		// 2. Create the context from the documents.
 		Map<String, Object> context = new HashMap<>(chatClientRequest.context());
 		context.put(RETRIEVED_DOCUMENTS, documents);
 
 		String documentContext = documents == null ? ""
 				: documents.stream().map(Document::getText).collect(Collectors.joining(System.lineSeparator()));
 
-		// 3. Augment the user prompt with the document context.
 		String augmentedUserText = this.promptTemplate.mutate()
 			.template(chatClientRequest.prompt().getUserMessage().getText() + System.lineSeparator()
 					+ this.promptTemplate.getTemplate())
@@ -131,7 +103,6 @@ public class QuestionAnswerAdvisor implements BaseAdvisor {
 			.build()
 			.render();
 
-		// 4. Update ChatClientRequest with augmented prompt.
 		return chatClientRequest.mutate()
 			.prompt(chatClientRequest.prompt().augmentUserMessage(augmentedUserText))
 			.context(context)

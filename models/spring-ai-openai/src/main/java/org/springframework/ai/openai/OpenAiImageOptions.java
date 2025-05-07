@@ -41,11 +41,6 @@ public class OpenAiImageOptions implements ImageOptions {
 		return new Builder();
 	}
 
-	/**
-	 * Create a new OpenAiImageOptions instance from an existing one.
-	 * @param fromOptions The options to copy from
-	 * @return A new OpenAiImageOptions instance
-	 */
 	public static OpenAiImageOptions fromOptions(OpenAiImageOptions fromOptions) {
 		OpenAiImageOptions options = new OpenAiImageOptions();
 		options.n = fromOptions.n;
@@ -176,7 +171,6 @@ public class OpenAiImageOptions implements ImageOptions {
 	public void setSize(String size) {
 		this.size = size;
 
-		// Parse the size string to update width and height
 		if (size != null) {
 			try {
 				String[] dimensions = size.split("x");
@@ -186,7 +180,7 @@ public class OpenAiImageOptions implements ImageOptions {
 				}
 			}
 			catch (Exception ex) {
-				// If parsing fails, leave width and height unchanged
+
 			}
 		}
 	}
@@ -220,10 +214,6 @@ public class OpenAiImageOptions implements ImageOptions {
 				+ ", user='" + this.user + '\'' + '}';
 	}
 
-	/**
-	 * Create a copy of this options instance.
-	 * @return A new instance with the same options
-	 */
 	public OpenAiImageOptions copy() {
 		return fromOptions(this);
 	}

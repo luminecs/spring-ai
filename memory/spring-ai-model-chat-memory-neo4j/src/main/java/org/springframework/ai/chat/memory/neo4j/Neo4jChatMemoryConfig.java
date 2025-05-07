@@ -73,21 +73,17 @@ public final class Neo4jChatMemoryConfig {
 		ensureIndexes();
 	}
 
-	/**
-	 * Ensures that indexes exist on conversationId for Session nodes and index for
-	 * Message nodes. This improves query performance for lookups and ordering.
-	 */
 	private void ensureIndexes() {
 		if (this.driver == null) {
 			logger.warn("Neo4j Driver is null, cannot ensure indexes.");
 			return;
 		}
 		try (var session = this.driver.session()) {
-			// Index for conversationId on Session nodes
+
 			String sessionIndexCypher = String.format(
 					"CREATE INDEX session_conversation_id_index IF NOT EXISTS FOR (n:%s) ON (n.conversationId)",
 					this.sessionLabel);
-			// Index for index on Message nodes
+
 			String messageIndexCypher = String
 				.format("CREATE INDEX message_index_index IF NOT EXISTS FOR (n:%s) ON (n.index)", this.messageLabel);
 			session.run(sessionIndexCypher);

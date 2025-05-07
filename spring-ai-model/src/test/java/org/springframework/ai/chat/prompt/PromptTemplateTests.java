@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.prompt;
 
 import java.util.HashMap;
@@ -31,11 +15,6 @@ import org.springframework.core.io.Resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Unit tests for {@link PromptTemplate}.
- *
- * @author Thomas Vitale
- */
 class PromptTemplateTests {
 
 	@Test
@@ -192,14 +171,11 @@ class PromptTemplateTests {
 			.hasMessageContaining("Only one of template or resource can be set");
 	}
 
-	// --- Builder Pattern Tests ---
-
 	@Test
 	void createWithValidTemplate_Builder() {
 		String template = "Hello {name}!";
 		PromptTemplate promptTemplate = PromptTemplate.builder().template(template).build();
-		// Render with the required variable to check the template string was set
-		// correctly
+
 		assertThat(promptTemplate.render(Map.of("name", "Test"))).isEqualTo("Hello Test!");
 	}
 
@@ -207,10 +183,7 @@ class PromptTemplateTests {
 	void renderWithVariables_Builder() {
 		Map<String, Object> variables = new HashMap<>();
 		variables.put("name", "Spring AI");
-		PromptTemplate promptTemplate = PromptTemplate.builder()
-			.template("Hello {name}!")
-			.variables(variables) // Use builder's variable method
-			.build();
+		PromptTemplate promptTemplate = PromptTemplate.builder().template("Hello {name}!").variables(variables).build();
 		assertThat(promptTemplate.render()).isEqualTo("Hello Spring AI!");
 	}
 
@@ -219,7 +192,7 @@ class PromptTemplateTests {
 		String content = "Hello {name}!";
 		Resource resource = new ByteArrayResource(content.getBytes());
 		PromptTemplate promptTemplate = PromptTemplate.builder().resource(resource).build();
-		// Render with the required variable to check the resource was read correctly
+
 		assertThat(promptTemplate.render(Map.of("name", "Resource"))).isEqualTo("Hello Resource!");
 	}
 
@@ -227,7 +200,7 @@ class PromptTemplateTests {
 	void addVariable_Builder() {
 		PromptTemplate promptTemplate = PromptTemplate.builder()
 			.template("Hello {name}!")
-			.variables(Map.of("name", "Spring AI")) // Use variables() method
+			.variables(Map.of("name", "Spring AI"))
 			.build();
 		assertThat(promptTemplate.render()).isEqualTo("Hello Spring AI!");
 	}
@@ -244,12 +217,12 @@ class PromptTemplateTests {
 		variables.put("greeting", "Hello");
 		PromptTemplate promptTemplate = PromptTemplate.builder()
 			.template("{greeting} {name}!")
-			.variables(variables) // Set default variables via builder
+			.variables(variables)
 			.build();
 
 		Map<String, Object> additionalVariables = new HashMap<>();
 		additionalVariables.put("name", "Spring AI");
-		// Pass additional variables during render - should merge with defaults
+
 		assertThat(promptTemplate.render(additionalVariables)).isEqualTo("Hello Spring AI!");
 	}
 
@@ -262,7 +235,7 @@ class PromptTemplateTests {
 
 		PromptTemplate promptTemplate = PromptTemplate.builder()
 			.template("Hello {content}!")
-			.variables(variables) // Set resource variable via builder
+			.variables(variables)
 			.build();
 		assertThat(promptTemplate.render()).isEqualTo("Hello Spring AI!");
 	}
@@ -274,21 +247,18 @@ class PromptTemplateTests {
 
 		PromptTemplate promptTemplate = PromptTemplate.builder()
 			.template("Hello {name} {noun}!")
-			.variables(initialVars) // Set initial variables
-			.variables(overwriteVars) // Overwrite with new variables
+			.variables(initialVars)
+			.variables(overwriteVars)
 			.build();
 
-		// Expect only variables from the last call to be present
 		assertThat(promptTemplate.render()).isEqualTo("Hello Overwritten Day!");
 	}
 
-	// Helper Custom Renderer for testing
 	private static class CustomTestRenderer implements TemplateRenderer {
 
 		@Override
 		public String apply(String template, Map<String, Object> model) {
-			// Simple renderer that just appends a marker
-			// Note: This simple renderer ignores the model map for test purposes.
+
 			return template + " (Rendered by Custom)";
 		}
 
@@ -299,10 +269,7 @@ class PromptTemplateTests {
 		String template = "This is a test.";
 		TemplateRenderer customRenderer = new CustomTestRenderer();
 
-		PromptTemplate promptTemplate = PromptTemplate.builder()
-			.template(template)
-			.renderer(customRenderer) // Set custom renderer
-			.build();
+		PromptTemplate promptTemplate = PromptTemplate.builder().template(template).renderer(customRenderer).build();
 
 		assertThat(promptTemplate.render()).isEqualTo(template + " (Rendered by Custom)");
 	}

@@ -1,31 +1,9 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.openai;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Unit tests for {@link OpenAiImageOptions}.
- *
- * @author Thomas Vitale
- * @author Mark Pollack
- */
 class OpenAiImageOptionsTests {
 
 	@Test
@@ -65,7 +43,6 @@ class OpenAiImageOptionsTests {
 			.user("original-user")
 			.build();
 
-		// Test fromOptions static method
 		OpenAiImageOptions copied = OpenAiImageOptions.fromOptions(original);
 		assertThat(copied).isNotSameAs(original);
 		assertThat(copied.getN()).isEqualTo(original.getN());
@@ -78,7 +55,6 @@ class OpenAiImageOptionsTests {
 		assertThat(copied.getStyle()).isEqualTo(original.getStyle());
 		assertThat(copied.getUser()).isEqualTo(original.getUser());
 
-		// Test copy instance method
 		OpenAiImageOptions copiedViaMethod = original.copy();
 		assertThat(copiedViaMethod).isNotSameAs(original);
 		assertThat(copiedViaMethod.getN()).isEqualTo(original.getN());
@@ -115,7 +91,6 @@ class OpenAiImageOptionsTests {
 		assertThat(options.getStyle()).isEqualTo("vivid");
 		assertThat(options.getUser()).isEqualTo("test-setter-user");
 
-		// Test size setter
 		options.setSize("256x256");
 		assertThat(options.getSize()).isEqualTo("256x256");
 		assertThat(options.getWidth()).isEqualTo(256);
@@ -170,29 +145,23 @@ class OpenAiImageOptionsTests {
 			.build();
 
 		OpenAiImageOptions options3 = OpenAiImageOptions.builder()
-			.N(3) // Different value
+			.N(3)
 			.model("dall-e-3")
 			.quality("hd")
 			.width(1024)
 			.height(1024)
 			.build();
 
-		// Test equals
-		assertThat(options1).isEqualTo(options1); // Same instance
-		assertThat(options1).isEqualTo(options2); // Equal objects
-		assertThat(options1).isNotEqualTo(options3); // Different objects
-		assertThat(options1).isNotEqualTo(null); // Null
-		assertThat(options1).isNotEqualTo("not an options object"); // Different type
+		assertThat(options1).isEqualTo(options1);
+		assertThat(options1).isEqualTo(options2);
+		assertThat(options1).isNotEqualTo(options3);
+		assertThat(options1).isNotEqualTo(null);
+		assertThat(options1).isNotEqualTo("not an options object");
 
-		// Test hashCode
-		assertThat(options1.hashCode()).isEqualTo(options2.hashCode()); // Equal objects
-																		// have equal hash
-																		// codes
-		assertThat(options1.hashCode()).isNotEqualTo(options3.hashCode()); // Different
-																			// objects
-																			// have
-																			// different
-																			// hash codes
+		assertThat(options1.hashCode()).isEqualTo(options2.hashCode());
+
+		assertThat(options1.hashCode()).isNotEqualTo(options3.hashCode());
+
 	}
 
 	@Test
@@ -207,7 +176,7 @@ class OpenAiImageOptionsTests {
 
 	@Test
 	void testFluentApiPattern() {
-		// Test the fluent API pattern by chaining method calls
+
 		OpenAiImageOptions options = OpenAiImageOptions.builder()
 			.N(1)
 			.model("dall-e-3")
@@ -230,7 +199,6 @@ class OpenAiImageOptionsTests {
 		assertThat(options.getUser()).isEqualTo("test-user");
 	}
 
-	// Original size-related tests
 	@Test
 	void whenImageDimensionsAreAllUnset() {
 		OpenAiImageOptions options = new OpenAiImageOptions();
@@ -264,7 +232,7 @@ class OpenAiImageOptionsTests {
 		options.setWidth(1920);
 		assertThat(options.getHeight()).isNull();
 		assertThat(options.getWidth()).isEqualTo(1920);
-		// 1920xnull is not a valid size, so "size" should be null.
+
 		assertThat(options.getSize()).isNull();
 	}
 
@@ -274,7 +242,7 @@ class OpenAiImageOptionsTests {
 		options.setHeight(1080);
 		assertThat(options.getHeight()).isEqualTo(1080);
 		assertThat(options.getWidth()).isNull();
-		// nullx1080 is not a valid size, so "size" should be null.
+
 		assertThat(options.getSize()).isNull();
 	}
 
@@ -318,13 +286,11 @@ class OpenAiImageOptionsTests {
 	void testSetSizeUpdatesWidthAndHeight() {
 		OpenAiImageOptions options = new OpenAiImageOptions();
 
-		// Test setting size updates width and height
 		options.setSize("800x600");
 		assertThat(options.getSize()).isEqualTo("800x600");
 		assertThat(options.getWidth()).isEqualTo(800);
 		assertThat(options.getHeight()).isEqualTo(600);
 
-		// Test changing size updates width and height
 		options.setSize("1920x1080");
 		assertThat(options.getSize()).isEqualTo("1920x1080");
 		assertThat(options.getWidth()).isEqualTo(1920);
@@ -335,36 +301,29 @@ class OpenAiImageOptionsTests {
 	void testSetSizeWithInvalidFormatPreservesExistingWidthAndHeight() {
 		OpenAiImageOptions options = new OpenAiImageOptions();
 
-		// First set valid width and height
 		options.setWidth(1024);
 		options.setHeight(768);
 
-		// Now set invalid size format
 		options.setSize("invalid");
 
-		// Size should be updated, but width and height should remain unchanged
 		assertThat(options.getSize()).isEqualTo("invalid");
-		assertThat(options.getWidth()).isEqualTo(1024); // Should preserve existing value
-		assertThat(options.getHeight()).isEqualTo(768); // Should preserve existing value
+		assertThat(options.getWidth()).isEqualTo(1024);
+		assertThat(options.getHeight()).isEqualTo(768);
 	}
 
 	@Test
 	void testSetSizeWithNullClearsSize() {
 		OpenAiImageOptions options = new OpenAiImageOptions();
 
-		// First set valid values
 		options.setSize("800x600");
 		assertThat(options.getWidth()).isEqualTo(800);
 		assertThat(options.getHeight()).isEqualTo(600);
 
-		// Now set size to null
 		options.setSize(null);
 
-		// The size field is null, but getSize() computes it from width and height
-		// This is the expected behavior based on the implementation of getSize()
 		assertThat(options.getSize()).isEqualTo("800x600");
-		assertThat(options.getWidth()).isEqualTo(800); // Should preserve existing value
-		assertThat(options.getHeight()).isEqualTo(600); // Should preserve existing value
+		assertThat(options.getWidth()).isEqualTo(800);
+		assertThat(options.getHeight()).isEqualTo(600);
 	}
 
 }

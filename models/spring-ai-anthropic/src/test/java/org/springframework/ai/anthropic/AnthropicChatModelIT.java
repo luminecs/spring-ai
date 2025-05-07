@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.anthropic;
 
 import java.io.IOException;
@@ -309,8 +293,7 @@ class AnthropicChatModelIT {
 	void streamFunctionCallTest() {
 
 		UserMessage userMessage = new UserMessage(
-				// "What's the weather like in San Francisco? Return the result in
-				// Celsius.");
+
 				"What's the weather like in San Francisco, Tokyo and Paris? Return the result in Celsius.");
 
 		List<Message> messages = new ArrayList<>(List.of(userMessage));
@@ -393,7 +376,7 @@ class AnthropicChatModelIT {
 		// @formatter:on
 
 		logger.info(response.toString());
-		// Note, brittle test.
+
 		validateChatResponseMetadata(response, "claude-3-5-sonnet-latest");
 	}
 
@@ -404,10 +387,10 @@ class AnthropicChatModelIT {
 
 		var promptOptions = AnthropicChatOptions.builder()
 			.model(AnthropicApi.ChatModel.CLAUDE_3_7_SONNET.getName())
-			.temperature(1.0) // temperature should be set to 1 when thinking is enabled
+			.temperature(1.0)
 			.maxTokens(8192)
-			.thinking(AnthropicApi.ThinkingType.ENABLED, 2048) // Must be ≥1024 && <
-																// max_tokens
+			.thinking(AnthropicApi.ThinkingType.ENABLED, 2048)
+
 			.build();
 
 		ChatResponse response = this.chatModel.call(new Prompt(List.of(userMessage), promptOptions));
@@ -416,14 +399,14 @@ class AnthropicChatModelIT {
 
 		for (Generation generation : response.getResults()) {
 			AssistantMessage message = generation.getOutput();
-			if (message.getText() != null) { // text
+			if (message.getText() != null) {
 				assertThat(message.getText()).isNotBlank();
 			}
-			else if (message.getMetadata().containsKey("signature")) { // thinking
+			else if (message.getMetadata().containsKey("signature")) {
 				assertThat(message.getMetadata().get("signature")).isNotNull();
 				assertThat(message.getMetadata().get("thinking")).isNotNull();
 			}
-			else if (message.getMetadata().containsKey("data")) { // redacted thinking
+			else if (message.getMetadata().containsKey("data")) {
 				assertThat(message.getMetadata().get("data")).isNotNull();
 			}
 		}

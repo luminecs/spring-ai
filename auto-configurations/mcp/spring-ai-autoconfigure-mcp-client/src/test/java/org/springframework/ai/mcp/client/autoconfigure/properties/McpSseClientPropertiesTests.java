@@ -1,19 +1,3 @@
-/*
- * Copyright 2025-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.mcp.client.autoconfigure.properties;
 
 import org.junit.jupiter.api.Test;
@@ -25,11 +9,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Tests for {@link McpSseClientProperties}.
- *
- * @author Christian Tzolov
- */
 class McpSseClientPropertiesTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
@@ -87,15 +66,10 @@ class McpSseClientPropertiesTests {
 
 	@Test
 	void connectionWithNullUrl() {
-		// This test verifies that a null URL is not allowed in the SseParameters record
-		// Since records require all parameters to be provided, this test is more of a
-		// documentation
-		// of expected behavior rather than a functional test
+
 		McpSseClientProperties properties = new McpSseClientProperties();
 		Map<String, McpSseClientProperties.SseParameters> connections = properties.getConnections();
 
-		// We can't create an SseParameters with null URL due to record constraints
-		// But we can verify that the connections map is initialized and empty
 		assertThat(connections).isNotNull();
 		assertThat(connections).isEmpty();
 	}
@@ -147,28 +121,24 @@ class McpSseClientPropertiesTests {
 			McpSseClientProperties properties = context.getBean(McpSseClientProperties.class);
 			Map<String, McpSseClientProperties.SseParameters> connections = properties.getConnections();
 
-			// Add a connection
 			connections.put("server1",
 					new McpSseClientProperties.SseParameters("http://localhost:8080/events", "/sse"));
 			assertThat(properties.getConnections()).hasSize(1);
 			assertThat(properties.getConnections().get("server1").url()).isEqualTo("http://localhost:8080/events");
 			assertThat(properties.getConnections().get("server1").sseEndpoint()).isEqualTo("/sse");
 
-			// Add another connection
 			connections.put("server2",
 					new McpSseClientProperties.SseParameters("http://otherserver:8081/events", null));
 			assertThat(properties.getConnections()).hasSize(2);
 			assertThat(properties.getConnections().get("server2").url()).isEqualTo("http://otherserver:8081/events");
 			assertThat(properties.getConnections().get("server2").sseEndpoint()).isNull();
 
-			// Replace a connection
 			connections.put("server1",
 					new McpSseClientProperties.SseParameters("http://newserver:8082/events", "/events"));
 			assertThat(properties.getConnections()).hasSize(2);
 			assertThat(properties.getConnections().get("server1").url()).isEqualTo("http://newserver:8082/events");
 			assertThat(properties.getConnections().get("server1").sseEndpoint()).isEqualTo("/events");
 
-			// Remove a connection
 			connections.remove("server1");
 			assertThat(properties.getConnections()).hasSize(1);
 			assertThat(properties.getConnections()).containsKey("server2");

@@ -17,11 +17,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Tests for {@link SseWebFluxTransportAutoConfiguration}.
- *
- * @author Christian Tzolov
- */
 public class SseWebFluxTransportAutoConfigurationTests {
 
 	private final ApplicationContextRunner applicationContext = new ApplicationContextRunner()
@@ -131,7 +126,7 @@ public class SseWebFluxTransportAutoConfigurationTests {
 				assertThat(transports).hasSize(1);
 				assertThat(transports.get(0).name()).isEqualTo("server1");
 				assertThat(transports.get(0).transport()).isInstanceOf(WebFluxSseClientTransport.class);
-				// Default SSE endpoint is "/sse" as specified in the configuration class
+
 			});
 	}
 

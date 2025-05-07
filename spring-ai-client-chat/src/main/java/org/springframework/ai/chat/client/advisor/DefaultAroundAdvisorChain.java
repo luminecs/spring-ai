@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor;
 
 import java.util.ArrayList;
@@ -42,16 +26,6 @@ import org.springframework.core.OrderComparator;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * Default implementation for the {@link BaseAdvisorChain}. Used by the
- * {@link org.springframework.ai.chat.client.ChatClient} to delegate the call to the next
- * {@link CallAdvisor} or {@link StreamAdvisor} in the chain.
- *
- * @author Christian Tzolov
- * @author Dariusz Jedrzejczyk
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 
 	public static final AdvisorObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultAdvisorObservationConvention();
@@ -209,9 +183,6 @@ public class DefaultAroundAdvisorChain implements BaseAdvisorChain {
 			return this;
 		}
 
-		/**
-		 * (Re)orders the advisors in priority order based on their Ordered attribute.
-		 */
 		private void reOrder() {
 			ArrayList<CallAdvisor> callAdvisors = new ArrayList<>(this.callAdvisors);
 			OrderComparator.sort(callAdvisors);

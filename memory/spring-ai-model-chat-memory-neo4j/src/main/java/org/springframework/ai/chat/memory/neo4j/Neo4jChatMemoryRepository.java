@@ -12,13 +12,6 @@ import org.springframework.util.MimeType;
 import java.net.URI;
 import java.util.*;
 
-/**
- * An implementation of {@link ChatMemoryRepository} for Neo4J
- *
- * @author Enrico Rampazzo
- * @since 1.0.0
- */
-
 public class Neo4jChatMemoryRepository implements ChatMemoryRepository {
 
 	private final Neo4jChatMemoryConfig config;
@@ -91,10 +84,9 @@ public class Neo4jChatMemoryRepository implements ChatMemoryRepository {
 
 	@Override
 	public void saveAll(String conversationId, List<Message> messages) {
-		// First delete existing messages for this conversation
+
 		deleteByConversationId(conversationId);
 
-		// Then add the new messages
 		try (Session s = this.config.getDriver().session()) {
 			try (Transaction t = s.beginTransaction()) {
 				for (Message m : messages) {
@@ -107,7 +99,7 @@ public class Neo4jChatMemoryRepository implements ChatMemoryRepository {
 
 	@Override
 	public void deleteByConversationId(String conversationId) {
-		// First delete all messages and related nodes
+
 		String deleteMessagesStatement = """
 				MATCH (s:%s {id:$conversationId})-[r:HAS_MESSAGE]->(m:%s)
 				OPTIONAL MATCH (m)-[:HAS_METADATA]->(metadata:%s)
@@ -119,7 +111,6 @@ public class Neo4jChatMemoryRepository implements ChatMemoryRepository {
 				this.config.getMetadataLabel(), this.config.getMediaLabel(), this.config.getToolResponseLabel(),
 				this.config.getToolCallLabel());
 
-		// Then delete the conversation node itself
 		String deleteConversationStatement = """
 				MATCH (s:%s {id:$conversationId})
 				DETACH DELETE s
@@ -127,9 +118,9 @@ public class Neo4jChatMemoryRepository implements ChatMemoryRepository {
 
 		try (Session s = this.config.getDriver().session()) {
 			try (Transaction t = s.beginTransaction()) {
-				// First delete messages
+
 				t.run(deleteMessagesStatement, Map.of("conversationId", conversationId));
-				// Then delete the conversation node
+
 				t.run(deleteConversationStatement, Map.of("conversationId", conversationId));
 				t.commit();
 			}

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vertexai.embedding;
 
 import java.io.IOException;
@@ -23,16 +7,6 @@ import com.google.cloud.aiplatform.v1.PredictionServiceSettings;
 
 import org.springframework.util.StringUtils;
 
-/**
- * VertexAiEmbeddingConnectionDetails represents the details of a connection to the Vertex
- * AI embedding service. It provides methods to access the project ID, location,
- * publisher, and PredictionServiceSettings.
- *
- * @author Christian Tzolov
- * @author Mark Pollack
- * @author Ilayaperumal Gopinathan
- * @since 1.0.0
- */
 public class VertexAiEmbeddingConnectionDetails {
 
 	public static final String DEFAULT_ENDPOINT = "us-central1-aiplatform.googleapis.com:443";
@@ -43,18 +17,8 @@ public class VertexAiEmbeddingConnectionDetails {
 
 	private static final String DEFAULT_LOCATION = "us-central1";
 
-	/**
-	 * Your project ID.
-	 */
 	private final String projectId;
 
-	/**
-	 * A location is a <a href="https://cloud.google.com/about/locations?hl=en">region</a>
-	 * you can specify in a request to control where data is stored at rest. For a list of
-	 * available regions, see <a href=
-	 * "https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations?hl=en">Generative
-	 * AI on Vertex AI locations</a>.
-	 */
 	private final String location;
 
 	private final String publisher;
@@ -96,34 +60,14 @@ public class VertexAiEmbeddingConnectionDetails {
 
 	public static class Builder {
 
-		/**
-		 * The Vertex AI embedding endpoint.
-		 */
 		private String endpoint;
 
-		/**
-		 * Your project ID.
-		 */
 		private String projectId;
 
-		/**
-		 * A location is a
-		 * <a href="https://cloud.google.com/about/locations?hl=en">region</a> you can
-		 * specify in a request to control where data is stored at rest. For a list of
-		 * available regions, see <a href=
-		 * "https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations?hl=en">Generative
-		 * AI on Vertex AI locations</a>.
-		 */
 		private String location;
 
-		/**
-		 *
-		 */
 		private String publisher;
 
-		/**
-		 * Allows the connection settings to be customized
-		 */
 		private PredictionServiceSettings predictionServiceSettings;
 
 		public Builder apiEndpoint(String endpoint) {

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.zhipuai;
 
 import java.util.ArrayList;
@@ -75,131 +59,51 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MimeType;
 
-/**
- * {@link ChatModel} and {@link StreamingChatModel} implementation for {@literal ZhiPuAI}
- * backed by {@link ZhiPuAiApi}.
- *
- * @author Geng Rong
- * @author Alexandros Pappas
- * @author Ilayaperumal Gopinathan
- * @see ChatModel
- * @see StreamingChatModel
- * @see ZhiPuAiApi
- * @since 1.0.0 M1
- */
 public class ZhiPuAiChatModel implements ChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(ZhiPuAiChatModel.class);
 
 	private static final ChatModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultChatModelObservationConvention();
 
-	/**
-	 * The retry template used to retry the ZhiPuAI API calls.
-	 */
 	public final RetryTemplate retryTemplate;
 
-	/**
-	 * The default options used for the chat completion requests.
-	 */
 	private final ZhiPuAiChatOptions defaultOptions;
 
-	/**
-	 * Low-level access to the ZhiPuAI API.
-	 */
 	private final ZhiPuAiApi zhiPuAiApi;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * The Tool calling manager.
-	 */
 	private final ToolCallingManager toolCallingManager;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
-	/**
-	 * The tool execution eligibility predicate used to determine if a tool can be
-	 * executed.
-	 */
 	private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
 
-	/**
-	 * Creates an instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @throws IllegalArgumentException if zhiPuAiApi is null
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi) {
 		this(zhiPuAiApi, ZhiPuAiChatOptions.builder().model(ZhiPuAiApi.DEFAULT_CHAT_MODEL).temperature(0.7).build());
 	}
 
-	/**
-	 * Initializes an instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @param options The ZhiPuAiChatOptions to configure the chat model.
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi, ZhiPuAiChatOptions options) {
 		this(zhiPuAiApi, options, RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
-	/**
-	 * Initializes an instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @param options The ZhiPuAiChatOptions to configure the chat model.
-	 * @param retryTemplate The retry template.
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi, ZhiPuAiChatOptions options, RetryTemplate retryTemplate) {
 		this(zhiPuAiApi, options, ToolCallingManager.builder().build(), retryTemplate, ObservationRegistry.NOOP,
 				new DefaultToolExecutionEligibilityPredicate());
 	}
 
-	/**
-	 * Initializes an instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @param options The ZhiPuAiChatOptions to configure the chat model.
-	 * @param retryTemplate The retry template.
-	 * @param observationRegistry The Observation Registry.
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi, ZhiPuAiChatOptions options, RetryTemplate retryTemplate,
 			ObservationRegistry observationRegistry) {
 		this(zhiPuAiApi, options, ToolCallingManager.builder().build(), retryTemplate, observationRegistry,
 				new DefaultToolExecutionEligibilityPredicate());
 	}
 
-	/**
-	 * Initializes an instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @param toolCallingManager The tool calling manager
-	 * @param options The ZhiPuAiChatOptions to configure the chat model.
-	 * @param retryTemplate The retry template.
-	 * @param observationRegistry The Observation Registry.
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi, ZhiPuAiChatOptions options, ToolCallingManager toolCallingManager,
 			RetryTemplate retryTemplate, ObservationRegistry observationRegistry) {
 		this(zhiPuAiApi, options, toolCallingManager, retryTemplate, observationRegistry,
 				new DefaultToolExecutionEligibilityPredicate());
 	}
 
-	/**
-	 * Initializes a new instance of the ZhiPuAiChatModel.
-	 * @param zhiPuAiApi The ZhiPuAiApi instance to be used for interacting with the
-	 * ZhiPuAI Chat API.
-	 * @param options The ZhiPuAiChatOptions to configure the chat model.
-	 * @param toolCallingManager The tool calling manager
-	 * @param retryTemplate The retry template.
-	 * @param observationRegistry The ObservationRegistry used for instrumentation.
-	 * @param toolExecutionEligibilityPredicate The Tool execution eligibility predicate.
-	 */
 	public ZhiPuAiChatModel(ZhiPuAiApi zhiPuAiApi, ZhiPuAiChatOptions options, ToolCallingManager toolCallingManager,
 			RetryTemplate retryTemplate, ObservationRegistry observationRegistry,
 			ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate) {
@@ -234,8 +138,7 @@ public class ZhiPuAiChatModel implements ChatModel {
 
 	@Override
 	public ChatResponse call(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		ChatCompletionRequest request = createRequest(requestPrompt, false);
 
@@ -281,14 +184,14 @@ public class ZhiPuAiChatModel implements ChatModel {
 		if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(requestPrompt.getOptions(), response)) {
 			var toolExecutionResult = this.toolCallingManager.executeToolCalls(requestPrompt, response);
 			if (toolExecutionResult.returnDirect()) {
-				// Return tool execution result directly to the client.
+
 				return ChatResponse.builder()
 					.from(response)
 					.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 					.build();
 			}
 			else {
-				// Send the tool execution result back to the model.
+
 				return this.call(new Prompt(toolExecutionResult.conversationHistory(), requestPrompt.getOptions()));
 			}
 		}
@@ -303,16 +206,13 @@ public class ZhiPuAiChatModel implements ChatModel {
 	@Override
 	public Flux<ChatResponse> stream(Prompt prompt) {
 		return Flux.deferContextual(contextView -> {
-			// Before moving any further, build the final request Prompt,
-			// merging runtime and default options.
+
 			Prompt requestPrompt = buildRequestPrompt(prompt);
 			ChatCompletionRequest request = createRequest(requestPrompt, true);
 
 			Flux<ChatCompletionChunk> completionChunks = this.retryTemplate
 				.execute(ctx -> this.zhiPuAiApi.chatCompletionStream(request));
 
-			// For chunked responses, only the first chunk contains the choice role.
-			// The rest of the chunks with same ID share the same role.
 			ConcurrentHashMap<String, String> roleMap = new ConcurrentHashMap<>();
 
 			final ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
@@ -358,17 +258,16 @@ public class ZhiPuAiChatModel implements ChatModel {
 			Flux<ChatResponse> flux = chatResponse.flatMap(response -> {
 						if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(requestPrompt.getOptions(), response)) {
 							return Flux.defer(() -> {
-								// FIXME: bounded elastic needs to be used since tool calling
-								//  is currently only synchronous
+
 								var toolExecutionResult = this.toolCallingManager.executeToolCalls(requestPrompt, response);
 								if (toolExecutionResult.returnDirect()) {
-									// Return tool execution result directly to the client.
+
 									return Flux.just(ChatResponse.builder().from(response)
 											.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 											.build());
 								}
 								else {
-									// Send the tool execution result back to the model.
+
 									return this.stream(new Prompt(toolExecutionResult.conversationHistory(), requestPrompt.getOptions()));
 								}
 							}).subscribeOn(Schedulers.boundedElastic());
@@ -399,11 +298,6 @@ public class ZhiPuAiChatModel implements ChatModel {
 		return new DefaultUsage(usage.promptTokens(), usage.completionTokens(), usage.totalTokens(), usage);
 	}
 
-	/**
-	 * Convert the ChatCompletionChunk into a ChatCompletion. The Usage is set to null.
-	 * @param chunk the ChatCompletionChunk to convert
-	 * @return the ChatCompletion
-	 */
 	private ChatCompletion chunkToChatCompletion(ChatCompletionChunk chunk) {
 		List<ChatCompletion.Choice> choices = chunk.choices().stream().map(cc -> {
 			ChatCompletionMessage delta = cc.delta();
@@ -426,7 +320,7 @@ public class ZhiPuAiChatModel implements ChatModel {
 	}
 
 	Prompt buildRequestPrompt(Prompt prompt) {
-		// Process runtime options
+
 		ZhiPuAiChatOptions runtimeOptions = null;
 		if (prompt.getOptions() != null) {
 			if (prompt.getOptions() instanceof ToolCallingChatOptions toolCallingChatOptions) {
@@ -439,12 +333,9 @@ public class ZhiPuAiChatModel implements ChatModel {
 			}
 		}
 
-		// Define request options by merging runtime options and default options
 		ZhiPuAiChatOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				ZhiPuAiChatOptions.class);
 
-		// Merge @JsonIgnore-annotated options explicitly since they are ignored by
-		// Jackson, used by ModelOptionsUtils.
 		if (runtimeOptions != null) {
 			requestOptions.setInternalToolExecutionEnabled(
 					ModelOptionsUtils.mergeOption(runtimeOptions.getInternalToolExecutionEnabled(),
@@ -468,9 +359,6 @@ public class ZhiPuAiChatModel implements ChatModel {
 		return new Prompt(prompt.getInstructions(), requestOptions);
 	}
 
-	/**
-	 * Accessible for testing.
-	 */
 	ChatCompletionRequest createRequest(Prompt prompt, boolean stream) {
 
 		List<ChatCompletionMessage> chatCompletionMessages = prompt.getInstructions().stream().map(message -> {
@@ -542,7 +430,6 @@ public class ZhiPuAiChatModel implements ChatModel {
 
 		ZhiPuAiChatOptions requestOptions = (ZhiPuAiChatOptions) prompt.getOptions();
 
-		// Add the tool definitions to the request's tools parameter.
 		List<ToolDefinition> toolDefinitions = this.toolCallingManager.resolveToolDefinitions(requestOptions);
 		if (!CollectionUtils.isEmpty(toolDefinitions)) {
 			request = ModelOptionsUtils.merge(
@@ -554,12 +441,11 @@ public class ZhiPuAiChatModel implements ChatModel {
 
 	private String fromMediaData(MimeType mimeType, Object mediaContentData) {
 		if (mediaContentData instanceof byte[] bytes) {
-			// Assume the bytes are an image. So, convert the bytes to a base64 encoded
-			// following the prefix pattern.
+
 			return String.format("data:%s;base64,%s", mimeType.toString(), Base64.getEncoder().encodeToString(bytes));
 		}
 		else if (mediaContentData instanceof String text) {
-			// Assume the text is a URLs or a base64 encoded image prefixed by the user.
+
 			return text;
 		}
 		else {

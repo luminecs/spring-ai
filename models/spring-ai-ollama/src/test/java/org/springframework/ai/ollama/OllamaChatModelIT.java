@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.ollama;
 
 import java.util.List;
@@ -102,7 +86,6 @@ class OllamaChatModelIT extends BaseOllamaIT {
 
 		UserMessage userMessage = new UserMessage("Tell me about 5 famous pirates from the Golden Age of Piracy.");
 
-		// portable/generic options
 		var portableOptions = ChatOptions.builder().temperature(0.7).build();
 
 		Prompt prompt = new Prompt(List.of(systemMessage, userMessage), portableOptions);
@@ -110,7 +93,6 @@ class OllamaChatModelIT extends BaseOllamaIT {
 		ChatResponse response = this.chatModel.call(prompt);
 		assertThat(response.getResult().getOutput().getText()).contains("Blackbeard");
 
-		// ollama specific options
 		var ollamaOptions = OllamaOptions.builder().lowVRAM(true).build();
 
 		response = this.chatModel.call(new Prompt(List.of(systemMessage, userMessage), ollamaOptions));
@@ -251,7 +233,6 @@ class OllamaChatModelIT extends BaseOllamaIT {
 		assertThat(actorsFilms.movies()).hasSize(5);
 	}
 
-	// Example inspired by https://ollama.com/blog/structured-outputs
 	@Test
 	@Disabled("Pending review")
 	void jsonSchemaFormatStructuredOutput() {

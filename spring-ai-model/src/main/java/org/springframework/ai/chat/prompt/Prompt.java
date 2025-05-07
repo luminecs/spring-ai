@@ -76,10 +76,6 @@ public class Prompt implements ModelRequest<List<Message>> {
 		return this.messages;
 	}
 
-	/**
-	 * Get the first system message in the prompt. If no system message is found, an empty
-	 * SystemMessage is returned.
-	 */
 	public SystemMessage getSystemMessage() {
 		for (int i = 0; i <= this.messages.size() - 1; i++) {
 			Message message = this.messages.get(i);
@@ -90,10 +86,6 @@ public class Prompt implements ModelRequest<List<Message>> {
 		return new SystemMessage("");
 	}
 
-	/**
-	 * Get the last user message in the prompt. If no user message is found, an empty
-	 * UserMessage is returned.
-	 */
 	public UserMessage getUserMessage() {
 		for (int i = this.messages.size() - 1; i >= 0; i--) {
 			Message message = this.messages.get(i);
@@ -154,11 +146,6 @@ public class Prompt implements ModelRequest<List<Message>> {
 		return messagesCopy;
 	}
 
-	/**
-	 * Augments the first system message in the prompt with the provided function. If no
-	 * system message is found, a new one is created with the provided text.
-	 * @return a new {@link Prompt} instance with the augmented system message.
-	 */
 	public Prompt augmentSystemMessage(Function<SystemMessage, SystemMessage> systemMessageAugmenter) {
 
 		var messagesCopy = new ArrayList<>(this.messages);
@@ -169,8 +156,7 @@ public class Prompt implements ModelRequest<List<Message>> {
 				break;
 			}
 			if (i == 0) {
-				// If no system message is found, create a new one with the provided text
-				// and add it as the first item in the list.
+
 				messagesCopy.add(0, systemMessageAugmenter.apply(new SystemMessage("")));
 			}
 		}
@@ -178,20 +164,10 @@ public class Prompt implements ModelRequest<List<Message>> {
 		return new Prompt(messagesCopy, null == this.chatOptions ? null : this.chatOptions.copy());
 	}
 
-	/**
-	 * Augments the last system message in the prompt with the provided text. If no system
-	 * message is found, a new one is created with the provided text.
-	 * @return a new {@link Prompt} instance with the augmented system message.
-	 */
 	public Prompt augmentSystemMessage(String newSystemText) {
 		return augmentSystemMessage(systemMessage -> systemMessage.mutate().text(newSystemText).build());
 	}
 
-	/**
-	 * Augments the last user message in the prompt with the provided function. If no user
-	 * message is found, a new one is created with the provided text.
-	 * @return a new {@link Prompt} instance with the augmented user message.
-	 */
 	public Prompt augmentUserMessage(Function<UserMessage, UserMessage> userMessageAugmenter) {
 		var messagesCopy = new ArrayList<>(this.messages);
 		for (int i = messagesCopy.size() - 1; i >= 0; i--) {
@@ -208,11 +184,6 @@ public class Prompt implements ModelRequest<List<Message>> {
 		return new Prompt(messagesCopy, null == this.chatOptions ? null : this.chatOptions.copy());
 	}
 
-	/**
-	 * Augments the last user message in the prompt with the provided text. If no user
-	 * message is found, a new one is created with the provided text.
-	 * @return a new {@link Prompt} instance with the augmented user message.
-	 */
 	public Prompt augmentUserMessage(String newUserText) {
 		return augmentUserMessage(userMessage -> userMessage.mutate().text(newUserText).build());
 	}

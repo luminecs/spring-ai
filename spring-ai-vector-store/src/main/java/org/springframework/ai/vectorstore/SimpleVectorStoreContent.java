@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.vectorstore;
 
 import java.util.Arrays;
@@ -32,11 +16,6 @@ import org.springframework.ai.document.id.IdGenerator;
 import org.springframework.ai.document.id.RandomIdGenerator;
 import org.springframework.util.Assert;
 
-/**
- * An immutable {@link Content} implementation representing content, metadata, and its
- * embeddings. This class is thread-safe and all its fields are final and deeply
- * immutable. The embedding vector is required for all instances of this class.
- */
 public final class SimpleVectorStoreContent implements Content {
 
 	private final String id;
@@ -47,49 +26,21 @@ public final class SimpleVectorStoreContent implements Content {
 
 	private final float[] embedding;
 
-	/**
-	 * Creates a new instance with the given content, empty metadata, and embedding
-	 * vector.
-	 * @param text the content text, must not be null
-	 * @param embedding the embedding vector, must not be null
-	 */
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 	public SimpleVectorStoreContent(@JsonProperty("text") @JsonAlias({ "content" }) String text,
 			@JsonProperty("embedding") float[] embedding) {
 		this(text, new HashMap<>(), embedding);
 	}
 
-	/**
-	 * Creates a new instance with the given content, metadata, and embedding vector.
-	 * @param text the content text, must not be null
-	 * @param metadata the metadata map, must not be null
-	 * @param embedding the embedding vector, must not be null
-	 */
 	public SimpleVectorStoreContent(String text, Map<String, Object> metadata, float[] embedding) {
 		this(text, metadata, new RandomIdGenerator(), embedding);
 	}
 
-	/**
-	 * Creates a new instance with the given content, metadata, custom ID generator, and
-	 * embedding vector.
-	 * @param text the content text, must not be null
-	 * @param metadata the metadata map, must not be null
-	 * @param idGenerator the ID generator to use, must not be null
-	 * @param embedding the embedding vector, must not be null
-	 */
 	public SimpleVectorStoreContent(String text, Map<String, Object> metadata, IdGenerator idGenerator,
 			float[] embedding) {
 		this(idGenerator.generateId(text, metadata), text, metadata, embedding);
 	}
 
-	/**
-	 * Creates a new instance with all fields specified.
-	 * @param id the unique identifier, must not be empty
-	 * @param text the content text, must not be null
-	 * @param metadata the metadata map, must not be null
-	 * @param embedding the embedding vector, must not be null
-	 * @throws IllegalArgumentException if any parameter is null or if id is empty
-	 */
 	public SimpleVectorStoreContent(String id, String text, Map<String, Object> metadata, float[] embedding) {
 		Assert.hasText(id, "id must not be null or empty");
 		Assert.notNull(text, "content must not be null");
@@ -117,10 +68,6 @@ public final class SimpleVectorStoreContent implements Content {
 		return this.metadata;
 	}
 
-	/**
-	 * Returns a defensive copy of the embedding vector.
-	 * @return a new array containing the embedding vector
-	 */
 	public float[] getEmbedding() {
 		return Arrays.copyOf(this.embedding, this.embedding.length);
 	}

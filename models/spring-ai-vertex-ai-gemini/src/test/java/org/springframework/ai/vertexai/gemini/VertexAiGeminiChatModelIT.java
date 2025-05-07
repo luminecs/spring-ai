@@ -275,9 +275,6 @@ class VertexAiGeminiChatModelIT {
 		assertThat(response.getResult().getOutput().getText()).containsAnyOf("Spring AI", "portable API");
 	}
 
-	/**
-	 * Helper method to create a VertexAI instance for tests
-	 */
 	private VertexAI vertexAiApi() {
 		String projectId = System.getenv("VERTEX_AI_GEMINI_PROJECT_ID");
 		String location = System.getenv("VERTEX_AI_GEMINI_LOCATION");
@@ -289,8 +286,6 @@ class VertexAiGeminiChatModelIT {
 
 	@Test
 	void jsonArrayToolCallingTest() {
-		// Test for the improved jsonToStruct method that handles JSON arrays in tool
-		// calling
 
 		ToolCallingManager toolCallingManager = ToolCallingManager.builder()
 			.observationRegistry(ObservationRegistry.NOOP)
@@ -307,8 +302,6 @@ class VertexAiGeminiChatModelIT {
 
 		ChatClient chatClient = ChatClient.builder(chatModelWithTools).build();
 
-		// Create a prompt that will trigger the tool call with a specific request that
-		// should invoke the tool
 		String response = chatClient.prompt()
 			.tools(new ScientistTools())
 			.user("List 3 famous scientists and their discoveries. Make sure to use the tool to get this information.")
@@ -322,16 +315,11 @@ class VertexAiGeminiChatModelIT {
 
 	}
 
-	/**
-	 * Tool class that returns a JSON array to test the jsonToStruct method's ability to
-	 * handle JSON arrays. This specifically tests the PR changes that improve the
-	 * jsonToStruct method to handle JSON arrays in addition to JSON objects.
-	 */
 	public static class ScientistTools {
 
 		@Tool(description = "Get information about famous scientists and their discoveries")
 		public List<Map<String, String>> getScientists() {
-			// Return a JSON array with scientist information
+
 			return List.of(Map.of("name", "Albert Einstein", "discovery", "Theory of Relativity"),
 					Map.of("name", "Isaac Newton", "discovery", "Laws of Motion"),
 					Map.of("name", "Marie Curie", "discovery", "Radioactivity"));

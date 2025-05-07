@@ -23,10 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest(classes = OpenAiTestConfiguration.class)
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".+")
 @ActiveProfiles("logging-test")
-/**
- * Integration test for https://github.com/spring-projects/spring-ai/issues/2339 Verifies
- * that MessageChatMemoryAdvisor works when Prompt is initialized with List<Message>.
- */
+
 class OpenAiChatClientMemoryAdvisorReproIT {
 
 	@Autowired
@@ -34,7 +31,7 @@ class OpenAiChatClientMemoryAdvisorReproIT {
 
 	@Test
 	void messageChatMemoryAdvisor_withPromptMessages_throwsException() {
-		// Arrange: create a Prompt with a List<Message> (including UserMessage)
+
 		Message userMessage = new UserMessage("Tell me a joke.");
 		List<Message> messages = List.of(userMessage);
 		Prompt prompt = new Prompt(messages);
@@ -45,8 +42,7 @@ class OpenAiChatClientMemoryAdvisorReproIT {
 
 		ChatClient chatClient = ChatClient.builder(chatModel).defaultAdvisors(advisor).build();
 
-		// Act: call should succeed without exception (issue #2339 is fixed)
-		chatClient.prompt(prompt).call().chatResponse(); // Should not throw
+		chatClient.prompt(prompt).call().chatResponse();
 
 	}
 

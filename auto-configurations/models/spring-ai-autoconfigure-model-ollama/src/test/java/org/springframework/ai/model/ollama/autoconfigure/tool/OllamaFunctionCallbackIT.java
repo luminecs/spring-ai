@@ -50,9 +50,6 @@ public class OllamaFunctionCallbackIT extends BaseOllamaIT {
 		initializeOllama(MODEL_NAME);
 	}
 
-	/**
-	 * See https://github.com/spring-projects/spring-ai/issues/2957
-	 */
 	@Test
 	void chatClientHelloWorld() {
 		this.contextRunner.run(context -> {

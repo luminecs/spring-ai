@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor.api;
 
 import reactor.core.publisher.Flux;
@@ -26,19 +10,6 @@ import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.AdvisorUtils;
 import org.springframework.util.Assert;
 
-/**
- * Base advisor that implements common aspects of the {@link CallAdvisor} and
- * {@link StreamAdvisor}, reducing the boilerplate code needed to implement an advisor.
- * <p>
- * It provides default implementations for the
- * {@link #adviseCall(ChatClientRequest, CallAdvisorChain)} and
- * {@link #adviseStream(ChatClientRequest, StreamAdvisorChain)} methods, delegating the
- * actual logic to the {@link #before(ChatClientRequest, AdvisorChain advisorChain)} and
- * {@link #after(ChatClientResponse, AdvisorChain advisorChain)} methods.
- *
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public interface BaseAdvisor extends CallAdvisor, StreamAdvisor {
 
 	Scheduler DEFAULT_SCHEDULER = Schedulers.boundedElastic();
@@ -78,19 +49,10 @@ public interface BaseAdvisor extends CallAdvisor, StreamAdvisor {
 		return this.getClass().getSimpleName();
 	}
 
-	/**
-	 * Logic to be executed before the rest of the advisor chain is called.
-	 */
 	ChatClientRequest before(ChatClientRequest chatClientRequest, AdvisorChain advisorChain);
 
-	/**
-	 * Logic to be executed after the rest of the advisor chain is called.
-	 */
 	ChatClientResponse after(ChatClientResponse chatClientResponse, AdvisorChain advisorChain);
 
-	/**
-	 * Scheduler used for processing the advisor logic when streaming.
-	 */
 	default Scheduler getScheduler() {
 		return DEFAULT_SCHEDULER;
 	}

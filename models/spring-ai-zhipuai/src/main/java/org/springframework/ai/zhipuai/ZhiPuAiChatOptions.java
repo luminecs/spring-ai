@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.zhipuai;
 
 import java.util.ArrayList;
@@ -36,92 +20,39 @@ import org.springframework.ai.zhipuai.api.ZhiPuAiApi;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-/**
- * ZhiPuAiChatOptions represents the options for the ZhiPuAiChat model.
- *
- * @author Geng Rong
- * @author Thomas Vitale
- * @author Ilayaperumal Gopinathan
- * @since 1.0.0 M1
- */
 @JsonInclude(Include.NON_NULL)
 public class ZhiPuAiChatOptions implements ToolCallingChatOptions {
 
 	// @formatter:off
-	/**
-	 * ID of the model to use.
-	 */
+
 	private @JsonProperty("model") String model;
-	/**
-	 * The maximum number of tokens to generate in the chat completion. The total length of input
-	 * tokens and generated tokens is limited by the model's context length.
-	 */
+
 	private @JsonProperty("max_tokens") Integer maxTokens;
-	/**
-	 * The model will stop generating characters specified by stop, and currently only supports a single stop word in the format of ["stop_word1"].
-	 */
+
 	private @JsonProperty("stop") List<String> stop;
-	/**
-	 * What sampling temperature to use, between 0 and 1. Higher values like 0.8 will make the output
-	 * more random, while lower values like 0.2 will make it more focused and deterministic. We generally recommend
-	 * altering this or top_p but not both.
-	 */
+
 	private @JsonProperty("temperature") Double temperature;
-	/**
-	 * An alternative to sampling with temperature, called nucleus sampling, where the model considers the
-	 * results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10%
-	 * probability mass are considered. We generally recommend altering this or temperature but not both.
-	 */
+
 	private @JsonProperty("top_p") Double topP;
-	/**
-	 * A list of tools the model may call. Currently, only functions are supported as a tool. Use this to
-	 * provide a list of functions the model may generate JSON inputs for.
-	 */
+
 	private @JsonProperty("tools") List<ZhiPuAiApi.FunctionTool> tools;
 
 	private @JsonProperty("tools1")  List<ZhiPuAiApi.Foo> foos;
 
-	/**
-	 * Controls which (if any) function is called by the model. none means the model will not call a
-	 * function and instead generates a message. auto means the model can pick between generating a message or calling a
-	 * function. Specifying a particular function via {"type: "function", "function": {"name": "my_function"}} forces
-	 * the model to call that function. none is the default when no functions are present. auto is the default if
-	 * functions are present. Use the {@link ZhiPuAiApi.ChatCompletionRequest.ToolChoiceBuilder} to create a tool choice object.
-	 */
 	private @JsonProperty("tool_choice") String toolChoice;
-	/**
-	 * A unique identifier representing your end-user, which can help ZhiPuAI to monitor and detect abuse.
-	 * ID length requirement: minimum of 6 characters, maximum of 128 characters.
-	 */
+
 	private @JsonProperty("user_id") String user;
-	/**
-	 * The parameter is passed by the client and must ensure uniqueness.
-	 * It is used to distinguish the unique identifier for each request.
-	 * If the client does not provide it, the platform will generate it by default.
-	 */
+
 	private @JsonProperty("request_id") String requestId;
-	/**
-	 * When do_sample is set to true, the sampling strategy is enabled.
-	 * If do_sample is false, the sampling strategy parameters temperature and top_p will not take effect.
-	 * The default value is true.
-	 */
+
 	private @JsonProperty("do_sample") Boolean doSample;
 
-	/**
-	 * Collection of {@link ToolCallback}s to be used for tool calling in the chat completion requests.
-	 */
 	@JsonIgnore
 	private List<ToolCallback> toolCallbacks = new ArrayList<>();
 
-	/**
-	 * Collection of tool names to be resolved at runtime and used for tool calling in the chat completion requests.
-	 */
 	@JsonIgnore
 	private Set<String> toolNames = new HashSet<>();
 
-	/**
-	 * Whether to enable the tool execution lifecycle internally in ChatModel.
-	 */
 	@JsonIgnore
 	private Boolean internalToolExecutionEnabled;
 
@@ -456,14 +387,12 @@ public class ZhiPuAiChatOptions implements ToolCallingChatOptions {
 	public ToolCallingChatOptions merge(ChatOptions options) {
 		ZhiPuAiChatOptions.Builder builder = ZhiPuAiChatOptions.builder();
 
-		// Merge chat-specific options
 		builder.model(options.getModel() != null ? options.getModel() : this.getModel())
 			.maxTokens(options.getMaxTokens() != null ? options.getMaxTokens() : this.getMaxTokens())
 			.stop(options.getStopSequences() != null ? options.getStopSequences() : this.getStopSequences())
 			.temperature(options.getTemperature() != null ? options.getTemperature() : this.getTemperature())
 			.topP(options.getTopP() != null ? options.getTopP() : this.getTopP());
 
-		// Try to get tool-specific properties if options is a ToolCallingChatOptions
 		if (options instanceof ToolCallingChatOptions toolCallingChatOptions) {
 			builder.internalToolExecutionEnabled(toolCallingChatOptions.getInternalToolExecutionEnabled() != null
 					? (toolCallingChatOptions).getInternalToolExecutionEnabled()
@@ -503,7 +432,6 @@ public class ZhiPuAiChatOptions implements ToolCallingChatOptions {
 			builder.toolContext(this.toolContext != null ? new HashMap<>(this.toolContext) : null);
 		}
 
-		// Preserve ZhiPuAi-specific properties
 		builder.tools(this.tools)
 			.toolChoice(this.toolChoice)
 			.user(this.user)

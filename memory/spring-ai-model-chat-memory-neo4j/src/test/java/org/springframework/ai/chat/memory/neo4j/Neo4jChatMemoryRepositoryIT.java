@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.memory.neo4j;
 
 import org.junit.jupiter.api.AfterEach;
@@ -50,12 +34,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Integration tests for {@link Neo4jChatMemoryRepository}.
- *
- * @author Enrico Rampazzo
- * @since 1.0.0
- */
 @Testcontainers
 class Neo4jChatMemoryRepositoryIT {
 
@@ -82,7 +60,7 @@ class Neo4jChatMemoryRepositoryIT {
 
 	@AfterEach
 	void tearDown() {
-		// Clean up all data after each test
+
 		try (Session session = driver.session()) {
 			session.run("MATCH (n) DETACH DELETE n");
 		}
@@ -114,7 +92,6 @@ class Neo4jChatMemoryRepositoryIT {
 			assertThat(retrievedMessage.getText()).isEqualTo(message.getText());
 		}
 
-		// Verify directly in the database
 		try (Session session = driver.session()) {
 			var result = session.run(
 					"MATCH (s:%s {id:$conversationId})-[:HAS_MESSAGE]->(m:%s) RETURN count(m) as count"
@@ -137,7 +114,6 @@ class Neo4jChatMemoryRepositoryIT {
 
 		assertThat(retrievedMessages).hasSize(messages.size());
 
-		// Verify the order is preserved (ascending by index)
 		for (int i = 0; i < messages.size(); i++) {
 			if (messages.get(i).getMessageType() != MessageType.TOOL) {
 				assertThat(retrievedMessages.get(i).getText()).isEqualTo(messages.get(i).getText());
@@ -151,7 +127,6 @@ class Neo4jChatMemoryRepositoryIT {
 		var conversationId = UUID.randomUUID().toString();
 		List<Message> messages = new ArrayList<>();
 
-		// Add messages in a specific order
 		for (int i = 1; i <= 5; i++) {
 			messages.add(new UserMessage("Message " + i));
 		}
@@ -161,7 +136,6 @@ class Neo4jChatMemoryRepositoryIT {
 
 		assertThat(retrievedMessages).hasSize(messages.size());
 
-		// Verify that messages are returned in ascending order (oldest first)
 		for (int i = 0; i < messages.size(); i++) {
 			assertThat(retrievedMessages.get(i).getText()).isEqualTo("Message " + (i + 1));
 		}
@@ -169,7 +143,7 @@ class Neo4jChatMemoryRepositoryIT {
 
 	@Test
 	void findConversationIds() {
-		// Create multiple conversations
+
 		var conversationId1 = UUID.randomUUID().toString();
 		var conversationId2 = UUID.randomUUID().toString();
 		var conversationId3 = UUID.randomUUID().toString();
@@ -192,16 +166,12 @@ class Neo4jChatMemoryRepositoryIT {
 
 		chatMemoryRepository.saveAll(conversationId, messages);
 
-		// Verify messages were saved
 		assertThat(chatMemoryRepository.findByConversationId(conversationId)).hasSize(3);
 
-		// Delete the conversation
 		chatMemoryRepository.deleteByConversationId(conversationId);
 
-		// Verify messages were deleted
 		assertThat(chatMemoryRepository.findByConversationId(conversationId)).isEmpty();
 
-		// Verify directly in the database
 		try (Session session = driver.session()) {
 			var result = session.run(
 					"MATCH (s:%s {id:$conversationId}) RETURN count(s) as count".formatted(config.getSessionLabel()),
@@ -214,19 +184,15 @@ class Neo4jChatMemoryRepositoryIT {
 	void saveAllReplacesExistingMessages() {
 		var conversationId = UUID.randomUUID().toString();
 
-		// Save initial messages
 		List<Message> initialMessages = List.of(new UserMessage("Initial message 1"),
 				new UserMessage("Initial message 2"), new UserMessage("Initial message 3"));
 		chatMemoryRepository.saveAll(conversationId, initialMessages);
 
-		// Verify initial messages were saved
 		assertThat(chatMemoryRepository.findByConversationId(conversationId)).hasSize(3);
 
-		// Replace with new messages
 		List<Message> newMessages = List.of(new UserMessage("New message 1"), new UserMessage("New message 2"));
 		chatMemoryRepository.saveAll(conversationId, newMessages);
 
-		// Verify only new messages exist
 		List<Message> retrievedMessages = chatMemoryRepository.findByConversationId(conversationId);
 		assertThat(retrievedMessages).hasSize(2);
 		assertThat(retrievedMessages.get(0).getText()).isEqualTo("New message 1");
@@ -314,11 +280,11 @@ class Neo4jChatMemoryRepositoryIT {
 
 		assertThat(retrievedMessage).isInstanceOf(SystemMessage.class);
 		assertThat(retrievedMessage.getText()).isEqualTo("System message with custom metadata - " + conversationId);
-		// Crucial assertion for the metadata
+
 		assertThat(retrievedMessage.getMetadata()).containsAllEntriesOf(customMetadata);
-		// Also check that the 'messageType' key is present (added by the repository)
+
 		assertThat(retrievedMessage.getMetadata()).containsEntry("messageType", MessageType.SYSTEM);
-		// Verify no extra unwanted metadata keys beyond what's expected
+
 		assertThat(retrievedMessage.getMetadata().keySet())
 			.containsExactlyInAnyOrderElementsOf(new ArrayList<>(customMetadata.keySet()) {
 				{
@@ -331,34 +297,26 @@ class Neo4jChatMemoryRepositoryIT {
 	void saveAllWithEmptyListClearsConversation() {
 		var conversationId = UUID.randomUUID().toString();
 
-		// 1. Setup: Create a conversation with some initial messages
 		UserMessage initialMessage1 = new UserMessage("Initial message 1");
 		AssistantMessage initialMessage2 = new AssistantMessage("Initial response 1");
 		chatMemoryRepository.saveAll(conversationId, List.of(initialMessage1, initialMessage2));
 
-		// Verify initial messages are there
 		List<Message> messagesAfterInitialSave = chatMemoryRepository.findByConversationId(conversationId);
 		assertThat(messagesAfterInitialSave).hasSize(2);
 
-		// 2. Action: Call saveAll with an empty list
 		chatMemoryRepository.saveAll(conversationId, Collections.emptyList());
 
-		// 3. Assertions:
-		// a) No messages should be found for the conversationId
 		List<Message> messagesAfterEmptySave = chatMemoryRepository.findByConversationId(conversationId);
 		assertThat(messagesAfterEmptySave).isEmpty();
 
-		// b) The conversationId itself should no longer be listed (because
-		// deleteByConversationId removes the session node)
 		List<String> conversationIds = chatMemoryRepository.findConversationIds();
 		assertThat(conversationIds).doesNotContain(conversationId);
 
-		// c) Verify directly in Neo4j that the conversation node is gone
 		try (Session session = driver.session()) {
 			Result result = session.run(
 					"MATCH (s:%s {id: $conversationId}) RETURN s".formatted(config.getSessionLabel()),
 					Map.of("conversationId", conversationId));
-			assertThat(result.hasNext()).isFalse(); // No conversation node should exist
+			assertThat(result.hasNext()).isFalse();
 		}
 	}
 
@@ -378,23 +336,19 @@ class Neo4jChatMemoryRepositoryIT {
 		List<Message> retrievedMessages = chatMemoryRepository.findByConversationId(conversationId);
 		assertThat(retrievedMessages).hasSize(2);
 
-		// Verify first message (empty content)
 		Message retrievedEmptyContentMsg = retrievedMessages.get(0);
 		assertThat(retrievedEmptyContentMsg).isInstanceOf(UserMessage.class);
 		assertThat(retrievedEmptyContentMsg.getText()).isEqualTo("");
-		assertThat(retrievedEmptyContentMsg.getMetadata()).containsEntry("messageType", MessageType.USER); // Default
-																											// metadata
-		assertThat(retrievedEmptyContentMsg.getMetadata().keySet()).hasSize(1); // Only
-																				// messageType
+		assertThat(retrievedEmptyContentMsg.getMetadata()).containsEntry("messageType", MessageType.USER);
 
-		// Verify second message (empty metadata from input, should only have messageType
-		// after retrieval)
+		assertThat(retrievedEmptyContentMsg.getMetadata().keySet()).hasSize(1);
+
 		Message retrievedEmptyMetadataMsg = retrievedMessages.get(1);
 		assertThat(retrievedEmptyMetadataMsg).isInstanceOf(UserMessage.class);
 		assertThat(retrievedEmptyMetadataMsg.getText()).isEqualTo("Content with empty metadata");
 		assertThat(retrievedEmptyMetadataMsg.getMetadata()).containsEntry("messageType", MessageType.USER);
-		assertThat(retrievedEmptyMetadataMsg.getMetadata().keySet()).hasSize(1); // Only
-																					// messageType
+		assertThat(retrievedEmptyMetadataMsg.getMetadata().keySet()).hasSize(1);
+
 	}
 
 	private Message createMessageByType(String content, MessageType messageType) {
@@ -406,9 +360,6 @@ class Neo4jChatMemoryRepositoryIT {
 		};
 	}
 
-	/**
-	 * Factory for creating Neo4j Driver instances.
-	 */
 	private static class Neo4jDriverFactory {
 
 		static Driver create(String boltUrl) {

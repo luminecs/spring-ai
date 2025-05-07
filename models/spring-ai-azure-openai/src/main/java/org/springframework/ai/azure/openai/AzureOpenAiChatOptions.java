@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.azure.openai;
 
 import java.util.ArrayList;
@@ -37,140 +21,51 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-/**
- * The configuration information for a chat completions request. Completions support a
- * wide variety of tasks and generate text that continues from or "completes" provided
- * prompt data.
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Soby Chacko
- * @author Ilayaperumal Gopinathan
- * @author Alexandros Pappas
- * @author Andres da Silva Santos
- */
 @JsonInclude(Include.NON_NULL)
 public class AzureOpenAiChatOptions implements ToolCallingChatOptions {
 
-	/**
-	 * The maximum number of tokens to generate.
-	 */
 	@JsonProperty("max_tokens")
 	private Integer maxTokens;
 
-	/**
-	 * The sampling temperature to use that controls the apparent creativity of generated
-	 * completions. Higher values will make output more random while lower values will
-	 * make results more focused and deterministic. It is not recommended to modify
-	 * temperature and top_p for the same completions request as the interaction of these
-	 * two settings is difficult to predict.
-	 */
 	@JsonProperty("temperature")
 	private Double temperature;
 
-	/**
-	 * An alternative to sampling with temperature called nucleus sampling. This value
-	 * causes the model to consider the results of tokens with the provided probability
-	 * mass. As an example, a value of 0.15 will cause only the tokens comprising the top
-	 * 15% of probability mass to be considered. It is not recommended to modify
-	 * temperature and top_p for the same completions request as the interaction of these
-	 * two settings is difficult to predict.
-	 */
 	@JsonProperty("top_p")
 	private Double topP;
 
-	/**
-	 * A map between GPT token IDs and bias scores that influences the probability of
-	 * specific tokens appearing in a completions response. Token IDs are computed via
-	 * external tokenizer tools, while bias scores reside in the range of -100 to 100 with
-	 * minimum and maximum values corresponding to a full ban or exclusive selection of a
-	 * token, respectively. The exact behavior of a given bias score varies by model.
-	 */
 	@JsonProperty("logit_bias")
 	private Map<String, Integer> logitBias;
 
-	/**
-	 * An identifier for the caller or end user of the operation. This may be used for
-	 * tracking or rate-limiting purposes.
-	 */
 	@JsonProperty("user")
 	private String user;
 
-	/**
-	 * The number of chat completions choices that should be generated for a chat
-	 * completions response. Because this setting can generate many completions, it may
-	 * quickly consume your token quota. Use carefully and ensure reasonable settings for
-	 * max_tokens and stop.
-	 */
 	@JsonProperty("n")
 	private Integer n;
 
-	/**
-	 * A collection of textual sequences that will end completions generation.
-	 */
 	@JsonProperty("stop")
 	private List<String> stop;
 
-	/**
-	 * A value that influences the probability of generated tokens appearing based on
-	 * their existing presence in generated text. Positive values will make tokens less
-	 * likely to appear when they already exist and increase the model's likelihood to
-	 * output new topics.
-	 */
 	@JsonProperty("presence_penalty")
 	private Double presencePenalty;
 
-	/**
-	 * A value that influences the probability of generated tokens appearing based on
-	 * their cumulative frequency in generated text. Positive values will make tokens less
-	 * likely to appear as their frequency increases and decrease the likelihood of the
-	 * model repeating the same statements verbatim.
-	 */
 	@JsonProperty("frequency_penalty")
 	private Double frequencyPenalty;
 
-	/**
-	 * The deployment name as defined in Azure Open AI Studio when creating a deployment
-	 * backed by an Azure OpenAI base model.
-	 */
 	@JsonProperty("deployment_name")
 	private String deploymentName;
 
-	/**
-	 * The response format expected from the Azure OpenAI model
-	 * @see org.springframework.ai.azure.openai.AzureOpenAiResponseFormat for supported
-	 * formats
-	 */
 	@JsonProperty("response_format")
 	private AzureOpenAiResponseFormat responseFormat;
 
-	/**
-	 * Seed value for deterministic sampling such that the same seed and parameters return
-	 * the same result.
-	 */
 	@JsonProperty("seed")
 	private Long seed;
 
-	/**
-	 * Whether to return log probabilities of the output tokens or not. If true, returns
-	 * the log probabilities of each output token returned in the `content` of `message`.
-	 * This option is currently not available on the `gpt-4-vision-preview` model.
-	 */
 	@JsonProperty("log_probs")
 	private Boolean logprobs;
 
-	/*
-	 * An integer between 0 and 5 specifying the number of most likely tokens to return at
-	 * each token position, each with an associated log probability. `logprobs` must be
-	 * set to `true` if this parameter is used.
-	 */
 	@JsonProperty("top_log_probs")
 	private Integer topLogProbs;
 
-	/*
-	 * If provided, the configuration options for available Azure OpenAI chat
-	 * enhancements.
-	 */
 	@JsonIgnore
 	private AzureChatEnhancementConfiguration enhancements;
 
@@ -180,30 +75,15 @@ public class AzureOpenAiChatOptions implements ToolCallingChatOptions {
 	@JsonIgnore
 	private Map<String, Object> toolContext = new HashMap<>();
 
-	/**
-	 * Collection of {@link ToolCallback}s to be used for tool calling in the chat
-	 * completion requests.
-	 */
 	@JsonIgnore
 	private List<ToolCallback> toolCallbacks = new ArrayList<>();
 
-	/**
-	 * Collection of tool names to be resolved at runtime and used for tool calling in the
-	 * chat completion requests.
-	 */
 	@JsonIgnore
 	private Set<String> toolNames = new HashSet<>();
 
-	/**
-	 * Whether to enable the tool execution lifecycle internally in ChatModel.
-	 */
 	@JsonIgnore
 	private Boolean internalToolExecutionEnabled;
 
-	/**
-	 * Whether to include token usage information in streaming chat completion responses.
-	 * Only applies to streaming responses.
-	 */
 	@JsonIgnore
 	private Boolean enableStreamUsage;
 

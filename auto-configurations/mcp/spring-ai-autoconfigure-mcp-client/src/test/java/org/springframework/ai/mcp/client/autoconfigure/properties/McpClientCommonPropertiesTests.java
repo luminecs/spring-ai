@@ -1,19 +1,3 @@
-/*
- * Copyright 2025-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.mcp.client.autoconfigure.properties;
 
 import org.junit.jupiter.api.Test;
@@ -25,11 +9,6 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Tests for {@link McpClientCommonProperties}.
- *
- * @author Christian Tzolov
- */
 class McpClientCommonPropertiesTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
@@ -72,32 +51,25 @@ class McpClientCommonPropertiesTests {
 	void setterGetterMethods() {
 		McpClientCommonProperties properties = new McpClientCommonProperties();
 
-		// Test enabled property
 		properties.setEnabled(false);
 		assertThat(properties.isEnabled()).isFalse();
 
-		// Test name property
 		properties.setName("test-client");
 		assertThat(properties.getName()).isEqualTo("test-client");
 
-		// Test version property
 		properties.setVersion("3.0.0");
 		assertThat(properties.getVersion()).isEqualTo("3.0.0");
 
-		// Test initialized property
 		properties.setInitialized(false);
 		assertThat(properties.isInitialized()).isFalse();
 
-		// Test requestTimeout property
 		Duration timeout = Duration.ofMinutes(5);
 		properties.setRequestTimeout(timeout);
 		assertThat(properties.getRequestTimeout()).isEqualTo(timeout);
 
-		// Test type property
 		properties.setType(McpClientCommonProperties.ClientType.ASYNC);
 		assertThat(properties.getType()).isEqualTo(McpClientCommonProperties.ClientType.ASYNC);
 
-		// Test rootChangeNotification property
 		properties.setRootChangeNotification(false);
 		assertThat(properties.isRootChangeNotification()).isFalse();
 	}
@@ -142,8 +114,7 @@ class McpClientCommonPropertiesTests {
 		this.contextRunner.withPropertyValues("spring.ai.mcp.client.type=INVALID_TYPE").run(context -> {
 			assertThat(context).hasFailed();
 			assertThat(context.getStartupFailure()).hasRootCauseInstanceOf(IllegalArgumentException.class);
-			// The error message doesn't contain the exact enum value, so we'll check for
-			// a more general message
+
 			assertThat(context.getStartupFailure().getMessage()).contains("Could not bind properties");
 		});
 	}
@@ -152,8 +123,7 @@ class McpClientCommonPropertiesTests {
 	void invalidDurationFormat() {
 		this.contextRunner.withPropertyValues("spring.ai.mcp.client.request-timeout=invalid-duration").run(context -> {
 			assertThat(context).hasFailed();
-			// The error message doesn't contain the property name, so we'll check for a
-			// more general message
+
 			assertThat(context.getStartupFailure().getMessage()).contains("Could not bind properties");
 		});
 	}
@@ -193,7 +163,7 @@ class McpClientCommonPropertiesTests {
 		this.contextRunner.withPropertyValues("spring.ai.mcp.client.enabled=false").run(context -> {
 			McpClientCommonProperties properties = context.getBean(McpClientCommonProperties.class);
 			assertThat(properties.isEnabled()).isFalse();
-			// Other properties should still have their default values
+
 			assertThat(properties.getName()).isEqualTo("spring-ai-mcp-client");
 			assertThat(properties.getVersion()).isEqualTo("1.0.0");
 			assertThat(properties.isInitialized()).isTrue();
@@ -208,7 +178,7 @@ class McpClientCommonPropertiesTests {
 		this.contextRunner.withPropertyValues("spring.ai.mcp.client.initialized=false").run(context -> {
 			McpClientCommonProperties properties = context.getBean(McpClientCommonProperties.class);
 			assertThat(properties.isInitialized()).isFalse();
-			// Other properties should still have their default values
+
 			assertThat(properties.isEnabled()).isTrue();
 			assertThat(properties.getName()).isEqualTo("spring-ai-mcp-client");
 			assertThat(properties.getVersion()).isEqualTo("1.0.0");
@@ -223,7 +193,7 @@ class McpClientCommonPropertiesTests {
 		this.contextRunner.withPropertyValues("spring.ai.mcp.client.root-change-notification=false").run(context -> {
 			McpClientCommonProperties properties = context.getBean(McpClientCommonProperties.class);
 			assertThat(properties.isRootChangeNotification()).isFalse();
-			// Other properties should still have their default values
+
 			assertThat(properties.isEnabled()).isTrue();
 			assertThat(properties.getName()).isEqualTo("spring-ai-mcp-client");
 			assertThat(properties.getVersion()).isEqualTo("1.0.0");
@@ -238,7 +208,7 @@ class McpClientCommonPropertiesTests {
 		this.contextRunner.withPropertyValues("spring.ai.mcp.client.request-timeout=120s").run(context -> {
 			McpClientCommonProperties properties = context.getBean(McpClientCommonProperties.class);
 			assertThat(properties.getRequestTimeout()).isEqualTo(Duration.ofSeconds(120));
-			// Other properties should still have their default values
+
 			assertThat(properties.isEnabled()).isTrue();
 			assertThat(properties.getName()).isEqualTo("spring-ai-mcp-client");
 			assertThat(properties.getVersion()).isEqualTo("1.0.0");
@@ -253,7 +223,7 @@ class McpClientCommonPropertiesTests {
 		this.contextRunner.withPropertyValues("spring.ai.mcp.client.type=ASYNC").run(context -> {
 			McpClientCommonProperties properties = context.getBean(McpClientCommonProperties.class);
 			assertThat(properties.getType()).isEqualTo(McpClientCommonProperties.ClientType.ASYNC);
-			// Other properties should still have their default values
+
 			assertThat(properties.isEnabled()).isTrue();
 			assertThat(properties.getName()).isEqualTo("spring-ai-mcp-client");
 			assertThat(properties.getVersion()).isEqualTo("1.0.0");
@@ -271,7 +241,7 @@ class McpClientCommonPropertiesTests {
 				McpClientCommonProperties properties = context.getBean(McpClientCommonProperties.class);
 				assertThat(properties.getName()).isEqualTo("custom-mcp-client");
 				assertThat(properties.getVersion()).isEqualTo("2.5.0");
-				// Other properties should still have their default values
+
 				assertThat(properties.isEnabled()).isTrue();
 				assertThat(properties.isInitialized()).isTrue();
 				assertThat(properties.getRequestTimeout()).isEqualTo(Duration.ofSeconds(20));

@@ -1,19 +1,3 @@
-/*
- * Copyright 2024-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model;
 
 import java.io.IOException;
@@ -152,7 +136,7 @@ class MediaTests {
 	@Test
 	void testMediaBuilderWithFailingResource() {
 		Resource failingResource = new ByteArrayResource(new byte[] { 1, 2, 3 }) {
-			// Implement other methods...
+
 			@Override
 			public byte[] getContentAsByteArray() throws IOException {
 				throw new IOException("Simulated failure");
@@ -215,19 +199,15 @@ class MediaTests {
 	}
 
 	private void assertValidMediaName(String name, String expectedMimeSubtype) {
-		// Split name into parts (media-subtype-uuid)
+
 		String[] parts = name.split("-", 3);
 
-		// Verify we have all three parts
 		assertThat(parts).hasSize(3);
 
-		// Verify the prefix is "media"
 		assertThat(parts[0]).isEqualTo("media");
 
-		// Verify the subtype matches expected
 		assertThat(parts[1]).isEqualTo(expectedMimeSubtype);
 
-		// Validate the UUID portion
 		assertThat(UUID.fromString(parts[2])).isNotNull();
 	}
 
@@ -295,16 +275,13 @@ class MediaTests {
 	void testUriConstructorNullValidation() {
 		MimeType mimeType = MimeType.valueOf("image/png");
 
-		// Test null mimeType
 		assertThatThrownBy(() -> new Media(null, URI.create("http://example.com/image.png")))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("MimeType must not be null");
 
-		// Test null URL
 		assertThatThrownBy(() -> new Media(mimeType, (URI) null)).isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("URI must not be null");
 
-		// Compare with builder validation
 		assertThatThrownBy(
 				() -> Media.builder().mimeType(null).data(URI.create("http://example.com/image.png")).build())
 			.isInstanceOf(IllegalArgumentException.class)
@@ -319,16 +296,13 @@ class MediaTests {
 	void testURLConstructorNullValidation() {
 		MimeType mimeType = MimeType.valueOf("image/png");
 
-		// Test null mimeType
 		assertThatThrownBy(() -> new Media(null, URI.create("http://example.com/image.png")))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("MimeType must not be null");
 
-		// Test null URL
 		assertThatThrownBy(() -> new Media(mimeType, (URI) null)).isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("URI must not be null");
 
-		// Compare with builder validation
 		assertThatThrownBy(
 				() -> Media.builder().mimeType(null).data(URI.create("http://example.com/image.png")).build())
 			.isInstanceOf(IllegalArgumentException.class)
@@ -343,16 +317,13 @@ class MediaTests {
 	void testResourceConstructorNullValidation() {
 		MimeType mimeType = MimeType.valueOf("image/png");
 
-		// Test null mimeType
 		assertThatThrownBy(() -> new Media(null, new ByteArrayResource(new byte[] { 1, 2, 3 })))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("MimeType must not be null");
 
-		// Test null resource
 		assertThatThrownBy(() -> new Media(mimeType, (Resource) null)).isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("Data must not be null");
 
-		// Compare with builder validation
 		assertThatThrownBy(
 				() -> Media.builder().mimeType(null).data(new ByteArrayResource(new byte[] { 1, 2, 3 })).build())
 			.isInstanceOf(IllegalArgumentException.class)
@@ -373,12 +344,10 @@ class MediaTests {
 			}
 		};
 
-		// Test constructor exception handling
 		assertThatThrownBy(() -> new Media(mimeType, failingResource)).isInstanceOf(RuntimeException.class)
 			.hasCauseInstanceOf(IOException.class)
 			.hasMessageContaining("Simulated failure");
 
-		// Compare with builder exception handling
 		assertThatThrownBy(() -> Media.builder().mimeType(mimeType).data(failingResource).build())
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasCauseInstanceOf(IOException.class)
@@ -387,14 +356,13 @@ class MediaTests {
 
 	@Test
 	void testDifferentMimeTypesNameFormat() {
-		// Test constructor name generation
+
 		Media jpegMediaCtor = new Media(Media.Format.IMAGE_JPEG, new ByteArrayResource(new byte[] { 1, 2, 3 }));
 		assertValidMediaName(jpegMediaCtor.getName(), "jpeg");
 
 		Media pngMediaCtor = new Media(Media.Format.IMAGE_PNG, new ByteArrayResource(new byte[] { 1, 2, 3 }));
 		assertValidMediaName(pngMediaCtor.getName(), "png");
 
-		// Compare with builder name generation
 		Media jpegMediaBuilder = Media.builder()
 			.mimeType(Media.Format.IMAGE_JPEG)
 			.data(new ByteArrayResource(new byte[] { 1, 2, 3 }))

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client.advisor.vectorstore;
 
 import java.util.ArrayList;
@@ -40,16 +24,6 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 
-/**
- * Memory is retrieved from a VectorStore added into the prompt's system text.
- *
- * This only works for text based exchanges with the models, not multi-modal exchanges.
- *
- * @author Christian Tzolov
- * @author Thomas Vitale
- * @author Oganes Bozoyan
- * @since 1.0.0
- */
 public class VectorStoreChatMemoryAdvisor extends AbstractChatMemoryAdvisor<VectorStore> {
 
 	private static final String DOCUMENT_METADATA_CONVERSATION_ID = "conversationId";
@@ -68,16 +42,6 @@ public class VectorStoreChatMemoryAdvisor extends AbstractChatMemoryAdvisor<Vect
 
 	private final String systemTextAdvise;
 
-	/**
-	 * Constructor for VectorStoreChatMemoryAdvisor.
-	 * @param vectorStore the vector store instance used for managing and querying
-	 * documents.
-	 * @param defaultConversationId the default conversation ID used if none is provided
-	 * in the context.
-	 * @param chatHistoryWindowSize the window size for the chat history retrieval.
-	 * @param systemTextAdvise the system text advice used for the chat advisor system.
-	 * @param order the order of precedence for this advisor in the chain.
-	 */
 	private VectorStoreChatMemoryAdvisor(VectorStore vectorStore, String defaultConversationId,
 			int chatHistoryWindowSize, String systemTextAdvise, int order) {
 		super(vectorStore, defaultConversationId, chatHistoryWindowSize, true, order);
@@ -112,7 +76,6 @@ public class VectorStoreChatMemoryAdvisor extends AbstractChatMemoryAdvisor<Vect
 		String conversationId = this.doGetConversationId(chatClientRequest.context());
 		int chatMemoryRetrieveSize = this.doGetChatMemoryRetrieveSize(chatClientRequest.context());
 
-		// 1. Retrieve the chat memory for the current conversation.
 		var searchRequest = SearchRequest.builder()
 			.query(chatClientRequest.prompt().getUserMessage().getText())
 			.topK(chatMemoryRetrieveSize)
@@ -121,11 +84,9 @@ public class VectorStoreChatMemoryAdvisor extends AbstractChatMemoryAdvisor<Vect
 
 		List<Document> documents = this.getChatMemoryStore().similaritySearch(searchRequest);
 
-		// 2. Processed memory messages as a string.
 		String longTermMemory = documents == null ? ""
 				: documents.stream().map(Document::getText).collect(Collectors.joining(System.lineSeparator()));
 
-		// 2. Augment the system message.
 		SystemMessage systemMessage = chatClientRequest.prompt().getSystemMessage();
 		String augmentedSystemText = PromptTemplate.builder()
 			.template(systemMessage.getText() + System.lineSeparator() + this.systemTextAdvise)
@@ -133,12 +94,10 @@ public class VectorStoreChatMemoryAdvisor extends AbstractChatMemoryAdvisor<Vect
 			.build()
 			.render();
 
-		// 3. Create a new request with the augmented system message.
 		ChatClientRequest processedChatClientRequest = chatClientRequest.mutate()
 			.prompt(chatClientRequest.prompt().augmentSystemMessage(augmentedSystemText))
 			.build();
 
-		// 4. Add the new user message to the conversation memory.
 		UserMessage userMessage = processedChatClientRequest.prompt().getUserMessage();
 		this.getChatMemoryStore().write(toDocuments(List.of(userMessage), conversationId));
 
@@ -168,10 +127,7 @@ public class VectorStoreChatMemoryAdvisor extends AbstractChatMemoryAdvisor<Vect
 				if (message instanceof UserMessage userMessage) {
 					return Document.builder()
 						.text(userMessage.getText())
-						// userMessage.getMedia().get(0).getId()
-						// TODO vector store for memory would not store this into the
-						// vector store, could store an 'id' instead
-						// .media(userMessage.getMedia())
+
 						.metadata(metadata)
 						.build();
 				}

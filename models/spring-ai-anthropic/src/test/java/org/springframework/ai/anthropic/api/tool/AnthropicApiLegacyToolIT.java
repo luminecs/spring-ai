@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.anthropic.api.tool;
 
 import java.util.List;
@@ -40,23 +24,6 @@ import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Experiments with
- * <a href="https://docs.anthropic.com/claude/docs/functions-external-tools">Anthropic
- * Functions & external tools</a>.
- *
- * <p>
- * <a href=
- * "https://www.linkedin.com/pulse/tool-usefunction-calling-anthropics-claude-3-opus-llm-micky-multani-fsmrc">Tool
- * Use(Function Calling) with Anthropic's Claude 3 Opus LLM</a>
- * <p>
- * <a href=
- * "https://www.codeproject.com/Articles/5379174/Csharp-Anthropic-Claude-Library-You-Can-Call-Claud">Anthropic
- * Functions & external tools</a>
- *
- * @author Christian Tzolov
- * @since 1.0.0
- */
 @EnabledIfEnvironmentVariable(named = "ANTHROPIC_API_KEY", matches = ".+")
 @SuppressWarnings("null")
 public class AnthropicApiLegacyToolIT {
@@ -99,8 +66,7 @@ public class AnthropicApiLegacyToolIT {
 
 		AnthropicMessage chatCompletionMessage = new AnthropicMessage(
 				List.of(new ContentBlock("What's the weather like in Paris? Show the temperature in Celsius.")),
-				// "What's the weather like in San Francisco, Tokyo, and Paris? Show the
-				// temperature in Celsius.")),
+
 				Role.USER);
 
 		ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest(

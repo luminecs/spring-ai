@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.prompt;
 
 import java.io.IOException;
@@ -40,22 +24,12 @@ import org.springframework.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * A template for creating prompts. It allows you to define a template string with
- * placeholders for variables, and then render the template with specific values for those
- * variables.
- */
 public class PromptTemplate implements PromptTemplateActions, PromptTemplateMessageActions {
 
 	private static final Logger log = LoggerFactory.getLogger(PromptTemplate.class);
 
 	private static final TemplateRenderer DEFAULT_TEMPLATE_RENDERER = StTemplateRenderer.builder().build();
 
-	/**
-	 * If you're subclassing this class, re-consider using the built-in implementation
-	 * together with the new PromptTemplateRenderer interface, designed to give you more
-	 * flexibility and control over the rendering process.
-	 */
 	private String template;
 
 	private final Map<String, Object> variables = new HashMap<>();
@@ -106,11 +80,9 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 		return this.template;
 	}
 
-	// From PromptTemplateStringActions.
-
 	@Override
 	public String render() {
-		// Process internal variables to handle Resources before rendering
+
 		Map<String, Object> processedVariables = new HashMap<>();
 		for (Entry<String, Object> entry : this.variables.entrySet()) {
 			if (entry.getValue() instanceof Resource) {
@@ -145,15 +117,15 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 		}
 
 		try {
-			// Handle ByteArrayResource specially
+
 			if (resource instanceof ByteArrayResource byteArrayResource) {
 				return new String(byteArrayResource.getByteArray(), StandardCharsets.UTF_8);
 			}
-			// If the resource exists but is empty
+
 			if (!resource.exists() || resource.contentLength() == 0) {
 				return "";
 			}
-			// For other Resource types or as fallback
+
 			return resource.getContentAsString(StandardCharsets.UTF_8);
 		}
 		catch (IOException e) {
@@ -161,8 +133,6 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 			return "[Unable to render resource: " + resource.getDescription() + "]";
 		}
 	}
-
-	// From PromptTemplateMessageActions.
 
 	@Override
 	public Message createMessage() {
@@ -178,8 +148,6 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 	public Message createMessage(Map<String, Object> additionalVariables) {
 		return new UserMessage(render(additionalVariables));
 	}
-
-	// From PromptTemplateActions.
 
 	@Override
 	public Prompt create() {
@@ -204,8 +172,6 @@ public class PromptTemplate implements PromptTemplateActions, PromptTemplateMess
 	public Builder mutate() {
 		return new Builder().template(this.template).variables(this.variables).renderer(this.renderer);
 	}
-
-	// Builder
 
 	public static Builder builder() {
 		return new Builder();

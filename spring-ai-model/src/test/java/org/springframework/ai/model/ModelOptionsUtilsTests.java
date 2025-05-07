@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.model;
 
 import java.util.Map;
@@ -29,9 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-/**
- * @author Christian Tzolov
- */
 public class ModelOptionsUtilsTests {
 
 	@Test
@@ -53,8 +34,8 @@ public class ModelOptionsUtilsTests {
 		var specificOptions2 = ModelOptionsUtils.merge(portableOptions, specificOptions, TestSpecificOptions.class);
 
 		assertThat(specificOptions2.getAge()).isEqualTo(30);
-		assertThat(specificOptions2.getName()).isEqualTo("John"); // !!! Overridden by the
-		// portableOptions
+		assertThat(specificOptions2.getName()).isEqualTo("John");
+
 		assertThat(specificOptions2.getSpecificField()).isEqualTo("SpecificField");
 	}
 
@@ -130,12 +111,11 @@ public class ModelOptionsUtilsTests {
 	@Test
 	public void jsonToMap_emptyStringAsNullObject() {
 		String json = "{\"name\":\"\", \"age\":30}";
-		// For Map: empty string remains ""
+
 		Map<String, Object> map = ModelOptionsUtils.jsonToMap(json);
 		assertThat(map.get("name")).isEqualTo("");
 		assertThat(map.get("age")).isEqualTo(30);
 
-		// Custom ObjectMapper: still "" for Map
 		ObjectMapper strictMapper = JsonMapper.builder()
 			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 			.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
@@ -149,17 +129,15 @@ public class ModelOptionsUtilsTests {
 	public void pojo_emptyStringAsNullObject() throws Exception {
 		String json = "{\"name\":\"\", \"age\":30}";
 
-		// POJO with default OBJECT_MAPPER (feature enabled)
 		Person person = ModelOptionsUtils.OBJECT_MAPPER.readValue(json, Person.class);
-		assertThat(person.name).isEqualTo(""); // String remains ""
-		assertThat(person.age).isEqualTo(30); // Integer is fine
+		assertThat(person.name).isEqualTo("");
+		assertThat(person.age).isEqualTo(30);
 
 		String jsonWithEmptyAge = "{\"name\":\"John\", \"age\":\"\"}";
 		Person person2 = ModelOptionsUtils.OBJECT_MAPPER.readValue(jsonWithEmptyAge, Person.class);
 		assertThat(person2.name).isEqualTo("John");
-		assertThat(person2.age).isNull(); // Integer: "" → null
+		assertThat(person2.age).isNull();
 
-		// POJO with feature disabled: should fail for Integer field
 		ObjectMapper strictMapper = JsonMapper.builder()
 			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 			.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
@@ -203,7 +181,6 @@ public class ModelOptionsUtilsTests {
 
 		private Integer age;
 
-		// Non interface fields
 		private String nonInterfaceField;
 
 		@Override

@@ -34,9 +34,9 @@ class Neo4jChatMemoryConfigIT {
 
 	@Test
 	void shouldCreateRequiredIndexes() {
-		// Given
+
 		Neo4jChatMemoryConfig config = Neo4jChatMemoryConfig.builder().withDriver(driver).build();
-		// When
+
 		try (Session session = driver.session()) {
 			Result result = session.run("SHOW INDEXES");
 			boolean sessionIndexFound = false;
@@ -49,7 +49,7 @@ class Neo4jChatMemoryConfigIT {
 				if ("message_index_index".equals(name))
 					messageIndexFound = true;
 			}
-			// Then
+
 			assertThat(sessionIndexFound).isTrue();
 			assertThat(messageIndexFound).isTrue();
 		}

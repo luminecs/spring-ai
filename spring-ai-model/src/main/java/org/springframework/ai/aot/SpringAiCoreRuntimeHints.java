@@ -28,7 +28,6 @@ public class SpringAiCoreRuntimeHints implements RuntimeHintsRegistrar {
 			hints.reflection().registerType(c);
 		}
 
-		// Register tool-related types for reflection
 		var toolTypes = Set.of(ToolCallback.class, ToolDefinition.class);
 		for (var c : toolTypes) {
 			hints.reflection().registerType(c);

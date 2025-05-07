@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client;
 
 import org.springframework.ai.chat.messages.Message;
@@ -35,24 +19,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Utilities for supporting the {@link DefaultChatClient} implementation.
- *
- * @author Thomas Vitale
- * @since 1.0.0
- */
 class DefaultChatClientUtils {
 
 	static ChatClientRequest toChatClientRequest(DefaultChatClient.DefaultChatClientRequestSpec inputRequest) {
 		Assert.notNull(inputRequest, "inputRequest cannot be null");
 
-		/*
-		 * ==========* MESSAGES * ==========
-		 */
-
 		List<Message> processedMessages = new ArrayList<>();
 
-		// System Text => First in the list
 		String processedSystemText = inputRequest.getSystemText();
 		if (StringUtils.hasText(processedSystemText)) {
 			if (!CollectionUtils.isEmpty(inputRequest.getSystemParams())) {
@@ -66,12 +39,10 @@ class DefaultChatClientUtils {
 			processedMessages.add(new SystemMessage(processedSystemText));
 		}
 
-		// Messages => In the middle of the list
 		if (!CollectionUtils.isEmpty(inputRequest.getMessages())) {
 			processedMessages.addAll(inputRequest.getMessages());
 		}
 
-		// User Test => Last in the list
 		String processedUserText = inputRequest.getUserText();
 		if (StringUtils.hasText(processedUserText)) {
 			if (!CollectionUtils.isEmpty(inputRequest.getUserParams())) {
@@ -84,10 +55,6 @@ class DefaultChatClientUtils {
 			}
 			processedMessages.add(UserMessage.builder().text(processedUserText).media(inputRequest.getMedia()).build());
 		}
-
-		/*
-		 * ==========* OPTIONS * ==========
-		 */
 
 		ChatOptions processedChatOptions = inputRequest.getChatOptions();
 		if (processedChatOptions instanceof ToolCallingChatOptions toolCallingChatOptions) {
@@ -108,10 +75,6 @@ class DefaultChatClientUtils {
 				toolCallingChatOptions.setToolContext(toolContext);
 			}
 		}
-
-		/*
-		 * ==========* REQUEST * ==========
-		 */
 
 		return ChatClientRequest.builder()
 			.prompt(Prompt.builder().messages(processedMessages).chatOptions(processedChatOptions).build())

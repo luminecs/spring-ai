@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.chat.client;
 
 import java.io.IOException;
@@ -71,19 +55,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
-/**
- * The default implementation of {@link ChatClient} as created by the
- * {@link Builder#build()} } method.
- *
- * @author Mark Pollack
- * @author Christian Tzolov
- * @author Josh Long
- * @author Arjen Poutsma
- * @author Soby Chacko
- * @author Dariusz Jedrzejczyk
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class DefaultChatClient implements ChatClient {
 
 	private static final ChatClientObservationConvention DEFAULT_CHAT_CLIENT_OBSERVATION_CONVENTION = new DefaultChatClientObservationConvention();
@@ -114,12 +85,10 @@ public class DefaultChatClient implements ChatClient {
 
 		DefaultChatClientRequestSpec spec = new DefaultChatClientRequestSpec(this.defaultChatClientRequest);
 
-		// Options
 		if (prompt.getOptions() != null) {
 			spec.options(prompt.getOptions());
 		}
 
-		// Messages
 		if (prompt.getInstructions() != null) {
 			spec.messages(prompt.getInstructions());
 		}
@@ -127,10 +96,6 @@ public class DefaultChatClient implements ChatClient {
 		return spec;
 	}
 
-	/**
-	 * Return a {@code ChatClient2Builder} to create a new {@code ChatClient} whose
-	 * settings are replicated from this {@code ChatClientRequest}.
-	 */
 	@Override
 	public Builder mutate() {
 		return this.defaultChatClientRequest.mutate();
@@ -470,7 +435,7 @@ public class DefaultChatClient implements ChatClient {
 			var observation = ChatClientObservationDocumentation.AI_CHAT_CLIENT.observation(observationConvention,
 					DEFAULT_CHAT_CLIENT_OBSERVATION_CONVENTION, () -> observationContext, observationRegistry);
 			var chatClientResponse = observation.observe(() -> {
-				// Apply the advisor chain that terminates with the ChatModelCallAdvisor.
+
 				return advisorChain.nextCall(chatClientRequest);
 			});
 			return chatClientResponse != null ? chatClientResponse : ChatClientResponse.builder().build();
@@ -527,7 +492,7 @@ public class DefaultChatClient implements ChatClient {
 					.start();
 
 				// @formatter:off
-				// Apply the advisor chain that terminates with the ChatModelStreamAdvisor.
+
 				return advisorChain.nextStream(chatClientRequest)
 						.doOnError(observation::error)
 						.doFinally(s -> observation.stop())
@@ -601,7 +566,6 @@ public class DefaultChatClient implements ChatClient {
 		@Nullable
 		private ChatOptions chatOptions;
 
-		/* copy constructor */
 		DefaultChatClientRequestSpec(DefaultChatClientRequestSpec ccr) {
 			this(ccr.chatModel, ccr.userText, ccr.userParams, ccr.systemText, ccr.systemParams, ccr.toolCallbacks,
 					ccr.messages, ccr.toolNames, ccr.media, ccr.chatOptions, ccr.advisors, ccr.advisorParams,
@@ -705,10 +669,6 @@ public class DefaultChatClient implements ChatClient {
 			return this.templateRenderer;
 		}
 
-		/**
-		 * Return a {@code ChatClient2Builder} to create a new {@code ChatClient2} whose
-		 * settings are replicated from this {@code ChatClientRequest}.
-		 */
 		public Builder mutate() {
 			DefaultChatClientBuilder builder = (DefaultChatClientBuilder) ChatClient
 				.builder(this.chatModel, this.observationRegistry, this.observationConvention)
@@ -917,8 +877,7 @@ public class DefaultChatClient implements ChatClient {
 		}
 
 		private BaseAdvisorChain buildAdvisorChain() {
-			// At the stack bottom add the model call advisors.
-			// They play the role of the last advisors in the advisor chain.
+
 			this.advisors.add(ChatModelCallAdvisor.builder().chatModel(this.chatModel).build());
 			this.advisors.add(ChatModelStreamAdvisor.builder().chatModel(this.chatModel).build());
 

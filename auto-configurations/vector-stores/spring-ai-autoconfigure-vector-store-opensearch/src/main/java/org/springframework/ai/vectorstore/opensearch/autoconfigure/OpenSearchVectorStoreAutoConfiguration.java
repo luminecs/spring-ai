@@ -117,17 +117,6 @@ public class OpenSearchVectorStoreAutoConfiguration {
 
 	}
 
-	/**
-	 * AWS OpenSearch configuration.
-	 * <p>
-	 * This configuration is only enabled if AWS SDK classes are present on the classpath
-	 * <b>and</b> the property {@code spring.ai.vectorstore.opensearch.aws.enabled} is set
-	 * to {@code true} (default: true).
-	 * <p>
-	 * Set {@code spring.ai.vectorstore.opensearch.aws.enabled=false} to disable
-	 * AWS-specific OpenSearch configuration when AWS SDK is present for other services
-	 * (e.g., S3).
-	 */
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ AwsCredentialsProvider.class, Region.class, ApacheHttpClient.class })
 	@ConditionalOnProperty(name = "spring.ai.vectorstore.opensearch.aws.enabled", havingValue = "true",

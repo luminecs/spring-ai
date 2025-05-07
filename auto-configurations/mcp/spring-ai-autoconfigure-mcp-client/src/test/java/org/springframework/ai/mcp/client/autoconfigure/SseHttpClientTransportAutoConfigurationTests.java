@@ -16,11 +16,6 @@ import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Tests for {@link SseHttpClientTransportAutoConfiguration}.
- *
- * @author Christian Tzolov
- */
 public class SseHttpClientTransportAutoConfigurationTests {
 
 	private final ApplicationContextRunner applicationContext = new ApplicationContextRunner()
@@ -136,7 +131,7 @@ public class SseHttpClientTransportAutoConfigurationTests {
 				assertThat(transports).hasSize(1);
 				assertThat(transports.get(0).name()).isEqualTo("server1");
 				assertThat(transports.get(0).transport()).isInstanceOf(HttpClientSseClientTransport.class);
-				// Default SSE endpoint is "/sse" as specified in the configuration class
+
 			});
 	}
 

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.template.st;
 
 import org.antlr.runtime.Token;
@@ -31,20 +15,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Renders a template using the StringTemplate (ST) v4 library.
- *
- * <p>
- * This renderer allows customization of delimiters, validation behavior when template
- * variables are missing, and how StringTemplate's built-in functions are handled during
- * validation.
- *
- * <p>
- * Use the {@link #builder()} to create and configure instances.
- *
- * @author Thomas Vitale
- * @since 1.0.0
- */
 public class StTemplateRenderer implements TemplateRenderer {
 
 	private static final Logger logger = LoggerFactory.getLogger(StTemplateRenderer.class);
@@ -105,7 +75,6 @@ public class StTemplateRenderer implements TemplateRenderer {
 		Set<String> templateTokens = getInputVariables(st);
 		Set<String> modelKeys = templateVariables != null ? templateVariables.keySet() : new HashSet<>();
 
-		// Check if model provides all keys required by the template
 		if (!modelKeys.containsAll(templateTokens)) {
 			templateTokens.removeAll(modelKeys);
 			if (validationMode == ValidationMode.WARN) {
@@ -152,9 +121,6 @@ public class StTemplateRenderer implements TemplateRenderer {
 		return new Builder();
 	}
 
-	/**
-	 * Builder for configuring and creating {@link StTemplateRenderer} instances.
-	 */
 	public static class Builder {
 
 		private char startDelimiterToken = DEFAULT_START_DELIMITER_TOKEN;
@@ -168,63 +134,26 @@ public class StTemplateRenderer implements TemplateRenderer {
 		private Builder() {
 		}
 
-		/**
-		 * Sets the character used as the start delimiter for template expressions.
-		 * Default is '{'.
-		 * @param startDelimiterToken The start delimiter character.
-		 * @return This builder instance for chaining.
-		 */
 		public Builder startDelimiterToken(char startDelimiterToken) {
 			this.startDelimiterToken = startDelimiterToken;
 			return this;
 		}
 
-		/**
-		 * Sets the character used as the end delimiter for template expressions. Default
-		 * is '}'.
-		 * @param endDelimiterToken The end delimiter character.
-		 * @return This builder instance for chaining.
-		 */
 		public Builder endDelimiterToken(char endDelimiterToken) {
 			this.endDelimiterToken = endDelimiterToken;
 			return this;
 		}
 
-		/**
-		 * Sets the validation mode to control behavior when the provided variables do not
-		 * match the variables required by the template. Default is
-		 * {@link ValidationMode#THROW}.
-		 * @param validationMode The desired validation mode.
-		 * @return This builder instance for chaining.
-		 */
 		public Builder validationMode(ValidationMode validationMode) {
 			this.validationMode = validationMode;
 			return this;
 		}
 
-		/**
-		 * Configures the renderer to support StringTemplate's built-in functions during
-		 * validation.
-		 * <p>
-		 * When enabled (set to true), identifiers in the template that match known ST
-		 * function names (e.g., "first", "rest", "length") will not be treated as
-		 * required input variables during validation.
-		 * <p>
-		 * When disabled (default, false), these identifiers are treated like regular
-		 * variables and must be provided in the input map if validation is enabled
-		 * ({@link ValidationMode#WARN} or {@link ValidationMode#THROW}).
-		 * @return This builder instance for chaining.
-		 */
 		public Builder supportStFunctions() {
 			this.supportStFunctions = true;
 			return this;
 		}
 
-		/**
-		 * Builds and returns a new {@link StTemplateRenderer} instance with the
-		 * configured settings.
-		 * @return A configured {@link StTemplateRenderer}.
-		 */
 		public StTemplateRenderer build() {
 			return new StTemplateRenderer(startDelimiterToken, endDelimiterToken, validationMode, supportStFunctions);
 		}

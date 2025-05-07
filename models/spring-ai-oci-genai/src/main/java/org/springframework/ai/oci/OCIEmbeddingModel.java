@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.oci;
 
 import java.util.ArrayList;
@@ -45,16 +29,8 @@ import org.springframework.ai.observation.conventions.AiProvider;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-/**
- * {@link org.springframework.ai.embedding.EmbeddingModel} implementation that uses the
- * OCI GenAI Embedding API.
- *
- * @author Anders Swanson
- * @since 1.0.0
- */
 public class OCIEmbeddingModel extends AbstractEmbeddingModel {
 
-	// The OCI GenAI API has a batch size of 96 for embed text requests.
 	private static final int EMBEDTEXT_BATCH_SIZE = 96;
 
 	private static final EmbeddingModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultEmbeddingModelObservationConvention();
@@ -162,18 +138,16 @@ public class OCIEmbeddingModel extends AbstractEmbeddingModel {
 	}
 
 	EmbeddingRequest buildEmbeddingRequest(EmbeddingRequest embeddingRequest) {
-		// Process runtime options
+
 		OCIEmbeddingOptions runtimeOptions = null;
 		if (embeddingRequest.getOptions() != null) {
 			runtimeOptions = ModelOptionsUtils.copyToTarget(embeddingRequest.getOptions(), EmbeddingOptions.class,
 					OCIEmbeddingOptions.class);
 		}
 
-		// Define request options by merging runtime options and default options
 		OCIEmbeddingOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.options,
 				OCIEmbeddingOptions.class);
 
-		// Validate request options
 		if (!StringUtils.hasText(requestOptions.getModel())) {
 			throw new IllegalArgumentException("model cannot be null or empty");
 		}

@@ -1,19 +1,3 @@
-/*
- * Copyright 2023-2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.ai.minimax;
 
 import java.util.ArrayList;
@@ -72,114 +56,44 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-/**
- * {@link ChatModel} and {@link StreamingChatModel} implementation for {@literal MiniMax}
- * backed by {@link MiniMaxApi}.
- *
- * @author Geng Rong
- * @author Alexandros Pappas
- * @author Ilayaperumal Gopinathan
- * @see ChatModel
- * @see StreamingChatModel
- * @see MiniMaxApi
- * @since 1.0.0 M1
- */
 public class MiniMaxChatModel implements ChatModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(MiniMaxChatModel.class);
 
 	private static final ChatModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultChatModelObservationConvention();
 
-	/**
-	 * The retry template used to retry the MiniMax API calls.
-	 */
 	public final RetryTemplate retryTemplate;
 
-	/**
-	 * The default options used for the chat completion requests.
-	 */
 	private final MiniMaxChatOptions defaultOptions;
 
-	/**
-	 * Low-level access to the MiniMax API.
-	 */
 	private final MiniMaxApi miniMaxApi;
 
-	/**
-	 * Observation registry used for instrumentation.
-	 */
 	private final ObservationRegistry observationRegistry;
 
-	/**
-	 * The tool calling manager.
-	 */
 	private final ToolCallingManager toolCallingManager;
 
-	/**
-	 * The tool execution eligibility predicate used to determine if a tool can be
-	 * executed.
-	 */
 	private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
 
-	/**
-	 * Conventions to use for generating observations.
-	 */
 	private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
-	/**
-	 * Creates an instance of the MiniMaxChatModel.
-	 * @param miniMaxApi The MiniMaxApi instance to be used for interacting with the
-	 * MiniMax Chat API.
-	 * @throws IllegalArgumentException if MiniMaxApi is null
-	 */
 	public MiniMaxChatModel(MiniMaxApi miniMaxApi) {
 		this(miniMaxApi, MiniMaxChatOptions.builder().model(MiniMaxApi.DEFAULT_CHAT_MODEL).temperature(0.7).build());
 	}
 
-	/**
-	 * Initializes an instance of the MiniMaxChatModel.
-	 * @param miniMaxApi The MiniMaxApi instance to be used for interacting with the
-	 * MiniMax Chat API.
-	 * @param options The MiniMaxChatOptions to configure the chat model.
-	 */
 	public MiniMaxChatModel(MiniMaxApi miniMaxApi, MiniMaxChatOptions options) {
 		this(miniMaxApi, options, ToolCallingManager.builder().build(), RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
-	/**
-	 * Initializes a new instance of the MiniMaxChatModel.
-	 * @param miniMaxApi The MiniMaxApi instance to be used for interacting with the
-	 * MiniMax Chat API.
-	 * @param options The MiniMaxChatOptions to configure the chat model.
-	 * @param toolCallingManager The tool calling manager.
-	 */
 	public MiniMaxChatModel(MiniMaxApi miniMaxApi, MiniMaxChatOptions options, ToolCallingManager toolCallingManager) {
 		this(miniMaxApi, options, toolCallingManager, RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
 
-	/**
-	 * Initializes a new instance of the MiniMaxChatModel.
-	 * @param miniMaxApi The MiniMaxApi instance to be used for interacting with the
-	 * MiniMax Chat API.
-	 * @param options The MiniMaxChatOptions to configure the chat model.
-	 * @param toolCallingManager The tool calling manager.
-	 * @param retryTemplate The retry template.
-	 */
 	public MiniMaxChatModel(MiniMaxApi miniMaxApi, MiniMaxChatOptions options, ToolCallingManager toolCallingManager,
 			RetryTemplate retryTemplate) {
 		this(miniMaxApi, options, toolCallingManager, retryTemplate, ObservationRegistry.NOOP,
 				new DefaultToolExecutionEligibilityPredicate());
 	}
 
-	/**
-	 * Initializes a new instance of the MiniMaxChatModel.
-	 * @param miniMaxApi The MiniMaxApi instance to be used for interacting with the
-	 * MiniMax Chat API.
-	 * @param options The MiniMaxChatOptions to configure the chat model.
-	 * @param retryTemplate The retry template.
-	 * @param observationRegistry The ObservationRegistry used for instrumentation.
-	 * @param toolExecutionEligibilityPredicate The Tool
-	 */
 	public MiniMaxChatModel(MiniMaxApi miniMaxApi, MiniMaxChatOptions options, ToolCallingManager toolCallingManager,
 			RetryTemplate retryTemplate, ObservationRegistry observationRegistry,
 			ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate) {
@@ -202,13 +116,7 @@ public class MiniMaxChatModel implements ChatModel {
 				: choice.message()
 					.toolCalls()
 					.stream()
-					// the MiniMax's stream function calls response are really odd
-					// occasionally, tool call might get split.
-					// for example, id empty means the previous tool call is not finished,
-					// the toolCalls:
-					// [{id:'1',function:{name:'a'}},{id:'',function:{arguments:'[1]'}}]
-					// these need to be merged into [{id:'1', name:'a', arguments:'[1]'}]
-					// it worked before, maybe the model provider made some adjustments
+
 					.reduce(new ArrayList<>(), (acc, current) -> {
 						if (!acc.isEmpty() && current.id().isEmpty()) {
 							AssistantMessage.ToolCall prev = acc.get(acc.size() - 1);
@@ -233,8 +141,7 @@ public class MiniMaxChatModel implements ChatModel {
 
 	@Override
 	public ChatResponse call(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		ChatCompletionRequest request = createRequest(requestPrompt, false);
 
@@ -267,14 +174,13 @@ public class MiniMaxChatModel implements ChatModel {
 
 				List<Generation> generations = choices.stream().map(choice -> {
 			// @formatter:off
-						// if the choice is a web search tool call, return last message of choice.messages
+
 						ChatCompletionMessage message = null;
 						if (choice.message() != null) {
 							message = choice.message();
 						}
 						else if (!CollectionUtils.isEmpty(choice.messages())) {
-							// the MiniMax web search messages result is ['user message','assistant tool call', 'tool call', 'assistant message']
-							// so the last message is the assistant message
+
 							message = choice.messages().get(choice.messages().size() - 1);
 						}
 						Map<String, Object> metadata = Map.of(
@@ -295,14 +201,14 @@ public class MiniMaxChatModel implements ChatModel {
 		if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(requestPrompt.getOptions(), response)) {
 			var toolExecutionResult = this.toolCallingManager.executeToolCalls(requestPrompt, response);
 			if (toolExecutionResult.returnDirect()) {
-				// Return tool execution result directly to the client.
+
 				return ChatResponse.builder()
 					.from(response)
 					.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 					.build();
 			}
 			else {
-				// Send the tool execution result back to the model.
+
 				return this.call(new Prompt(toolExecutionResult.conversationHistory(), requestPrompt.getOptions()));
 			}
 		}
@@ -317,8 +223,7 @@ public class MiniMaxChatModel implements ChatModel {
 
 	@Override
 	public Flux<ChatResponse> stream(Prompt prompt) {
-		// Before moving any further, build the final request Prompt,
-		// merging runtime and default options.
+
 		Prompt requestPrompt = buildRequestPrompt(prompt);
 		return Flux.deferContextual(contextView -> {
 			ChatCompletionRequest request = createRequest(requestPrompt, true);
@@ -326,8 +231,6 @@ public class MiniMaxChatModel implements ChatModel {
 			Flux<ChatCompletionChunk> completionChunks = this.retryTemplate
 				.execute(ctx -> this.miniMaxApi.chatCompletionStream(request));
 
-			// For chunked responses, only the first chunk contains the choice role.
-			// The rest of the chunks with same ID share the same role.
 			ConcurrentHashMap<String, String> roleMap = new ConcurrentHashMap<>();
 
 			final ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
@@ -341,8 +244,6 @@ public class MiniMaxChatModel implements ChatModel {
 
 			observation.parentObservation(contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null)).start();
 
-			// Convert the ChatCompletionChunk into a ChatCompletion to be able to reuse
-			// the function call handling logic.
 			Flux<ChatResponse> chatResponse = completionChunks.map(this::chunkToChatCompletion)
 				.switchMap(chatCompletion -> Mono.just(chatCompletion).map(chatCompletion2 -> {
 					try {
@@ -371,17 +272,16 @@ public class MiniMaxChatModel implements ChatModel {
 			Flux<ChatResponse> flux = chatResponse.flatMap(response -> {
 						if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(requestPrompt.getOptions(), response)) {
 							return Flux.defer(() -> {
-								// FIXME: bounded elastic needs to be used since tool calling
-								//  is currently only synchronous
+
 								var toolExecutionResult = this.toolCallingManager.executeToolCalls(requestPrompt, response);
 								if (toolExecutionResult.returnDirect()) {
-									// Return tool execution result directly to the client.
+
 									return Flux.just(ChatResponse.builder().from(response)
 											.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
 											.build());
 								}
 								else {
-									// Send the tool execution result back to the model.
+
 									return this.stream(new Prompt(toolExecutionResult.conversationHistory(), requestPrompt.getOptions()));
 								}
 							}).subscribeOn(Schedulers.boundedElastic());
@@ -430,11 +330,6 @@ public class MiniMaxChatModel implements ChatModel {
 		return new Generation(assistantMessage, generationMetadata);
 	}
 
-	/**
-	 * Convert the ChatCompletionChunk into a ChatCompletion. The Usage is set to null.
-	 * @param chunk the ChatCompletionChunk to convert
-	 * @return the ChatCompletion
-	 */
 	private ChatCompletion chunkToChatCompletion(ChatCompletionChunk chunk) {
 		List<ChatCompletion.Choice> choices = chunk.choices().stream().map(cc -> {
 			ChatCompletionMessage delta = cc.delta();
@@ -449,7 +344,7 @@ public class MiniMaxChatModel implements ChatModel {
 	}
 
 	Prompt buildRequestPrompt(Prompt prompt) {
-		// Process runtime options
+
 		MiniMaxChatOptions runtimeOptions = null;
 		if (prompt.getOptions() != null) {
 			if (prompt.getOptions() instanceof ToolCallingChatOptions toolCallingChatOptions) {
@@ -462,12 +357,9 @@ public class MiniMaxChatModel implements ChatModel {
 			}
 		}
 
-		// Define request options by merging runtime options and default options
 		MiniMaxChatOptions requestOptions = ModelOptionsUtils.merge(runtimeOptions, this.defaultOptions,
 				MiniMaxChatOptions.class);
 
-		// Merge @JsonIgnore-annotated options explicitly since they are ignored by
-		// Jackson, used by ModelOptionsUtils.
 		if (runtimeOptions != null) {
 			requestOptions.setInternalToolExecutionEnabled(
 					ModelOptionsUtils.mergeOption(runtimeOptions.getInternalToolExecutionEnabled(),
@@ -491,9 +383,6 @@ public class MiniMaxChatModel implements ChatModel {
 		return new Prompt(prompt.getInstructions(), requestOptions);
 	}
 
-	/**
-	 * Accessible for testing.
-	 */
 	ChatCompletionRequest createRequest(Prompt prompt, boolean stream) {
 
 		List<ChatCompletionMessage> chatCompletionMessages = prompt.getInstructions().stream().map(message -> {
@@ -535,7 +424,6 @@ public class MiniMaxChatModel implements ChatModel {
 		MiniMaxChatOptions requestOptions = (MiniMaxChatOptions) prompt.getOptions();
 		request = ModelOptionsUtils.merge(requestOptions, request, ChatCompletionRequest.class);
 
-		// Add the tool definitions to the request's tools parameter.
 		List<ToolDefinition> toolDefinitions = this.toolCallingManager.resolveToolDefinitions(requestOptions);
 		if (!CollectionUtils.isEmpty(toolDefinitions)) {
 			request = ModelOptionsUtils.merge(
